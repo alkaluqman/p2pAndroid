@@ -1,6 +1,5 @@
 package com.example.applayout.FederatedLearning;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
@@ -11,7 +10,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -20,13 +18,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.applayout.MainActivity;
 import com.example.applayout.R;
-import com.example.applayout.Report.ReportActivity;
 import com.example.applayout.Report.ReportActivity2;
 
 import org.tensorflow.lite.Interpreter;
 
 import java.io.BufferedReader;
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
