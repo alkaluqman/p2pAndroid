@@ -10,9 +10,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Process;
 import android.text.format.Formatter;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.net.TrafficStats;
@@ -24,7 +25,8 @@ import java.io.InputStreamReader;
 import com.example.applayout.R;
 
 public class DeviceUsageActivity extends AppCompatActivity {
-
+    private ProgressBar availableMemoryProgressBar;
+    private ProgressBar appUsedMemoryProgressBar;
     private TextView memoryUsageText;
     private TextView cpuUsageText;
     private TextView networkUsageText;
@@ -33,12 +35,21 @@ public class DeviceUsageActivity extends AppCompatActivity {
     private long lastRxBytes = 0;
     private long lastTxBytes = 0;
 
+    private final String pid = Integer.toString(Process.myPid());
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_usage);
 
+        availableMemoryProgressBar = findViewById(R.id.availableMemoryProgressBar);
+        availableMemoryProgressBar.setVisibility(View.VISIBLE);
+
+        appUsedMemoryProgressBar = findViewById(R.id.appUsedMemoryProgressBar);
+        appUsedMemoryProgressBar.setVisibility(View.VISIBLE);
+
         memoryUsageText = findViewById(R.id.memoryUsageText);
+
         cpuUsageText = findViewById(R.id.cpuUsageText);
         networkUsageText = findViewById(R.id.networkUsageText);
         batteryUsageText = findViewById(R.id.batteryUsageText);
@@ -110,23 +121,25 @@ public class DeviceUsageActivity extends AppCompatActivity {
         activityManager.getMemoryInfo(memoryInfo);
 
         long availableMemory = memoryInfo.availMem / (1024 * 1024);
-        String memoryUsageStr = getMemoryUsageStr(memoryInfo, availableMemory);
 
-        memoryUsageText.setText(memoryUsageStr);
-    }
-
-    @NonNull
-    private static String getMemoryUsageStr(ActivityManager.MemoryInfo memoryInfo, long availableMemory) {
         long totalMemory = memoryInfo.totalMem / (1024 * 1024);
 
         Runtime runtime = Runtime.getRuntime();
         long usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
         long maxMemory = runtime.maxMemory() / (1024 * 1024);
 
-        return "Device Available Memory: " + availableMemory + " MB\n" +
+        double availableMemoryPercentage = (availableMemory * 100.0) / totalMemory;
+        availableMemoryProgressBar.setProgress((int) availableMemoryPercentage);
+
+        double appUsedMemoryPercentage = (usedMemory * 100.0) / maxMemory;
+        appUsedMemoryProgressBar.setProgress((int) appUsedMemoryPercentage);
+
+        String memoryUsageStr = "Device Available Memory: " + availableMemory + " MB\n" +
                 "Device Total Memory: " + totalMemory + " MB\n" +
                 "App Used Memory: " + usedMemory + " MB\n" +
                 "App Max Memory: " + maxMemory + " MB";
+
+        memoryUsageText.setText(memoryUsageStr);
     }
 
     private void displayCpuUsage() {
@@ -138,7 +151,6 @@ public class DeviceUsageActivity extends AppCompatActivity {
     private double getAppCpuUsage() {
         try {
             String Result;
-            String pid = Integer.toString(Process.myPid());
 
             java.lang.Process p = Runtime.getRuntime().exec("top -n 1");
             BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));

@@ -9,25 +9,56 @@
     android:paddingBottom="32dp"
     tools:context=".Metrics.DeviceUsageActivity">
 
-    <TextView
-        android:id="@+id/memoryUsageText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="16sp"
-        app:layout_constraintBottom_toTopOf="@+id/cpuUsageText"
+    <ProgressBar
+        android:id="@+id/availableMemoryProgressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="center_horizontal"
+        android:indeterminate="false"
+        android:layoutDirection="rtl"
+        android:max="100"
+        android:progressDrawable="@drawable/circle"
+        app:layout_constraintBottom_toTopOf="@+id/memoryUsageText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
+        android:id="@+id/memoryUsageText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@+id/appUsedMemoryProgressBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/availableMemoryProgressBar" />
+
+    <ProgressBar
+        android:id="@+id/appUsedMemoryProgressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="center_horizontal"
+        android:indeterminate="false"
+        android:layoutDirection="rtl"
+        android:max="100"
+        android:progressDrawable="@drawable/circle"
+        app:layout_constraintBottom_toTopOf="@+id/cpuUsageText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/memoryUsageText" />
+
+    <TextView
         android:id="@+id/cpuUsageText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
         android:textSize="16sp"
         app:layout_constraintBottom_toTopOf="@+id/networkUsageText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/memoryUsageText" />
+        app:layout_constraintTop_toBottomOf="@+id/appUsedMemoryProgressBar" />
 
     <TextView
         android:id="@+id/networkUsageText"
