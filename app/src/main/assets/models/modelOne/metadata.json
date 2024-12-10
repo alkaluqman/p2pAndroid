@@ -1,0 +1,10 @@
+{
+  "description": "Classify shirts",
+  "architecture": "CNN -> [Conv2D(32, 3x3, ReLU, same) -> MaxPool(2x2) -> Conv2D(64, 3x3, ReLU, same) -> MaxPool(2x2) -> Flatten -> Dense(128, ReLU) -> Dense(10, Softmax)]",
+  "likes": 5,
+  "usage":2,
+  "publicLink":"",
+  "task":"object detection",
+  "name": "sample model",
+  "modelId": "sample model"
+}
