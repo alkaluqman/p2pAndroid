@@ -18,8 +18,8 @@ import android.widget.TextView;
 import org.checkerframework.checker.units.qual.A;
 import org.tensorflow.lite.task.vision.detector.ObjectDetector;
 import org.tensorflow.lite.support.model.Model;
-import org.tensorflow.lite.gpu.CompatibilityList;
-import org.tensorflow.lite.gpu.GpuDelegate;
+//import org.tensorflow.lite.gpu.CompatibilityList;
+//import org.tensorflow.lite.gpu.GpuDelegate;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -71,7 +71,7 @@ public class ReportActivity extends AppCompatActivity {
         try (Interpreter anotherInterpreter = new Interpreter(loadModelFile(context.getAssets(),"model.tflite"))) {
             FloatBuffer testImages = loadTestData();
             if (testImages == null) {
-                Log.e("ReportActivity", "Failed to load test images.");
+                Log.e("ReportActivity", "Failed to load test datasets.");
                 return; // Exit if no data could be loaded
             }
 
@@ -167,7 +167,7 @@ public class ReportActivity extends AppCompatActivity {
             Log.e("loadTestData", "No image files found");
             return null; // Early return or throw exception
         }
-        // Assuming the model expects a single channel (grayscale), 28x28 input images
+        // Assuming the model expects a single channel (grayscale), 28x28 input datasets
         ByteBuffer imageData = ByteBuffer.allocateDirect(files.length * 28 * 28 * 4); // 4 bytes per float
         imageData.order(ByteOrder.nativeOrder());
         for (String file : files) {

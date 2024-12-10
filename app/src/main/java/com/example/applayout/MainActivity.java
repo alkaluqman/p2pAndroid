@@ -11,20 +11,24 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.applayout.Assets.AssetsActivity;
 import com.example.applayout.Report.ReportActivity;
 
 public class MainActivity extends AppCompatActivity {
     TextView status;
     Button btConfirm;
+    Button btViewResources;
     ListView lvApplications;
     String[] applications;
     public static String string;
 
-    protected void onCreate(Bundle savedInstanceState){
+
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         lvApplications = findViewById(R.id.lvApplication);
         btConfirm = findViewById(R.id.btConfirmApplication);
+        btViewResources = findViewById(R.id.btViewResourcesApplication);
         status = findViewById(R.id.statusApplication);
 
         applications = new String[2];
@@ -36,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         lvApplications.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                status.setText("The Selected Application is "+applications[i]);
+                status.setText("The Selected Application is " + applications[i]);
                 string = applications[i];
             }
         });
@@ -45,6 +49,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(view.getContext(), ReportActivity.class);
+                startActivity(intent);
+            }
+        });
+        btViewResources.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, AssetsActivity.class);
                 startActivity(intent);
             }
         });

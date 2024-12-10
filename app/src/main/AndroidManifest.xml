@@ -56,8 +56,13 @@
             android:exported="true">
         </activity>
         <activity android:name=".FederatedLearning.FederatedLearningActivity"
-            android:exported="true"></activity>
+            android:exported="true">
+        </activity>
         <activity android:name=".Report.ReportActivity2"
+            android:exported="true"/>
+        <activity android:name="com.example.applayout.Assets.AssetsActivity"
+            android:exported="true"/>
+        <activity android:name="com.example.applayout.Assets.Models.ModelDetailsActivity"
             android:exported="true"/>
     </application>
 

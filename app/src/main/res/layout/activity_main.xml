@@ -58,9 +58,18 @@
         android:text="Confirm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@+id/privacy"
+        app:layout_constraintBottom_toTopOf="@+id/btViewResourcesApplication"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/statusApplication"
+        app:layout_constraintEnd_toEndOf="parent"/>
+    <Button
+        android:id="@+id/btViewResourcesApplication"
+        android:text="View Resources"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/privacy"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btConfirmApplication"
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <TextView
