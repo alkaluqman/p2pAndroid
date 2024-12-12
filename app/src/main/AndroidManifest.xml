@@ -60,6 +60,8 @@
         </activity>
         <activity android:name=".Report.ReportActivity2"
             android:exported="true"/>
+        <activity android:name=".LocalAssets.LocalAssetActivity"
+            android:exported="true"/>
     </application>
 
 </manifest>

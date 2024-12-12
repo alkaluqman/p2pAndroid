@@ -8,6 +8,7 @@ import android.widget.Button;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.applayout.LocalAssets.LocalAssetActivity;
 import com.example.applayout.R;
 
 public class CommunicationActivity extends AppCompatActivity {
@@ -39,7 +40,7 @@ public class CommunicationActivity extends AppCompatActivity {
         btMarketPlace.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(view.getContext(), BluetoothActivity.class);
+                Intent intent = new Intent(view.getContext(), LocalAssetActivity.class);
                 startActivity(intent);
             }
         });
