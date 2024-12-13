@@ -1,10 +1,15 @@
 package com.example.applayout.Models
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -14,33 +19,39 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @Composable
-fun LocalModelCard(fileName: String) {
-    Row(
+fun LocalModelCard(fileName: String, fileSize: Long, onClick: (String) -> Unit) {
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Text(
-            text = fileName,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f)
-        )
-        IconButton(onClick = {
-            CoroutineScope(Dispatchers.IO).launch {
-                //todo upload model- dialog form for info
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = fileName,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "File Size: $fileSize bytes",
+                    fontSize = 16.sp
+                )
+                IconButton(onClick = { onClick(fileName) }) {
+                    Icon(
+                        imageVector = Icons.Default.Send,
+                        contentDescription = "Upload Model",
+                    )
+                }
             }
-        }) {
-            Icon(
-                imageVector = Icons.Default.Send,
-                contentDescription = "Upload Model",
-            )
         }
     }
 }

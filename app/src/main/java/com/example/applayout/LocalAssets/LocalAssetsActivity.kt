@@ -1,6 +1,7 @@
 package com.example.applayout.LocalAssets
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -9,18 +10,25 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,6 +43,7 @@ import com.example.applayout.Marketplace.MarketplaceScreen
 import com.example.applayout.Marketplace.WebViewScreen
 import com.example.applayout.Models.LocalModelCard
 import com.example.applayout.Models.PublicModelCard
+import kotlinx.coroutines.launch
 import java.io.File
 
 class LocalAssetActivity : ComponentActivity() {
@@ -61,6 +70,10 @@ class LocalAssetActivity : ComponentActivity() {
 fun LocalAssetsScreen(filesDir: File, navController: NavController) {
     val uploadedModelListState = remember { mutableStateOf<List<Model>>(emptyList()) }
     val localModelListState = remember { mutableStateOf<List<String>>(emptyList()) }
+    var showUploadDialog by remember { mutableStateOf(false) }
+    var selectedLocalModel by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
         val localFiles = getLocalFiles(filesDir, "models")
         val results = fetchModelsInfo(localFiles)
@@ -72,6 +85,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         Box(
             modifier = Modifier
@@ -107,28 +121,63 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
         }
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(top = 8.dp)
+                .height(250.dp)
         ) {
             items(uploadedModelListState.value) { model ->
                 PublicModelCard(filesDir, model, navController)
             }
         }
-        Text(
-            text = "Local Models",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f)
-        )
-        LazyColumn(
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 8.dp)
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            items(localModelListState.value) { model ->
-                LocalModelCard(model)
+            Text(
+                text = "Local Models",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            Button(
+                onClick = { downloadFile(filesDir, "models") },
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text("Spawn Local Files")
             }
         }
+        LazyColumn(
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .height(250.dp)
+        ) {
+            items(localModelListState.value) { model ->
+                LocalModelCard(model,
+                    File(filesDir, "/models/$model.tflite").length(),
+                    onClick = { clickedFileName ->
+                        selectedLocalModel = clickedFileName
+                        showUploadDialog = true
+                    })
+            }
+        }
+    }
+    if (showUploadDialog && selectedLocalModel != null) {
+        UploadWeightDialog(
+            onDismiss = { showUploadDialog = false },
+            onSubmit = { formData ->
+                Log.d("UploadModels", "Uploading file: $selectedLocalModel with data: $formData")
+                coroutineScope.launch {
+                    try {
+                        uploadModel(filesDir, formData, selectedLocalModel!!, "alice", context)
+                        Log.d("UploadModels", "Upload successful for: $selectedLocalModel")
+                    } catch (e: Exception) {
+                        Log.e("UploadModels", "Error during upload: ${e.message}")
+                    }
+                }
+                showUploadDialog = false
+            }
+        )
     }
 }
 

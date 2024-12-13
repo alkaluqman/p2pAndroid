@@ -51,7 +51,6 @@ fun PublicModelCard(filesDir: File, modelData: Model, navController: NavControll
                 text = "File Size: ${modelData.weight_size} bytes",
                 fontSize = 16.sp
             )
-            Spacer(modifier = Modifier.height(8.dp))
             IconButton(onClick = {
                 CoroutineScope(Dispatchers.IO).launch {
                     downloadModelFile(modelData.public_link, filesDir, modelData.uniqueIdentifier)
