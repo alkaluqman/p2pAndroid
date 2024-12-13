@@ -19,6 +19,10 @@ fun downloadModelFile(downloadUrl: String, filesDir: File, fileName: String) {
     try {
         val inputStream = URL(downloadUrl).openStream()
         val outputFile = File(filesDir, "/models/$fileName.tflite")
+        if (outputFile.exists()) {
+            Log.d(TAG, "File already exists: ${outputFile.absolutePath}")
+            return
+        }
         val outputStream = FileOutputStream(outputFile)
         inputStream.use { input ->
             outputStream.use { output ->

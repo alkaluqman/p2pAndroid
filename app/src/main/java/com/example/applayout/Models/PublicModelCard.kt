@@ -1,4 +1,4 @@
-package com.example.applayout.Marketplace
+package com.example.applayout.Models
 
 import android.net.Uri
 import androidx.compose.foundation.clickable
@@ -21,13 +21,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.applayout.Data.Model.Model
+import com.example.applayout.Marketplace.downloadModelFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 
 @Composable
-fun ModelCard(filesDir: File, modelData: Model, navController: NavController) {
+fun PublicModelCard(filesDir: File, modelData: Model, navController: NavController) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -61,7 +62,6 @@ fun ModelCard(filesDir: File, modelData: Model, navController: NavController) {
                     contentDescription = "Download Model",
                 )
             }
-
         }
     }
 }
