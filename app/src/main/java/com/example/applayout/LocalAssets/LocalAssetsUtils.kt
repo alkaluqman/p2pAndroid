@@ -12,9 +12,7 @@ import com.google.cloud.storage.Storage
 import com.google.cloud.storage.StorageOptions
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -26,9 +24,9 @@ import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.util.UUID
 
-fun downloadFile(fileDir: File, parentFolder: String) {
-    val TAG = "DownloadFile" // Tag for logging
-    CoroutineScope(Dispatchers.IO).launch {
+suspend fun downloadFile(fileDir: File, parentFolder: String) {
+    val TAG = "DownloadFile"
+    withContext(Dispatchers.IO) {
         try {
             val client = OkHttpClient()
             val fileUrl = "https://storage.googleapis.com/android-p2p/weights/test.tflite"
@@ -67,6 +65,19 @@ fun downloadFile(fileDir: File, parentFolder: String) {
         }
     }
 }
+
+fun deleteLocalFile(fileName: String, fileDir: File, parentFolder: String): Boolean {
+    val tag = "DeleteFile"
+    val modelsDir = File(fileDir, parentFolder)
+    val modelFilePath = File(modelsDir, "${fileName}.tflite")
+    return if (modelFilePath.exists()) {
+        modelFilePath.delete()
+    } else {
+        Log.d(tag, "File $fileName does not exist.")
+        false
+    }
+}
+
 fun getLocalFiles(fileDir: File, parentFolder: String): List<String> {
     return try {
         val modelsDir = File(fileDir, parentFolder)
@@ -88,6 +99,35 @@ data class ModelResponse(
     val notUploadedModels: List<String>
 )
 
+suspend fun fetchModelOwner(modelUniqueIdentifier: String, username: String): Boolean {
+    val client = OkHttpClient()
+    val gson = Gson()
+    return withContext(Dispatchers.IO) {
+
+        try {
+            val url = "http://10.0.2.2:8000/weights/$modelUniqueIdentifier/user"
+            val request = Request.Builder().url(url).build()
+            val response = client.newCall(request).execute()
+
+            if (response.isSuccessful) {
+                val body = response.body?.string()
+                val jsonObject = gson.fromJson(body, Map::class.java)
+                val modelOwner = jsonObject["username"] as? String
+                return@withContext modelOwner == username
+            }
+            return@withContext false
+        } catch (e: Exception) {
+            Log.e("FetchOwner", "Exception: ${e.message}", e)
+            return@withContext false
+        }
+    }
+}
+
+suspend fun updateModels(filesDir: File): ModelResponse {
+    val localFiles = getLocalFiles(filesDir, "models")
+    return fetchModelsInfo(localFiles)
+}
+
 suspend fun fetchModelsInfo(fileNames: List<String>): ModelResponse  {
     val uploadedModels = mutableListOf<Model>()
     val notUploadedModels = mutableListOf<String>()
@@ -97,7 +137,7 @@ suspend fun fetchModelsInfo(fileNames: List<String>): ModelResponse  {
         fileNames.map{ it.substringBeforeLast(".") } //remove file extensions
             .forEach { fileName ->
             try {
-                val url = "http://192.168.1.5:8000/weights/$fileName"
+                val url = "http://10.0.2.2:8000/weights/$fileName"
                 val request = Request.Builder().url(url).build()
                 val response = client.newCall(request).execute()
                 if (response.isSuccessful) {
@@ -109,7 +149,7 @@ suspend fun fetchModelsInfo(fileNames: List<String>): ModelResponse  {
                         notUploadedModels.add(fileName)
                     }
                 } else {
-                    Log.e("FetchModels", "Error: ${response.code}")
+//                    Log.e("FetchModels", "Error: ${response.code}")
                     notUploadedModels.add(fileName)
                 }
             } catch (e: Exception) {
@@ -154,7 +194,8 @@ suspend fun uploadModel(
             likes = 0,
             public_link = publicLink,
             architecture = formData.architecture,
-            is_uploaded = true
+            is_uploaded = true,
+            isOwner = true
         )
 
         val payload = gson.toJson(UploadPayload(weight = modelData, username = username))
@@ -162,7 +203,7 @@ suspend fun uploadModel(
 
         val requestBody = payload.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
-            .url("http://192.168.1.5:8000/weights/create")
+            .url("http://10.0.2.2:8000/weights/create")
             .post(requestBody)
             .build()
 

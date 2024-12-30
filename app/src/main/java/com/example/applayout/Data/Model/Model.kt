@@ -10,5 +10,6 @@ data class Model(
     var usage: Int,
     var likes: Int,
     var public_link: String,
-    var architecture: String
+    var architecture: String,
+    var isOwner: Boolean,
 )

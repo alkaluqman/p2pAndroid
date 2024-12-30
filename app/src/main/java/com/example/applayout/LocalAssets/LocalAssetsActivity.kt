@@ -41,8 +41,8 @@ import androidx.navigation.navArgument
 import com.example.applayout.Data.Model.Model
 import com.example.applayout.Marketplace.MarketplaceScreen
 import com.example.applayout.Marketplace.WebViewScreen
+import com.example.applayout.Models.InstalledModelCard
 import com.example.applayout.Models.LocalModelCard
-import com.example.applayout.Models.PublicModelCard
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -66,6 +66,9 @@ class LocalAssetActivity : ComponentActivity() {
     }
 }
 
+
+val USERNAME = "alice"
+
 @Composable
 fun LocalAssetsScreen(filesDir: File, navController: NavController) {
     val uploadedModelListState = remember { mutableStateOf<List<Model>>(emptyList()) }
@@ -75,10 +78,17 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
-        val localFiles = getLocalFiles(filesDir, "models")
-        val results = fetchModelsInfo(localFiles)
-        uploadedModelListState.value = results.uploadedModels
+        val results = updateModels(filesDir)
+        var updatedModels = results.uploadedModels.toMutableList()
+        updatedModels = updatedModels.map { model ->
+            model.apply {
+                isOwner = fetchModelOwner(uniqueIdentifier, USERNAME)
+            }
+        }.toMutableList()
+
+        uploadedModelListState.value = updatedModels
         localModelListState.value = results.notUploadedModels
+
     }
 
     Column(
@@ -125,9 +135,26 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 .height(250.dp)
         ) {
             items(uploadedModelListState.value) { model ->
-                PublicModelCard(filesDir, model, navController)
+                InstalledModelCard(
+                    modelData = model,
+                    navController = navController,
+                    onDelete = { filename ->
+                        deleteLocalFile(filename, filesDir, "models")
+                        coroutineScope.launch {
+                            val results = updateModels(filesDir)
+                            var updatedModels = results.uploadedModels.toMutableList()
+                            updatedModels = updatedModels.map { model ->
+                                model.apply {
+                                    isOwner = fetchModelOwner(uniqueIdentifier, USERNAME)
+                                }
+                            }.toMutableList()
+                            uploadedModelListState.value = updatedModels
+                        }
+                    }
+                )
             }
         }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -141,7 +168,13 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 modifier = Modifier.weight(1f)
             )
             Button(
-                onClick = { downloadFile(filesDir, "models") },
+                onClick = {
+                    coroutineScope.launch {
+                        downloadFile(filesDir, "models")
+
+                        localModelListState.value = updateModels(filesDir).notUploadedModels
+                    }
+                },
                 modifier = Modifier.padding(top = 16.dp)
             ) {
                 Text("Spawn Local Files")
@@ -153,11 +186,18 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 .height(250.dp)
         ) {
             items(localModelListState.value) { model ->
-                LocalModelCard(model,
+                LocalModelCard(
+                    model,
                     File(filesDir, "/models/$model.tflite").length(),
                     onClick = { clickedFileName ->
                         selectedLocalModel = clickedFileName
                         showUploadDialog = true
+                    },
+                    onDelete = { filename ->
+                        deleteLocalFile(filename, filesDir, "models")
+                        coroutineScope.launch {
+                            localModelListState.value = updateModels(filesDir).notUploadedModels
+                        }
                     })
             }
         }
