@@ -1,5 +1,6 @@
 package com.example.applayout.Data.Model
 
+
 data class Model(
     var uniqueIdentifier: String = "",
     var model_task: String = "object_detection",
@@ -12,4 +13,13 @@ data class Model(
     var public_link: String = "",
     var architecture: String = "",
     var isOwner: Boolean = true,
-)
+
+    ) {
+    fun toLocalModel(): LocalModel {
+        return LocalModel(
+            uniqueIdentifier = this.uniqueIdentifier,
+            model_task = this.model_task,
+            description = this.description
+        )
+    }
+}

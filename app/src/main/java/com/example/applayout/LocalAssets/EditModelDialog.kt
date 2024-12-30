@@ -24,14 +24,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.example.applayout.Data.Model.Model
-import com.example.applayout.Data.Model.UploadFormData
+import com.example.applayout.Data.Model.LocalModel
 
 @Composable
-fun EditModelDialog(onDismiss: () -> Unit, modelData: Model, onSubmit: (UploadFormData) -> Unit) {
-    var modelTask by remember { mutableStateOf(modelData.model_task) }
-    var description by remember { mutableStateOf(modelData.description) }
-    var architecture by remember { mutableStateOf(modelData.architecture) }
+fun EditModelDialog(
+    onDismiss: () -> Unit,
+    localModelData: LocalModel,
+    onSubmit: (LocalModel) -> Unit
+) {
+    var modelTask by remember { mutableStateOf(localModelData.model_task) }
+    var description by remember { mutableStateOf(localModelData.description) }
     val modelTasks =
         listOf("object_detection", "image_classification", "segmentation", "regression")
 
@@ -86,25 +88,16 @@ fun EditModelDialog(onDismiss: () -> Unit, modelData: Model, onSubmit: (UploadFo
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text("Architecture")
-                BasicTextField(
-                    value = architecture,
-                    onValueChange = { architecture = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, MaterialTheme.colorScheme.primary)
-                        .padding(8.dp)
-                )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Button(
                     onClick = {
                         onSubmit(
-                            UploadFormData(
+                            LocalModel(
+                                uniqueIdentifier = localModelData.uniqueIdentifier,
                                 model_task = modelTask,
                                 description = description,
-                                architecture = architecture
                             )
                         )
                     },

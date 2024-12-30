@@ -2,8 +2,9 @@ package com.example.applayout.LocalAssets
 
 import android.content.Context
 import android.util.Log
+import com.example.applayout.Data.Database.AppDatabase
+import com.example.applayout.Data.Model.LocalModel
 import com.example.applayout.Data.Model.Model
-import com.example.applayout.Data.Model.UploadFormData
 import com.example.applayout.R
 import com.google.auth.oauth2.ServiceAccountCredentials
 import com.google.cloud.storage.BlobId
@@ -24,7 +25,18 @@ import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.util.UUID
 
-suspend fun downloadFile(fileDir: File, parentFolder: String) {
+
+fun saveFile(context: Context, fileName: String) {
+    val db = AppDatabase.getDatabase(context)
+    val modelDao = db.localModelDao()
+    val newModel = LocalModel(
+        uniqueIdentifier = fileName
+    )
+    modelDao.insertModel(newModel)
+    logDatabaseContents(db)
+}
+
+suspend fun downloadFile(context: Context, fileDir: File, parentFolder: String) {
     val TAG = "DownloadFile"
     withContext(Dispatchers.IO) {
         try {
@@ -39,8 +51,9 @@ suspend fun downloadFile(fileDir: File, parentFolder: String) {
             if (!modelsDir.exists()) {
                 modelsDir.mkdirs()
             }
-
-            val randomFileName = "${UUID.randomUUID()}.tflite"
+            val randomID = UUID.randomUUID()
+            val randomFileName = "${randomID}.tflite"
+            saveFile(context, randomID.toString()) //save an entry into db
             val outputFile = File(modelsDir, randomFileName)
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
@@ -162,7 +175,7 @@ data class UploadPayload(
     val username: String
 )
 
-suspend fun editModel(modelUniqueIdentifier: String, formData: UploadFormData) {
+suspend fun editModel(modelUniqueIdentifier: String, formData: LocalModel) {
     val client = OkHttpClient()
     val gson = Gson()
     val payload = gson.toJson(formData)
@@ -186,7 +199,7 @@ suspend fun editModel(modelUniqueIdentifier: String, formData: UploadFormData) {
 
 suspend fun uploadModel(
     filesDir: File,
-    formData: UploadFormData,
+    localModelData: LocalModel,
     fileName: String,
     username: String,
     context: Context
@@ -204,16 +217,10 @@ suspend fun uploadModel(
 
         val modelData = Model(
             uniqueIdentifier = fileName,
-            model_task = formData.model_task,
+            model_task = localModelData.model_task,
             last_trained = System.currentTimeMillis().toString(), // Current timestamp
-            description = formData.description,
+            description = localModelData.description,
             weight_size = modelFile.length(),
-            usage = 0,
-            likes = 0,
-            public_link = publicLink,
-            architecture = formData.architecture,
-            is_uploaded = true,
-            isOwner = true
         )
 
         val payload = gson.toJson(UploadPayload(weight = modelData, username = username))
@@ -295,4 +302,15 @@ suspend fun uploadFileToGCS(
             ""
         }
     }
+}
+
+fun logDatabaseContents(database: AppDatabase) {
+    val tag = "DatabaseContents"
+    database.localModelDao().getAllModels().forEach { model ->
+        Log.d(tag, "Model ID: ${model.uniqueIdentifier}")
+        Log.d(tag, "Model Description: ${model.description}")
+        Log.d(tag, "FILE Path: ${model.model_task}")
+
+    }
+
 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Card
@@ -25,7 +26,8 @@ import androidx.compose.ui.unit.sp
 fun LocalModelCard(
     fileName: String,
     fileSize: Long,
-    onClick: (String) -> Unit,
+    onEdit: (String) -> Unit,
+    onSend: (String) -> Unit,
     onDelete: (filename: String) -> Unit
 ) {
     Card(
@@ -52,7 +54,13 @@ fun LocalModelCard(
                     fontSize = 16.sp
                 )
                 Row() {
-                    IconButton(onClick = { onClick(fileName) }) {
+                    IconButton(onClick = { onEdit(fileName) }) {
+                        Icon(
+                            imageVector = Icons.Default.Create,
+                            contentDescription = "Edit Model",
+                        )
+                    }
+                    IconButton(onClick = { onSend(fileName) }) {
                         Icon(
                             imageVector = Icons.Default.Send,
                             contentDescription = "Upload Model",
