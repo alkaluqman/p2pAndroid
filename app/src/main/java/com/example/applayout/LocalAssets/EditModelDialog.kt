@@ -24,13 +24,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.applayout.Data.Model.Model
 import com.example.applayout.Data.Model.UploadFormData
 
 @Composable
-fun UploadWeightDialog(onDismiss: () -> Unit, onSubmit: (UploadFormData) -> Unit) {
-    var modelTask by remember { mutableStateOf("object_detection") }
-    var description by remember { mutableStateOf("") }
-    var architecture by remember { mutableStateOf("") }
+fun EditModelDialog(onDismiss: () -> Unit, modelData: Model, onSubmit: (UploadFormData) -> Unit) {
+    var modelTask by remember { mutableStateOf(modelData.model_task) }
+    var description by remember { mutableStateOf(modelData.description) }
+    var architecture by remember { mutableStateOf(modelData.architecture) }
     val modelTasks =
         listOf("object_detection", "image_classification", "segmentation", "regression")
 

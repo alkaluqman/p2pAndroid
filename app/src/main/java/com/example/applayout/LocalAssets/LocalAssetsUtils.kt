@@ -123,12 +123,8 @@ suspend fun fetchModelOwner(modelUniqueIdentifier: String, username: String): Bo
     }
 }
 
-suspend fun updateModels(filesDir: File): ModelResponse {
-    val localFiles = getLocalFiles(filesDir, "models")
-    return fetchModelsInfo(localFiles)
-}
-
-suspend fun fetchModelsInfo(fileNames: List<String>): ModelResponse  {
+suspend fun fetchModelsInfo(filesDir: File): ModelResponse {
+    val fileNames = getLocalFiles(filesDir, "models")
     val uploadedModels = mutableListOf<Model>()
     val notUploadedModels = mutableListOf<String>()
     val client = OkHttpClient()
@@ -165,6 +161,28 @@ data class UploadPayload(
     val weight: Model,
     val username: String
 )
+
+suspend fun editModel(modelUniqueIdentifier: String, formData: UploadFormData) {
+    val client = OkHttpClient()
+    val gson = Gson()
+    val payload = gson.toJson(formData)
+    Log.d("EditModel", "Generated JSON Payload: $payload")
+
+    val requestBody = payload.toRequestBody("application/json".toMediaType())
+    val request = Request.Builder()
+        .url("http://10.0.2.2:8000/weights/${modelUniqueIdentifier}")
+        .patch(requestBody)
+        .build()
+
+    Log.d("EditModel", "Sending PATCH request to serverUrl")
+    withContext(Dispatchers.IO) {
+        val response = client.newCall(request).execute()
+        Log.d(
+            "EditModel",
+            "Response Code: ${response.code}, Response Body: ${response.body?.string()}"
+        )
+    }
+}
 
 suspend fun uploadModel(
     filesDir: File,

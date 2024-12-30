@@ -1,7 +1,6 @@
 package com.example.applayout.LocalAssets
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -74,11 +73,13 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
     val uploadedModelListState = remember { mutableStateOf<List<Model>>(emptyList()) }
     val localModelListState = remember { mutableStateOf<List<String>>(emptyList()) }
     var showUploadDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var selectedInstalledModel by remember { mutableStateOf<Model?>(null) }
     var selectedLocalModel by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
-        val results = updateModels(filesDir)
+        val results = fetchModelsInfo(filesDir)
         var updatedModels = results.uploadedModels.toMutableList()
         updatedModels = updatedModels.map { model ->
             model.apply {
@@ -138,10 +139,14 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 InstalledModelCard(
                     modelData = model,
                     navController = navController,
+                    onClick = { clickedModel ->
+                        selectedInstalledModel = clickedModel
+                        showEditDialog = true
+                    },
                     onDelete = { filename ->
                         deleteLocalFile(filename, filesDir, "models")
                         coroutineScope.launch {
-                            val results = updateModels(filesDir)
+                            val results = fetchModelsInfo(filesDir)
                             var updatedModels = results.uploadedModels.toMutableList()
                             updatedModels = updatedModels.map { model ->
                                 model.apply {
@@ -171,8 +176,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 onClick = {
                     coroutineScope.launch {
                         downloadFile(filesDir, "models")
-
-                        localModelListState.value = updateModels(filesDir).notUploadedModels
+                        localModelListState.value = fetchModelsInfo(filesDir).notUploadedModels
                     }
                 },
                 modifier = Modifier.padding(top = 16.dp)
@@ -196,26 +200,45 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                     onDelete = { filename ->
                         deleteLocalFile(filename, filesDir, "models")
                         coroutineScope.launch {
-                            localModelListState.value = updateModels(filesDir).notUploadedModels
+                            localModelListState.value = fetchModelsInfo(filesDir).notUploadedModels
                         }
                     })
             }
         }
     }
     if (showUploadDialog && selectedLocalModel != null) {
-        UploadWeightDialog(
+        EditModelDialog(
             onDismiss = { showUploadDialog = false },
+            modelData = Model(),
             onSubmit = { formData ->
-                Log.d("UploadModels", "Uploading file: $selectedLocalModel with data: $formData")
                 coroutineScope.launch {
-                    try {
-                        uploadModel(filesDir, formData, selectedLocalModel!!, "alice", context)
-                        Log.d("UploadModels", "Upload successful for: $selectedLocalModel")
-                    } catch (e: Exception) {
-                        Log.e("UploadModels", "Error during upload: ${e.message}")
-                    }
+                    uploadModel(filesDir, formData, selectedLocalModel!!, "alice", context)
+                    val results = fetchModelsInfo(filesDir)
+                    var updatedModels = results.uploadedModels.toMutableList()
+                    updatedModels = updatedModels.map { model ->
+                        model.apply {
+                            isOwner = fetchModelOwner(uniqueIdentifier, USERNAME)
+                        }
+                    }.toMutableList()
+                    uploadedModelListState.value = updatedModels
+                    localModelListState.value = results.notUploadedModels
                 }
                 showUploadDialog = false
+            }
+        )
+    }
+    if (showEditDialog && selectedInstalledModel != null) {
+        EditModelDialog(
+            onDismiss = { showEditDialog = false },
+            modelData = selectedInstalledModel!!,
+            onSubmit = { formData ->
+                coroutineScope.launch {
+                    editModel(selectedInstalledModel!!.uniqueIdentifier, formData)
+                    val results = fetchModelsInfo(filesDir)
+                    uploadedModelListState.value = results.uploadedModels
+                }
+                showEditDialog = false
+
             }
         )
     }

@@ -23,15 +23,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.applayout.Data.Model.Model
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 
 @Composable
 fun InstalledModelCard(
     modelData: Model,
     navController: NavController,
+    onClick: (Model) -> Unit,
     onDelete: (filename: String) -> Unit
 ) {
     Card(
@@ -60,9 +58,7 @@ fun InstalledModelCard(
                 IconButton(
                     enabled = modelData.isOwner,
                     onClick = {
-                        CoroutineScope(Dispatchers.IO).launch {
-//                        downloadModelFile(modelData.public_link, filesDir, modelData.uniqueIdentifier)
-                        }
+                        onClick(modelData)
                     }) {
                     Icon(
                         imageVector = Icons.Default.Create,
