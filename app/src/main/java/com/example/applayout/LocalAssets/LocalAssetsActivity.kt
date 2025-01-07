@@ -3,6 +3,7 @@ package com.example.applayout.LocalAssets
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -235,8 +236,6 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                         val modelDao = db.localModelDao()
                         coroutineScope.launch(Dispatchers.IO) {
                             val localModelData = modelDao.getModel(clickedFileName)
-
-
                             uploadModel(
                                 filesDir,
                                 localModelData!!,
@@ -299,9 +298,23 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 LocalRelationshipCard(
                     relationship = localRelationship,
                     onSend = { relationshipData ->
+                        val allIds =
+                            relationshipData.sourceUniqueIdentifiers.split(",") + relationshipData.modelUniqueIdentifier
+
                         val db = AppDatabase.getDatabase(context)
                         val relationshipDao = db.localRelationshipDao()
                         coroutineScope.launch(Dispatchers.IO) {
+                            val missingIds = checkModelExistence(allIds)
+                            if (missingIds.isNotEmpty()) {
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(
+                                        context,
+                                        "The following IDs do not exist: $missingIds",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                                return@launch
+                            }
                             relationshipDao.deleteById(relationshipData.modelUniqueIdentifier)
                             uploadRelationship(
                                 relationshipData

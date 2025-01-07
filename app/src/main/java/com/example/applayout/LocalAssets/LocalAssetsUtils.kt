@@ -359,3 +359,26 @@ fun logDatabaseContents(database: AppDatabase) {
     }
 
 }
+
+suspend fun checkModelExistence(ids: List<String>): List<String> {
+    val missingIds = mutableListOf<String>()
+    val client = OkHttpClient()
+    for (id in ids) {
+        try {
+            val request = Request.Builder()
+                .url("http://10.0.2.2:8000/weights/$id")
+                .get()
+                .build()
+            val response = withContext(Dispatchers.IO) {
+                client.newCall(request).execute()
+            }
+            if (!response.isSuccessful) {
+                missingIds.add(id)
+            }
+        } catch (e: Exception) {
+            Log.e("ModelCheck", "Error checking ID $id: ${e.message}")
+            missingIds.add(id)
+        }
+    }
+    return missingIds
+}
