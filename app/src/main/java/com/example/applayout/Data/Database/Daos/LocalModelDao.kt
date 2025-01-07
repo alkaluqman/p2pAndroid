@@ -11,7 +11,7 @@ import com.example.applayout.Data.Model.LocalModel
 @Dao
 interface LocalModelDao {
     @Query("SELECT * FROM LocalModels WHERE uniqueIdentifier=:modelId")
-    fun getModel(modelId: String): LocalModel
+    fun getModel(modelId: String): LocalModel?
 
     @Query("SELECT * FROM LocalModels")
     fun getAllModels(): List<LocalModel>

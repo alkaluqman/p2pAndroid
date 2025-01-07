@@ -5,11 +5,14 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.applayout.Data.Database.Daos.LocalModelDao
+import com.example.applayout.Data.Database.Daos.LocalRelationshipDao
 import com.example.applayout.Data.Model.LocalModel
+import com.example.applayout.Data.Model.LocalRelationship
 
-@Database(entities = [LocalModel::class], version = 1)
+@Database(entities = [LocalModel::class, LocalRelationship::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun localModelDao(): LocalModelDao
+    abstract fun localRelationshipDao(): LocalRelationshipDao
 
     companion object {
         @Volatile
@@ -21,7 +24,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "room_database"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

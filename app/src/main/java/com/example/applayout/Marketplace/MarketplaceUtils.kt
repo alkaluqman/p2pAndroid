@@ -17,12 +17,20 @@ val TAG = "MarketplaceUtils"
 
 fun downloadModelFile(downloadUrl: String, filesDir: File, fileName: String) {
     try {
-        val inputStream = URL(downloadUrl).openStream()
-        val outputFile = File(filesDir, "/models/$fileName.tflite")
+        // Ensure the /models directory exists
+        val modelsDir = File(filesDir, "models")
+        if (!modelsDir.exists()) {
+            modelsDir.mkdirs()
+        }
+
+        val outputFile = File(modelsDir, "$fileName.tflite")
         if (outputFile.exists()) {
             Log.d(TAG, "File already exists: ${outputFile.absolutePath}")
             return
         }
+
+        // Download the file
+        val inputStream = URL(downloadUrl).openStream()
         val outputStream = FileOutputStream(outputFile)
         inputStream.use { input ->
             outputStream.use { output ->

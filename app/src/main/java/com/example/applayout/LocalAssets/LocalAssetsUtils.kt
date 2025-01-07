@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.example.applayout.Data.Database.AppDatabase
 import com.example.applayout.Data.Model.LocalModel
+import com.example.applayout.Data.Model.LocalRelationship
 import com.example.applayout.Data.Model.Model
 import com.example.applayout.R
 import com.google.auth.oauth2.ServiceAccountCredentials
@@ -170,7 +171,7 @@ suspend fun fetchModelsInfo(filesDir: File): ModelResponse {
 }
 
 
-data class UploadPayload(
+data class UploadModelPayload(
     val weight: Model,
     val username: String
 )
@@ -221,9 +222,10 @@ suspend fun uploadModel(
             last_trained = System.currentTimeMillis().toString(), // Current timestamp
             description = localModelData.description,
             weight_size = modelFile.length(),
+            public_link = publicLink
         )
 
-        val payload = gson.toJson(UploadPayload(weight = modelData, username = username))
+        val payload = gson.toJson(UploadModelPayload(weight = modelData, username = username))
         Log.d("UploadModel", "Generated JSON Payload: $payload")
 
         val requestBody = payload.toRequestBody("application/json".toMediaType())
@@ -239,6 +241,49 @@ suspend fun uploadModel(
                 "UploadModel",
                 "Response Code: ${response.code}, Response Body: ${response.body?.string()}"
             )
+        }
+    } catch (e: Exception) {
+        Log.e("UploadModel", "Error during model upload: ${e.message}", e)
+        e.printStackTrace()
+    }
+}
+
+
+data class UploadRelationshipPayload(
+    val resultant_id: String,
+    val component_ids: List<String>
+)
+
+suspend fun uploadRelationship(
+    relationshipData: LocalRelationship,
+) {
+    try {
+        val client = OkHttpClient()
+        val gson = Gson()
+        if (relationshipData.relationshipType == "Model") {
+            val payload = gson.toJson(
+                UploadRelationshipPayload(
+                    resultant_id = relationshipData.modelUniqueIdentifier,
+                    component_ids = relationshipData.sourceUniqueIdentifiers.split(",")
+                )
+            )
+            Log.d("uploadRelationship", "Generated JSON Payload: $payload")
+            val requestBody = payload.toRequestBody("application/json".toMediaType())
+            val request = Request.Builder()
+                .url("http://10.0.2.2:8000/weights/combine")
+                .post(requestBody)
+                .build()
+
+            Log.d("uploadRelationship", "Sending POST request to serverUrl")
+            withContext(Dispatchers.IO) {
+                val response = client.newCall(request).execute()
+                Log.d(
+                    "uploadRelationship",
+                    "Response Code: ${response.code}, Response Body: ${response.body?.string()}"
+                )
+            }
+        } else {
+            Log.d("uploadRelationship", "not of type model")
         }
     } catch (e: Exception) {
         Log.e("UploadModel", "Error during model upload: ${e.message}", e)

@@ -42,11 +42,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.applayout.Data.Database.AppDatabase
 import com.example.applayout.Data.Model.LocalModel
+import com.example.applayout.Data.Model.LocalRelationship
 import com.example.applayout.Data.Model.Model
 import com.example.applayout.Marketplace.MarketplaceScreen
 import com.example.applayout.Marketplace.WebViewScreen
 import com.example.applayout.Models.InstalledModelCard
 import com.example.applayout.Models.LocalModelCard
+import com.example.applayout.Models.LocalRelationshipCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -79,25 +81,43 @@ val USERNAME = "alice"
 fun LocalAssetsScreen(filesDir: File, navController: NavController) {
     val uploadedModelListState = remember { mutableStateOf<List<Model>>(emptyList()) }
     val localModelListState = remember { mutableStateOf<List<String>>(emptyList()) }
+    val localRelationshipListState =
+        remember { mutableStateOf<List<LocalRelationship>>(emptyList()) }
     var showEditLocalDialog by remember { mutableStateOf(false) }
     var showEditInstallDialog by remember { mutableStateOf(false) }
+    var showRelationshipDialog by remember { mutableStateOf(false) }
     var selectedInstalledModel by remember { mutableStateOf<Model?>(null) }
     var selectedLocalModel by remember { mutableStateOf<String?>(null) }
     var selectedLocalModelData by remember { mutableStateOf<LocalModel?>(null) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
-        val results = fetchModelsInfo(filesDir)
-        var updatedModels = results.uploadedModels.toMutableList()
-        updatedModels = updatedModels.map { model ->
-            model.apply {
-                isOwner = fetchModelOwner(uniqueIdentifier, USERNAME)
+        coroutineScope.launch {
+            val results =
+                fetchModelsInfo(filesDir) //check if downloaded models are public TODO change logic to storing flag on database
+            var updatedModels = results.uploadedModels.toMutableList()
+            updatedModels = updatedModels.map { model ->
+                model.apply {
+                    isOwner = fetchModelOwner(
+                        uniqueIdentifier,
+                        USERNAME
+                    ) //check isOwner for each downloaded model
+                }
+            }.toMutableList()
+
+            withContext(Dispatchers.Main) { // Switch back to Main thread for UI updates
+                uploadedModelListState.value = updatedModels
+                localModelListState.value = results.notUploadedModels
             }
-        }.toMutableList()
 
-        uploadedModelListState.value = updatedModels
-        localModelListState.value = results.notUploadedModels
-
+            //fetch local relationships
+            val db = AppDatabase.getDatabase(context)
+            val relationshipDao = db.localRelationshipDao()
+            val relationships = relationshipDao.getAll().toMutableList()
+            withContext(Dispatchers.Main) { // Update UI state on the Main thread
+                localRelationshipListState.value = relationships.toMutableList()
+            }
+        }
     }
 
     Column(
@@ -153,7 +173,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                     },
                     onDelete = { filename ->
                         deleteLocalFile(filename, filesDir, "models")
-                        coroutineScope.launch {
+                        coroutineScope.launch(Dispatchers.IO) {
                             val results = fetchModelsInfo(filesDir)
                             var updatedModels = results.uploadedModels.toMutableList()
                             updatedModels = updatedModels.map { model ->
@@ -210,19 +230,21 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                             "selectedLocalModel: $selectedLocalModel, showEditLocalDialog: $showEditLocalDialog"
                         )
                     },
-                    onSend = { filename ->
+                    onSend = { clickedFileName ->
                         val db = AppDatabase.getDatabase(context)
                         val modelDao = db.localModelDao()
                         coroutineScope.launch(Dispatchers.IO) {
-                            val localModelData = modelDao.getModel(filename)
-                            modelDao.deleteModel(filename)
+                            val localModelData = modelDao.getModel(clickedFileName)
+
+
                             uploadModel(
                                 filesDir,
-                                localModelData,
-                                selectedLocalModel!!,
+                                localModelData!!,
+                                clickedFileName,
                                 "alice",
                                 context
                             )
+                            modelDao.deleteModel(clickedFileName)
                             val results = fetchModelsInfo(filesDir)
                             var updatedModels = results.uploadedModels.toMutableList()
                             updatedModels = updatedModels.map { model ->
@@ -233,6 +255,8 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                             uploadedModelListState.value = updatedModels
                             localModelListState.value = results.notUploadedModels
                         }
+
+
                     },
                     onDelete = { filename ->
                         deleteLocalFile(filename, filesDir, "models")
@@ -245,9 +269,61 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                     })
             }
         }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Local Relationships",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            Button(
+                onClick = {
+                    showRelationshipDialog = true
+                },
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text("Create Relationship")
+            }
+        }
+        LazyColumn(
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .height(250.dp)
+        ) {
+            items(localRelationshipListState.value) { localRelationship ->
+                LocalRelationshipCard(
+                    relationship = localRelationship,
+                    onSend = { relationshipData ->
+                        val db = AppDatabase.getDatabase(context)
+                        val relationshipDao = db.localRelationshipDao()
+                        coroutineScope.launch(Dispatchers.IO) {
+                            relationshipDao.deleteById(relationshipData.modelUniqueIdentifier)
+                            uploadRelationship(
+                                relationshipData
+                            )
+                            localRelationshipListState.value =
+                                relationshipDao.getAll().toMutableList()
+                        }
+                    },
+                    onDelete = { relationshipID ->
+                        val db = AppDatabase.getDatabase(context)
+                        val relationshipDao = db.localRelationshipDao()
+                        coroutineScope.launch(Dispatchers.IO) {
+                            relationshipDao.deleteById(relationshipID)
+                            localRelationshipListState.value =
+                                relationshipDao.getAll().toMutableList()
+                        }
+                    }
+                )
+            }
+        }
     }
     if (showEditLocalDialog && selectedLocalModel != null) {
-        // Fetch data when the dialog is triggered
         LaunchedEffect(selectedLocalModel) {
             val db = AppDatabase.getDatabase(context)
             val modelDao = db.localModelDao()
@@ -309,6 +385,26 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 }
                 showEditInstallDialog = false
 
+            }
+        )
+    }
+    if (showRelationshipDialog) {
+        EditRelationshipDialog(
+            onDismiss = { showRelationshipDialog = false },
+            uploadedModels = uploadedModelListState.value.map { it.uniqueIdentifier },
+            localModels = localModelListState.value,
+            onSubmit = { localRelationship ->
+                coroutineScope.launch(Dispatchers.IO) {
+                    val db = AppDatabase.getDatabase(context)
+                    val relationshipDao = db.localRelationshipDao()
+                    try {
+                        relationshipDao.insert(localRelationship)
+                        localRelationshipListState.value = relationshipDao.getAll().toMutableList()
+                    } catch (e: Exception) {
+                        Log.e("LocalAssetsScreen", "Error updating relationship: ${e.message}")
+                    }
+                }
+                showRelationshipDialog = false
             }
         )
     }
