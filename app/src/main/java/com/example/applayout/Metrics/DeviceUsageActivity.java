@@ -21,6 +21,7 @@ import android.net.TrafficStats;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 
 import com.example.applayout.R;
 
@@ -152,15 +153,14 @@ public class DeviceUsageActivity extends AppCompatActivity {
         try {
             String Result;
 
-            java.lang.Process p = Runtime.getRuntime().exec("top -n 1");
+            java.lang.Process p = Runtime.getRuntime().exec("top -p " + pid);
             BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
             while ((Result = br.readLine()) != null) {
                 if (Result.contains(pid)) {
                     String[] info = Result.trim().replaceAll(" +", " ").split(" ");
-                    return Double.valueOf(info[9]);
+                    return Double.parseDouble(info[9]);
                 }
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
