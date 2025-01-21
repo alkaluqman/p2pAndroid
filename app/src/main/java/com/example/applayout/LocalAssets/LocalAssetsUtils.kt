@@ -1,6 +1,7 @@
 package com.example.applayout.LocalAssets
 
 import android.content.Context
+import android.net.ConnectivityManager
 import android.util.Log
 import com.example.applayout.Data.Database.AppDatabase
 import com.example.applayout.Data.Model.LocalModel
@@ -25,7 +26,6 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.util.UUID
-
 
 fun saveFile(context: Context, fileName: String) {
     val db = AppDatabase.getDatabase(context)
@@ -387,4 +387,11 @@ suspend fun checkModelExistence(ids: List<String>): List<String> {
         }
     }
     return missingIds
+}
+
+fun isInternetConnected(context: Context): Boolean {
+    val connectivityManager =
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val activeNetworkInfo = connectivityManager.activeNetworkInfo
+    return activeNetworkInfo != null && activeNetworkInfo.isConnected
 }

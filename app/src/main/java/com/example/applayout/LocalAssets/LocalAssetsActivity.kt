@@ -91,9 +91,12 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
     var selectedLocalModel by remember { mutableStateOf<String?>(null) }
     var selectedLocalModelData by remember { mutableStateOf<LocalModel?>(null) }
     val context = LocalContext.current
+    val internetConnected = remember { mutableStateOf(false) }
+
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
         coroutineScope.launch {
+            internetConnected.value = isInternetConnected(context)
             val results =
                 fetchModelsInfo(filesDir) //check if downloaded models are public TODO change logic to storing flag on database
             var updatedModels = results.uploadedModels.toMutableList()
@@ -154,6 +157,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             )
             Button(
                 onClick = { navController.navigate("marketplace") },
+                enabled = internetConnected.value,
                 modifier = Modifier.padding(top = 16.dp)
             ) {
                 Text("Go to Marketplace")
@@ -164,30 +168,42 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 .padding(top = 8.dp)
                 .height(250.dp)
         ) {
-            items(uploadedModelListState.value) { model ->
-                InstalledModelCard(
-                    modelData = model,
-                    navController = navController,
-                    onClick = { clickedModel ->
-                        selectedInstalledModel = clickedModel
-                        showEditInstallDialog = true
-                    },
-                    onDelete = { filename ->
-                        deleteLocalFile(filename, filesDir, "models")
-                        coroutineScope.launch(Dispatchers.IO) {
-                            val results = fetchModelsInfo(filesDir)
-                            var updatedModels = results.uploadedModels.toMutableList()
-                            updatedModels = updatedModels.map { model ->
-                                model.apply {
-                                    isOwner = fetchModelOwner(uniqueIdentifier, USERNAME)
-                                }
-                            }.toMutableList()
-                            uploadedModelListState.value = updatedModels
+            if (!internetConnected.value) {
+                item {
+                    Text(
+                        text = "Internet connection is required to access the Marketplace.",
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            } else {
+                items(uploadedModelListState.value) { model ->
+                    InstalledModelCard(
+                        modelData = model,
+                        navController = navController,
+                        onClick = { clickedModel ->
+                            selectedInstalledModel = clickedModel
+                            showEditInstallDialog = true
+                        },
+                        onDelete = { filename ->
+                            deleteLocalFile(filename, filesDir, "models")
+                            coroutineScope.launch(Dispatchers.IO) {
+                                val results = fetchModelsInfo(filesDir)
+                                var updatedModels = results.uploadedModels.toMutableList()
+                                updatedModels = updatedModels.map { model ->
+                                    model.apply {
+                                        isOwner = fetchModelOwner(uniqueIdentifier, USERNAME)
+                                    }
+                                }.toMutableList()
+                                uploadedModelListState.value = updatedModels
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
+
 
         Row(
             modifier = Modifier
