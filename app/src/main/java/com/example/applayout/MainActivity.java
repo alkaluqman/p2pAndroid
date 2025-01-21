@@ -9,12 +9,10 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.example.applayout.Metrics.DeviceUsageActivity;
 import com.example.applayout.Report.ReportActivity;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
     TextView status;
     Button btConfirm;
     Button btDeviceUsage;
@@ -22,9 +20,10 @@ public class MainActivity extends AppCompatActivity {
     String[] applications;
     public static String string;
 
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        super.onCreate(savedInstanceState);
         lvApplications = findViewById(R.id.lvApplication);
         btConfirm = findViewById(R.id.btConfirmApplication);
         btDeviceUsage = findViewById(R.id.btDeviceUsage);
