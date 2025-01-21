@@ -48,7 +48,8 @@ suspend fun getMarketplaceFiles(): List<Model> {
     val client = OkHttpClient()
     val gson = Gson()
     val request = Request.Builder()
-        .url("http://10.0.2.2:8000/weights")//10.0.2.2 refers to localhost
+//        .url("http://10.0.2.2:8000/weights")//10.0.2.2 refers to localhost
+        .url("https://android-p2p-backend.onrender.com/weights")
         .get()
         .build()
     return try {

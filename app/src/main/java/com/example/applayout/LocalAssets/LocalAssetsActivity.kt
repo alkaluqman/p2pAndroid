@@ -235,10 +235,18 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                         val db = AppDatabase.getDatabase(context)
                         val modelDao = db.localModelDao()
                         coroutineScope.launch(Dispatchers.IO) {
+                            logDatabaseContents(db)
                             val localModelData = modelDao.getModel(clickedFileName)
+                            if (localModelData == null) {
+                                Log.e(
+                                    "LocalAssets",
+                                    "Model data not found for file: $clickedFileName"
+                                )
+                                return@launch // Exit the coroutine if data is null
+                            }
                             uploadModel(
                                 filesDir,
-                                localModelData!!,
+                                localModelData,
                                 clickedFileName,
                                 "alice",
                                 context

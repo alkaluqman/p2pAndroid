@@ -119,7 +119,8 @@ suspend fun fetchModelOwner(modelUniqueIdentifier: String, username: String): Bo
     return withContext(Dispatchers.IO) {
 
         try {
-            val url = "http://10.0.2.2:8000/weights/$modelUniqueIdentifier/user"
+//            val url = "http://10.0.2.2:8000/weights/$modelUniqueIdentifier/user"
+            val url = "https://android-p2p-backend.onrender.com/weights/$modelUniqueIdentifier/user"
             val request = Request.Builder().url(url).build()
             val response = client.newCall(request).execute()
 
@@ -147,7 +148,8 @@ suspend fun fetchModelsInfo(filesDir: File): ModelResponse {
         fileNames.map{ it.substringBeforeLast(".") } //remove file extensions
             .forEach { fileName ->
             try {
-                val url = "http://10.0.2.2:8000/weights/$fileName"
+//                val url = "http://10.0.2.2:8000/weights/$fileName"
+                val url = "https://android-p2p-backend.onrender.com/weights/$fileName"
                 val request = Request.Builder().url(url).build()
                 val response = client.newCall(request).execute()
                 if (response.isSuccessful) {
@@ -184,7 +186,8 @@ suspend fun editModel(modelUniqueIdentifier: String, formData: LocalModel) {
 
     val requestBody = payload.toRequestBody("application/json".toMediaType())
     val request = Request.Builder()
-        .url("http://10.0.2.2:8000/weights/${modelUniqueIdentifier}")
+//        .url("http://10.0.2.2:8000/weights/${modelUniqueIdentifier}")
+        .url("https://android-p2p-backend.onrender.com/weights/${modelUniqueIdentifier}")
         .patch(requestBody)
         .build()
 
@@ -230,7 +233,8 @@ suspend fun uploadModel(
 
         val requestBody = payload.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
-            .url("http://10.0.2.2:8000/weights/create")
+//            .url("http://10.0.2.2:8000/weights/create")
+            .url("https://android-p2p-backend.onrender.com/weights/create")
             .post(requestBody)
             .build()
 
@@ -270,7 +274,8 @@ suspend fun uploadRelationship(
             Log.d("uploadRelationship", "Generated JSON Payload: $payload")
             val requestBody = payload.toRequestBody("application/json".toMediaType())
             val request = Request.Builder()
-                .url("http://10.0.2.2:8000/weights/combine")
+//                .url("http://10.0.2.2:8000/weights/combine")
+                .url("https://android-p2p-backend.onrender.com/weights/combine")
                 .post(requestBody)
                 .build()
 
@@ -354,7 +359,7 @@ fun logDatabaseContents(database: AppDatabase) {
     database.localModelDao().getAllModels().forEach { model ->
         Log.d(tag, "Model ID: ${model.uniqueIdentifier}")
         Log.d(tag, "Model Description: ${model.description}")
-        Log.d(tag, "FILE Path: ${model.model_task}")
+        Log.d(tag, "Model Task: ${model.model_task}")
 
     }
 
@@ -366,7 +371,8 @@ suspend fun checkModelExistence(ids: List<String>): List<String> {
     for (id in ids) {
         try {
             val request = Request.Builder()
-                .url("http://10.0.2.2:8000/weights/$id")
+//                .url("http://10.0.2.2:8000/weights/$id")
+                .url("https://android-p2p-backend.onrender.com/weights/$id")
                 .get()
                 .build()
             val response = withContext(Dispatchers.IO) {
