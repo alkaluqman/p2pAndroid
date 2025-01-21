@@ -158,6 +158,7 @@ public class DeviceUsageActivity extends AppCompatActivity {
             while ((Result = br.readLine()) != null) {
                 if (Result.contains(pid)) {
                     String[] info = Result.trim().replaceAll(" +", " ").split(" ");
+                    if (info.length < 10) return 0.0;
                     return Double.parseDouble(info[9]);
                 }
             }
