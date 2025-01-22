@@ -379,7 +379,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             Button(
                 onClick = {
                     coroutineScope.launch {
-                        createDatasetFolder(context, filesDir, "models")
+                        createDatasetFolder(filesDir)
                         localDatasetListState.value =
                             listLocalResources(filesDir, "datasets", false)
                     }

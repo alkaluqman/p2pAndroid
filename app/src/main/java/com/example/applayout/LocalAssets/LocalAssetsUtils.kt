@@ -37,7 +37,7 @@ fun saveFile(context: Context, fileName: String) {
     logDatabaseContents(db)
 }
 
-fun createDatasetFolder(context: Context, fileDir: File, parentFolder: String) {
+fun createDatasetFolder(fileDir: File) {
     val datasetsDir = File(fileDir, "datasets")
     if (!datasetsDir.exists()) {
         datasetsDir.mkdirs() // Create the datasets directory if it doesn't exist
