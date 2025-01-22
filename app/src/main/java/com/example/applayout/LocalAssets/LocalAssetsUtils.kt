@@ -37,6 +37,18 @@ fun saveFile(context: Context, fileName: String) {
     logDatabaseContents(db)
 }
 
+fun createDatasetFolder(context: Context, fileDir: File, parentFolder: String) {
+    val datasetsDir = File(fileDir, "datasets")
+    if (!datasetsDir.exists()) {
+        datasetsDir.mkdirs() // Create the datasets directory if it doesn't exist
+    }
+    val randomID = UUID.randomUUID()
+    val newDatasetDir = File(datasetsDir, randomID.toString())
+    newDatasetDir.mkdirs()
+    val labelsFile = File(newDatasetDir, "labels.json")
+    labelsFile.writeText("{}") // Initialize an empty JSON file for labels
+}
+
 suspend fun downloadFile(context: Context, fileDir: File, parentFolder: String) {
     val TAG = "DownloadFile"
     withContext(Dispatchers.IO) {
@@ -80,6 +92,17 @@ suspend fun downloadFile(context: Context, fileDir: File, parentFolder: String) 
     }
 }
 
+fun deleteLocalDirectory(directoryName: String, fileDir: File): Boolean {
+    val tag = "DeleteDirectory"
+    val datasetsDir = File(fileDir, "datasets")
+    val specificDirectory = File(datasetsDir, directoryName)
+    return if (specificDirectory.exists() && specificDirectory.isDirectory) {
+        specificDirectory.deleteRecursively()
+    } else {
+        Log.d(tag, "Directory $directoryName does not exist.")
+        false
+    }
+}
 fun deleteLocalFile(fileName: String, fileDir: File, parentFolder: String): Boolean {
     val tag = "DeleteFile"
     val modelsDir = File(fileDir, parentFolder)
@@ -92,12 +115,12 @@ fun deleteLocalFile(fileName: String, fileDir: File, parentFolder: String): Bool
     }
 }
 
-fun getLocalFiles(fileDir: File, parentFolder: String): List<String> {
+fun listLocalResources(fileDir: File, parentFolder: String, isFile: Boolean): List<String> {
     return try {
-        val modelsDir = File(fileDir, parentFolder)
-        if (modelsDir.exists() && modelsDir.isDirectory) {
-            modelsDir.listFiles()
-                ?.filter { it.isFile }
+        val parentDir = File(fileDir, parentFolder)
+        if (parentDir.exists() && parentDir.isDirectory) {
+            parentDir.listFiles()
+                ?.filter { if (isFile) it.isFile else it.isDirectory }
                 ?.map { it.name }
                 ?: emptyList()
         } else {
@@ -108,6 +131,7 @@ fun getLocalFiles(fileDir: File, parentFolder: String): List<String> {
         emptyList()
     }
 }
+
 data class ModelResponse(
     val uploadedModels: List<Model>,
     val notUploadedModels: List<String>
@@ -139,7 +163,7 @@ suspend fun fetchModelOwner(modelUniqueIdentifier: String, username: String): Bo
 }
 
 suspend fun fetchModelsInfo(filesDir: File): ModelResponse {
-    val fileNames = getLocalFiles(filesDir, "models")
+    val fileNames = listLocalResources(filesDir, "models", true)
     val uploadedModels = mutableListOf<Model>()
     val notUploadedModels = mutableListOf<String>()
     val client = OkHttpClient()

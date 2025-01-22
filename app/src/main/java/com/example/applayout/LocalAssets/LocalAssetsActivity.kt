@@ -45,6 +45,7 @@ import com.example.applayout.Data.Database.AppDatabase
 import com.example.applayout.Data.Model.LocalModel
 import com.example.applayout.Data.Model.LocalRelationship
 import com.example.applayout.Data.Model.Model
+import com.example.applayout.Dataset.LocalDatasetCard
 import com.example.applayout.Marketplace.MarketplaceScreen
 import com.example.applayout.Marketplace.WebViewScreen
 import com.example.applayout.Models.InstalledModelCard
@@ -84,12 +85,15 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
     val localModelListState = remember { mutableStateOf<List<String>>(emptyList()) }
     val localRelationshipListState =
         remember { mutableStateOf<List<LocalRelationship>>(emptyList()) }
+    val localDatasetListState = remember { mutableStateOf<List<String>>(emptyList()) }
     var showEditLocalDialog by remember { mutableStateOf(false) }
     var showEditInstallDialog by remember { mutableStateOf(false) }
+    var showEditDatabaseDialog by remember { mutableStateOf(false) }
     var showRelationshipDialog by remember { mutableStateOf(false) }
     var selectedInstalledModel by remember { mutableStateOf<Model?>(null) }
     var selectedLocalModel by remember { mutableStateOf<String?>(null) }
     var selectedLocalModelData by remember { mutableStateOf<LocalModel?>(null) }
+    var selectedLocalDataset by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val internetConnected = remember { mutableStateOf(false) }
 
@@ -112,6 +116,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             withContext(Dispatchers.Main) { // Switch back to Main thread for UI updates
                 uploadedModelListState.value = updatedModels
                 localModelListState.value = results.notUploadedModels
+                localDatasetListState.value = listLocalResources(filesDir, "datasets", false)
             }
 
             //fetch local relationships
@@ -359,6 +364,59 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 )
             }
         }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Local Datasets",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        createDatasetFolder(context, filesDir, "models")
+                        localDatasetListState.value =
+                            listLocalResources(filesDir, "datasets", false)
+                    }
+                },
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text("Add Dataset Folder")
+            }
+        }
+        LazyColumn(
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .height(250.dp)
+        ) {
+            items(localDatasetListState.value) { dataset ->
+                LocalDatasetCard(
+                    dataset,
+                    onUpload = { selectedDataset ->
+                    },
+                    onRemove = { selectedDataset ->
+                        deleteLocalDirectory(selectedDataset, filesDir)
+                        coroutineScope.launch {
+                            localDatasetListState.value =
+                                listLocalResources(filesDir, "datasets", false)
+                        }
+                    },
+                    onEdit = { selectedDataset ->
+                        selectedLocalDataset = selectedDataset
+                        showEditDatabaseDialog = true
+                        Log.d(
+                            "LocalAssetsScreen",
+                            "selectedLocalDataset: $selectedLocalDataset, showEditDatabaseDialog: $showEditDatabaseDialog"
+                        )
+                    })
+
+            }
+
     }
     if (showEditLocalDialog && selectedLocalModel != null) {
         LaunchedEffect(selectedLocalModel) {
@@ -444,6 +502,16 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 showRelationshipDialog = false
             }
         )
+    }
+
+        if (showEditDatabaseDialog && selectedLocalDataset != null) {
+            EditDatasetDialog(
+                datasetName = selectedLocalDataset!!,
+                filesDir = filesDir,
+                onDismiss = { showEditDatabaseDialog = false },
+                onSubmit = {}
+            )
+        }
     }
 }
 
