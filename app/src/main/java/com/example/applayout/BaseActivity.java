@@ -20,7 +20,7 @@ public class BaseActivity extends AppCompatActivity {
 
         if (fab != null) {
             fab.setOnTouchListener(new View.OnTouchListener() {
-                private static final int MOVE_THRESHOLD = 1000;  // Minimum distance to be considered a drag
+                private static final int MOVE_THRESHOLD = 1500;  // Minimum distance to be considered a drag
                 private float dX, dY;
                 private boolean isDragging = false;
                 private long touchDownTime;
@@ -39,7 +39,6 @@ public class BaseActivity extends AppCompatActivity {
                         case MotionEvent.ACTION_MOVE:
                             // Check if the move is large enough to be considered a drag
                             if (!isDragging && (Math.abs(event.getRawX() - dX) > MOVE_THRESHOLD || Math.abs(event.getRawY() - dY) > MOVE_THRESHOLD)) {
-                                System.out.println("setting from action_move");
                                 isDragging = true;
                             }
 
@@ -57,13 +56,14 @@ public class BaseActivity extends AppCompatActivity {
                             if (!isDragging) {
                                 long touchUpTime = System.currentTimeMillis();
                                 // If the touch duration is short (considered a click)
-                                if (touchUpTime - touchDownTime < 100) {  // Adjust duration as needed
+                                if (touchUpTime - touchDownTime < 300) {  // Adjust duration as needed
                                     // Trigger the click action here
                                     handleFabClick(v);
                                     v.performClick();
                                 }
                                 return true;  // Consume the event
                             }
+                            isDragging = false;
                             return true;  // If it was a drag, do nothing
                         default:
                             return false;
