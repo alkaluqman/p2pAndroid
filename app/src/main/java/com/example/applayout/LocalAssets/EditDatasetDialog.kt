@@ -3,11 +3,14 @@ package com.example.applayout.LocalAssets
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,11 +21,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,39 +46,50 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.applayout.Data.Model.Dataset
+import com.example.applayout.Data.Model.modelTasks
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 
+
 @Composable
 fun EditDatasetDialog(
-    datasetName: String,
+    datasetData: Dataset,
     filesDir: File,
     onDismiss: () -> Unit,
-    onSubmit: () -> Unit
+    onSubmit: (Dataset) -> Unit
 ) {
-//    var datasetData by remember { mutableStateOf(localDatasetData) }
+
+    var modelTask by remember { mutableStateOf(datasetData.model_task) }
+    var description by remember { mutableStateOf(datasetData.description) }
+    Log.d("update dataset", "Dataset ID1: $datasetData")
     var fileNames by remember {
         mutableStateOf(
-            listLocalResources(filesDir, "datasets/${datasetName}", true)
+            listLocalResources(filesDir, "datasets/${datasetData.uniqueIdentifier}", true)
                 .filter { it != "labels.json" }
         )
     }
-    val datasetDir = File(filesDir, "datasets/${datasetName}")
+    val datasetDir = File(filesDir, "datasets/${datasetData.uniqueIdentifier}")
     var datasetLabels = readLabels(datasetDir).toMutableMap()
+    Log.d("update dataset", "Dataset ID2: $datasetData")
     val context = LocalContext.current
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             uri?.let {
                 saveImageToDataset(context, it, datasetDir)?.let { newFileName ->
-                    fileNames = listLocalResources(filesDir, "datasets/${datasetName}", true)
+                    fileNames = listLocalResources(
+                        filesDir,
+                        "datasets/${datasetData.uniqueIdentifier}",
+                        true
+                    )
                         .filter { it != "labels.json" }
                 }
             }
         }
-
+    Log.d("update dataset", "Dataset ID3: $datasetData")
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
@@ -88,13 +105,47 @@ fun EditDatasetDialog(
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
+                Text("Model Task")
+                var expanded by remember { mutableStateOf(false) }
+                Box {
+                    Text(
+                        text = modelTask,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .clickable { expanded = true }
+                            .border(1.dp, MaterialTheme.colorScheme.primary)
+                    )
+                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                        modelTasks.forEach { task ->
+                            DropdownMenuItem(
+                                text = { Text(task) },
+                                onClick = {
+                                    modelTask = task
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Description")
+                BasicTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, MaterialTheme.colorScheme.primary)
+                        .padding(8.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
 
                 LazyColumn(modifier = Modifier.fillMaxHeight(0.6f)) {
                     items(fileNames) { filename ->
                         DatasetItemCard(
                             datasetDir = datasetDir,
                             fileName = filename,
-                            label = datasetLabels[filename] ?: "na",
+                            label = datasetLabels[filename] ?: "0",
                             onLabelChange = { newLabel ->
                                 datasetLabels[filename] = newLabel
                                 val labelsFile = File(datasetDir, "labels.json")
@@ -133,6 +184,21 @@ fun EditDatasetDialog(
                 ) {
                     Text("Upload New File")
                 }
+
+                Button(
+                    onClick = {
+                        onSubmit(
+                            Dataset(
+                                uniqueIdentifier = datasetData.uniqueIdentifier,
+                                model_task = modelTask,
+                                description = description,
+                            )
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Save Changes")
+                }
             }
         }
     }
@@ -149,7 +215,7 @@ fun DatasetItemCard(
 ) {
     val imageFilePath = File(datasetDir, fileName).absolutePath
     var newFileName by remember { mutableStateOf(fileName) }
-    var newLabel by remember { mutableStateOf(label) }
+    var newLabel by remember { mutableStateOf(label.toIntOrNull() ?: 0) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -174,19 +240,28 @@ fun DatasetItemCard(
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Label:")
-                Spacer(modifier = Modifier.width(8.dp))
-                BasicTextField(
-                    value = newLabel,
-                    onValueChange = { updatedLabel ->
-                        newLabel = updatedLabel // Update the local state
-                        onLabelChange(updatedLabel) // Pass the updated label to the callback
-                    },
-                    modifier = Modifier
-                        .border(1.dp, MaterialTheme.colorScheme.primary)
-                        .padding(8.dp)
-                )
+            Text("Label:")
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                items((0..9).toList()) { number ->
+                    Button(
+                        onClick = {
+                            newLabel = number
+                            onLabelChange(number.toString()) // Pass the selected number as a string
+                        },
+                        modifier = Modifier
+                            .border(
+                                width = if (newLabel == number) 2.dp else 1.dp,
+                                color = if (newLabel == number) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                    ) {
+                        Text(number.toString())
+                    }
+                }
             }
         }
         Image(

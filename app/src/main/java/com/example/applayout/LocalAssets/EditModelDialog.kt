@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.applayout.Data.Model.LocalModel
+import com.example.applayout.Data.Model.modelTasks
 
 @Composable
 fun EditModelDialog(
@@ -34,8 +35,7 @@ fun EditModelDialog(
 ) {
     var modelTask by remember { mutableStateOf(localModelData.model_task) }
     var description by remember { mutableStateOf(localModelData.description) }
-    val modelTasks =
-        listOf("object_detection", "image_classification", "segmentation", "regression")
+
 
     Dialog(
         onDismissRequest = onDismiss,

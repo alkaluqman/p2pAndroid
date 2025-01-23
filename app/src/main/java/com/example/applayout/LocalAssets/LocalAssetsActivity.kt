@@ -42,6 +42,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.applayout.Data.Database.AppDatabase
+import com.example.applayout.Data.Model.Dataset
 import com.example.applayout.Data.Model.LocalModel
 import com.example.applayout.Data.Model.LocalRelationship
 import com.example.applayout.Data.Model.Model
@@ -94,6 +95,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
     var selectedLocalModel by remember { mutableStateOf<String?>(null) }
     var selectedLocalModelData by remember { mutableStateOf<LocalModel?>(null) }
     var selectedLocalDataset by remember { mutableStateOf<String?>(null) }
+    var selectedLocalDatasetData by remember { mutableStateOf<Dataset?>(null) }
     val context = LocalContext.current
     val internetConnected = remember { mutableStateOf(false) }
 
@@ -368,6 +370,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp),
+
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -379,7 +382,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             Button(
                 onClick = {
                     coroutineScope.launch {
-                        createDatasetFolder(filesDir)
+                        createDatasetFolder(context, filesDir)
                         localDatasetListState.value =
                             listLocalResources(filesDir, "datasets", false)
                     }
@@ -398,10 +401,19 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 LocalDatasetCard(
                     dataset,
                     onUpload = { selectedDataset ->
+                        val db = AppDatabase.getDatabase(context)
+                        val datasetDao = db.localDatasetDao()
+                        coroutineScope.launch(Dispatchers.IO) {
+                            val selectedDatasetData = datasetDao.getDataset(selectedDataset)
+                            uploadDataset(selectedDatasetData!!, USERNAME)
+                        }
                     },
                     onRemove = { selectedDataset ->
                         deleteLocalDirectory(selectedDataset, filesDir)
-                        coroutineScope.launch {
+                        val db = AppDatabase.getDatabase(context)
+                        val datasetDao = db.localDatasetDao()
+                        coroutineScope.launch(Dispatchers.IO) {
+                            datasetDao.deleteDataset(selectedDataset)
                             localDatasetListState.value =
                                 listLocalResources(filesDir, "datasets", false)
                         }
@@ -505,13 +517,57 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
     }
 
         if (showEditDatabaseDialog && selectedLocalDataset != null) {
-            EditDatasetDialog(
-                datasetName = selectedLocalDataset!!,
-                filesDir = filesDir,
-                onDismiss = { showEditDatabaseDialog = false },
-                onSubmit = {}
-            )
+            LaunchedEffect(selectedLocalDataset) {
+                Log.d("EditDataset", "Selected Dataset ID: $selectedLocalDataset")
+                val db = AppDatabase.getDatabase(context)
+                val datasetDao = db.localDatasetDao()
+                try {
+                    selectedLocalDatasetData = withContext(Dispatchers.IO) {
+                        datasetDao.getDataset(selectedLocalDataset!!)
+                    }
+                    Log.d("EditDataset", "Fetched Dataset: $selectedLocalDatasetData")
+                } catch (e: Exception) {
+                    Log.e("EditDataset", "Error fetching dataset: ${e.message}")
+                    showEditDatabaseDialog = false
+                }
+            }
+            if (selectedLocalDatasetData != null) {
+                EditDatasetDialog(
+                    datasetData = selectedLocalDatasetData!!,
+                    filesDir = filesDir,
+                    onDismiss = { showEditDatabaseDialog = false },
+                    onSubmit = { newDatasetData ->
+                        coroutineScope.launch(Dispatchers.IO) {
+                            val db = AppDatabase.getDatabase(context)
+                            val datasetDao = db.localDatasetDao()
+                            try {
+                                datasetDao.updateDataset(
+                                    selectedLocalDatasetData!!.uniqueIdentifier,
+                                    newDatasetData.description,
+                                    newDatasetData.model_task
+                                )
+                                logDatabaseContents(db)
+                                withContext(Dispatchers.Main) {
+                                    showEditDatabaseDialog = false
+                                    selectedLocalDatasetData = null // Reset state after saving
+                                }
+                            } catch (e: Exception) {
+                                Log.e("LocalAssetsScreen", "Error updating data: ${e.message}")
+                            }
+                        }
+                    }
+                )
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
         }
-    }
+        }
+
 }
 

@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.util.Log
 import com.example.applayout.Data.Database.AppDatabase
+import com.example.applayout.Data.Model.Dataset
 import com.example.applayout.Data.Model.LocalModel
 import com.example.applayout.Data.Model.LocalRelationship
 import com.example.applayout.Data.Model.Model
@@ -27,7 +28,7 @@ import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.util.UUID
 
-fun saveFile(context: Context, fileName: String) {
+fun saveModelintoDB(context: Context, fileName: String) {
     val db = AppDatabase.getDatabase(context)
     val modelDao = db.localModelDao()
     val newModel = LocalModel(
@@ -37,7 +38,19 @@ fun saveFile(context: Context, fileName: String) {
     logDatabaseContents(db)
 }
 
-fun createDatasetFolder(fileDir: File) {
+fun saveDatasetintoDB(context: Context, fileName: String) {
+    val db = AppDatabase.getDatabase(context)
+    val datasetDao = db.localDatasetDao()
+    val newDataset = Dataset(
+        uniqueIdentifier = fileName
+
+    )
+    datasetDao.insertDataset(newDataset)
+    logDatabaseContents(db)
+}
+
+
+suspend fun createDatasetFolder(context: Context, fileDir: File) {
     val datasetsDir = File(fileDir, "datasets")
     if (!datasetsDir.exists()) {
         datasetsDir.mkdirs() // Create the datasets directory if it doesn't exist
@@ -46,7 +59,10 @@ fun createDatasetFolder(fileDir: File) {
     val newDatasetDir = File(datasetsDir, randomID.toString())
     newDatasetDir.mkdirs()
     val labelsFile = File(newDatasetDir, "labels.json")
-    labelsFile.writeText("{}") // Initialize an empty JSON file for labels
+    labelsFile.writeText("{}")
+    withContext(Dispatchers.IO) {
+        saveDatasetintoDB(context, randomID.toString()) //save an entry into db
+    }
 }
 
 suspend fun downloadFile(context: Context, fileDir: File, parentFolder: String) {
@@ -66,7 +82,7 @@ suspend fun downloadFile(context: Context, fileDir: File, parentFolder: String) 
             }
             val randomID = UUID.randomUUID()
             val randomFileName = "${randomID}.tflite"
-            saveFile(context, randomID.toString()) //save an entry into db
+            saveModelintoDB(context, randomID.toString()) //save an entry into db
             val outputFile = File(modelsDir, randomFileName)
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
@@ -275,6 +291,60 @@ suspend fun uploadModel(
         e.printStackTrace()
     }
 }
+data class DatasetForApi(
+    val uniqueIdentifier: String,
+    val model_task: String,
+    val description: String,
+    val numImages: Int,
+    val class_labels: List<String>
+)
+
+
+data class UploadDatasetPayload(
+    val dataset: DatasetForApi,
+    val username: String
+)
+
+suspend fun uploadDataset(
+    datasetData: Dataset,
+    username: String,
+) {
+    try {
+        val client = OkHttpClient()
+        val gson = Gson()
+        val datasetForApi = DatasetForApi(
+            uniqueIdentifier = datasetData.uniqueIdentifier,
+            model_task = datasetData.model_task,
+            description = datasetData.description,
+            numImages = datasetData.numImages,
+            class_labels = datasetData.getClassLabelsAsList()
+        )
+
+        val payload =
+            gson.toJson(UploadDatasetPayload(dataset = datasetForApi, username = username))
+        Log.d("uploadDataset", "Generated JSON Payload: $payload")
+
+        val requestBody = payload.toRequestBody("application/json".toMediaType())
+        val request = Request.Builder()
+//            .url("http://10.0.2.2:8000/weights/create")
+            .url("https://android-p2p-backend.onrender.com/dataset/create")
+            .post(requestBody)
+            .build()
+
+        Log.d("uploadDataset", "Sending POST request to serverUrl")
+        withContext(Dispatchers.IO) {
+            val response = client.newCall(request).execute()
+            Log.d(
+                "uploadDataset",
+                "Response Code: ${response.code}, Response Body: ${response.body?.string()}"
+            )
+        }
+    } catch (e: Exception) {
+        Log.e("UploadModel", "Error during model upload: ${e.message}", e)
+        e.printStackTrace()
+    }
+}
+
 
 
 data class UploadRelationshipPayload(
@@ -384,6 +454,12 @@ fun logDatabaseContents(database: AppDatabase) {
         Log.d(tag, "Model ID: ${model.uniqueIdentifier}")
         Log.d(tag, "Model Description: ${model.description}")
         Log.d(tag, "Model Task: ${model.model_task}")
+
+    }
+    database.localDatasetDao().getAllDatasets().forEach { dataset ->
+        Log.d(tag, "dataset ID: ${dataset.uniqueIdentifier}")
+        Log.d(tag, "dataset Description: ${dataset.description}")
+        Log.d(tag, "dataset Task: ${dataset.model_task}")
 
     }
 
