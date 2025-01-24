@@ -1,18 +1,19 @@
 package com.example.applayout.LocalAssets
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,7 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.applayout.Models.evaluationApi
-
 
 @Composable
 fun EvaluationResultsDialog(
@@ -58,6 +58,7 @@ fun EvaluationResultsDialog(
             (classCorrect[index] ?: 0).toDouble() / predictedCount
         } else 0.0
     }
+
     val overallPrecision = if (classPrecision.isNotEmpty()) {
         classPrecision.values.average()
     } else 0.0
@@ -65,61 +66,92 @@ fun EvaluationResultsDialog(
     val classPerformance = classLabels.indices.map { index ->
         classAccuracy[index] ?: 0.0
     }
+
     val evaluationDate = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
         .format(java.util.Date())
-    Log.d("eval", classCounts.toString())
-    Log.d("eval", classCorrect.toString())
-    Log.d("eval", classAccuracy.toString())
-    Log.d("eval", classPrecision.toString())
-    Log.d("eval", overallPrecision.toString())
-    Log.d("eval", classPerformance.toString())
 
     Dialog(onDismissRequest = onDismiss) {
-        Box(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(16.dp)
+        Surface(
+            shape = MaterialTheme.shapes.medium,
+            tonalElevation = 8.dp,
+            modifier = Modifier.padding(16.dp)
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
+            Column(
+                modifier = Modifier.padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Add the header
-                item {
-                    Text("Evaluation Results", style = MaterialTheme.typography.titleLarge)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "Overall Accuracy: ${(overallAccuracy * 100).format(2)}%",
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
+                // Header Section
+                Text(
+                    text = "Evaluation Results",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                Text(
+                    text = "Overall Accuracy: ${(overallAccuracy * 100).format(2)}%",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Overall Precision: ${(overallPrecision * 100).format(2)}%",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Divider(modifier = Modifier.padding(vertical = 16.dp))
 
-                // Add the list of class items
-                items(classLabels.indices.toList()) { index ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Class ${index} (${classLabels[index]}):")
-                        Text(
-                            "Accuracy: ${
-                                (classAccuracy[index]?.times(100)?.format(2)) ?: "0.00"
-                            }%"
-                        )
-                        Text(
-                            "Precision: ${
-                                (classPrecision[index]?.times(100)?.format(2)) ?: "0.00"
-                            }%"
-                        )
+                // Class Results Section
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    items(classLabels.indices.toList()) { index ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Class ${index + 1}: ${classLabels[index]}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1.5f)
+                            )
+                            Text(
+                                text = "Accuracy: ${
+                                    (classAccuracy[index]?.times(100)?.format(2)) ?: "0.00"
+                                }%",
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = "Precision: ${
+                                    (classPrecision[index]?.times(100)?.format(2)) ?: "0.00"
+                                }%",
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
                 }
 
-                // Add the footer (buttons)
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
+                Divider(modifier = Modifier.padding(vertical = 16.dp))
+
+                // Buttons Section
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Close")
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
                     Button(
                         onClick = {
                             onUpload(
@@ -131,19 +163,15 @@ fun EvaluationResultsDialog(
                                 )
                             )
                         },
-                        enabled = isUploadable
+                        enabled = isUploadable,
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Text("Upload Results")
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(onClick = onDismiss) {
-                        Text("Close")
+                        Text("Upload")
                     }
                 }
             }
         }
     }
-
 }
 
 fun Double.format(digits: Int) = "%.${digits}f".format(this)

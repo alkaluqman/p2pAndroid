@@ -51,7 +51,6 @@ import com.example.applayout.Marketplace.MarketplaceScreen
 import com.example.applayout.Marketplace.WebViewScreen
 import com.example.applayout.Models.InstalledModelCard
 import com.example.applayout.Models.LocalModelCard
-import com.example.applayout.Models.LocalRelationshipCard
 import com.example.applayout.Models.runInferenceOnDirectory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -314,73 +313,73 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                     })
             }
         }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Local Relationships",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f)
-            )
-            Button(
-                onClick = {
-                    showRelationshipDialog = true
-                },
-                modifier = Modifier.padding(top = 16.dp)
-            ) {
-                Text("Create Relationship")
-            }
-        }
-        LazyColumn(
-            modifier = Modifier
-                .padding(top = 8.dp)
-                .height(250.dp)
-        ) {
-            items(localRelationshipListState.value) { localRelationship ->
-                LocalRelationshipCard(
-                    relationship = localRelationship,
-                    onSend = { relationshipData ->
-                        val allIds =
-                            relationshipData.sourceUniqueIdentifiers.split(",") + relationshipData.modelUniqueIdentifier
-
-                        val db = AppDatabase.getDatabase(context)
-                        val relationshipDao = db.localRelationshipDao()
-                        coroutineScope.launch(Dispatchers.IO) {
-                            val missingIds = checkModelExistence(allIds)
-                            if (missingIds.isNotEmpty()) {
-                                withContext(Dispatchers.Main) {
-                                    Toast.makeText(
-                                        context,
-                                        "The following IDs do not exist: $missingIds",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                                return@launch
-                            }
-                            relationshipDao.deleteById(relationshipData.modelUniqueIdentifier)
-                            uploadRelationship(
-                                relationshipData
-                            )
-                            localRelationshipListState.value =
-                                relationshipDao.getAll().toMutableList()
-                        }
-                    },
-                    onDelete = { relationshipID ->
-                        val db = AppDatabase.getDatabase(context)
-                        val relationshipDao = db.localRelationshipDao()
-                        coroutineScope.launch(Dispatchers.IO) {
-                            relationshipDao.deleteById(relationshipID)
-                            localRelationshipListState.value =
-                                relationshipDao.getAll().toMutableList()
-                        }
-                    }
-                )
-            }
-        }
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(top = 16.dp),
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//            Text(
+//                text = "Local Relationships",
+//                fontSize = 20.sp,
+//                fontWeight = FontWeight.Bold,
+//                modifier = Modifier.weight(1f)
+//            )
+//            Button(
+//                onClick = {
+//                    showRelationshipDialog = true
+//                },
+//                modifier = Modifier.padding(top = 16.dp)
+//            ) {
+//                Text("Create Relationship")
+//            }
+//        }
+//        LazyColumn(
+//            modifier = Modifier
+//                .padding(top = 8.dp)
+//                .height(250.dp)
+//        ) {
+//            items(localRelationshipListState.value) { localRelationship ->
+//                LocalRelationshipCard(
+//                    relationship = localRelationship,
+//                    onSend = { relationshipData ->
+//                        val allIds =
+//                            relationshipData.sourceUniqueIdentifiers.split(",") + relationshipData.modelUniqueIdentifier
+//
+//                        val db = AppDatabase.getDatabase(context)
+//                        val relationshipDao = db.localRelationshipDao()
+//                        coroutineScope.launch(Dispatchers.IO) {
+//                            val missingIds = checkModelExistence(allIds)
+//                            if (missingIds.isNotEmpty()) {
+//                                withContext(Dispatchers.Main) {
+//                                    Toast.makeText(
+//                                        context,
+//                                        "The following IDs do not exist: $missingIds",
+//                                        Toast.LENGTH_LONG
+//                                    ).show()
+//                                }
+//                                return@launch
+//                            }
+//                            relationshipDao.deleteById(relationshipData.modelUniqueIdentifier)
+//                            uploadRelationship(
+//                                relationshipData
+//                            )
+//                            localRelationshipListState.value =
+//                                relationshipDao.getAll().toMutableList()
+//                        }
+//                    },
+//                    onDelete = { relationshipID ->
+//                        val db = AppDatabase.getDatabase(context)
+//                        val relationshipDao = db.localRelationshipDao()
+//                        coroutineScope.launch(Dispatchers.IO) {
+//                            relationshipDao.deleteById(relationshipID)
+//                            localRelationshipListState.value =
+//                                relationshipDao.getAll().toMutableList()
+//                        }
+//                    }
+//                )
+//            }
+//        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()

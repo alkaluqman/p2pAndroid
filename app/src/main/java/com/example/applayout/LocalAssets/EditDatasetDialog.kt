@@ -8,7 +8,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,13 +17,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -95,24 +94,33 @@ fun EditDatasetDialog(
         Surface(
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.padding(16.dp),
-            tonalElevation = 4.dp
+            tonalElevation = 8.dp // Increased elevation for better prominence
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
+                // Dialog Title
                 Text(
                     text = "Edit Dataset",
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
-                Text("Model Task")
+
+                // Model Task Dropdown
+                Text("Model Task", style = MaterialTheme.typography.bodyMedium)
+                Spacer(modifier = Modifier.height(8.dp))
                 var expanded by remember { mutableStateOf(false) }
-                Box {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
+                        .clickable { expanded = true }
+                        .padding(8.dp)
+                ) {
                     Text(
-                        text = modelTask,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .clickable { expanded = true }
-                            .border(1.dp, MaterialTheme.colorScheme.primary)
+                        text = modelTask.ifEmpty { "Select a model task" },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (modelTask.isEmpty()) MaterialTheme.colorScheme.onSurface.copy(
+                            alpha = 0.5f
+                        ) else MaterialTheme.colorScheme.onSurface
                     )
                     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         modelTasks.forEach { task ->
@@ -126,19 +134,42 @@ fun EditDatasetDialog(
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Divider()
+
+                // Description Input
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Description", style = MaterialTheme.typography.bodyMedium)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Description")
                 BasicTextField(
                     value = description,
                     onValueChange = { description = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, MaterialTheme.colorScheme.primary)
+                        .border(1.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
                         .padding(8.dp)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
 
-                LazyColumn(modifier = Modifier.fillMaxHeight(0.6f)) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Divider()
+
+                // Files Section
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Files in Dataset",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxHeight(0.6f)
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.surfaceVariant,
+                            MaterialTheme.shapes.small
+                        )
+                ) {
                     items(fileNames) { filename ->
                         DatasetItemCard(
                             classLabels = datasetData.getClassLabelsAsList(),
@@ -162,7 +193,6 @@ fun EditDatasetDialog(
                             onDelete = {
                                 val file = File(datasetDir, filename)
                                 if (file.delete()) {
-                                    // Remove the entry from datasetLabels
                                     datasetLabels.remove(filename)
                                     val labelsFile = File(datasetDir, "labels.json")
                                     labelsFile.writeText(Gson().toJson(datasetLabels))
@@ -173,8 +203,11 @@ fun EditDatasetDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+                Divider()
 
+                // Buttons
+                Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = {
                         launcher.launch("image/*")
@@ -184,6 +217,7 @@ fun EditDatasetDialog(
                     Text("Upload New File")
                 }
 
+                Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = {
                         onSubmit(
@@ -201,6 +235,7 @@ fun EditDatasetDialog(
             }
         }
     }
+
 }
 
 @Composable
@@ -216,67 +251,65 @@ fun DatasetItemCard(
     val imageFilePath = File(datasetDir, fileName).absolutePath
     var newFileName by remember { mutableStateOf(fileName) }
     var newLabel by remember { mutableStateOf(label.toIntOrNull() ?: 0) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .border(1.dp, MaterialTheme.colorScheme.primary),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .border(1.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small),
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        // File details
         Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Filename:")
-                Spacer(modifier = Modifier.width(8.dp))
-                BasicTextField(
-                    value = newFileName,
-                    onValueChange = { updatedFileName ->
-                        newFileName = updatedFileName
-                        onFileNameChange(updatedFileName)
-                    },
-                    modifier = Modifier
-                        .border(1.dp, MaterialTheme.colorScheme.primary)
-                        .padding(8.dp)
-                        .fillMaxWidth(0.7f) // Adjust width as needed
-                )
-            }
+            Text("Filename:", style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(4.dp))
+            BasicTextField(
+                value = newFileName,
+                onValueChange = { updatedFileName ->
+                    newFileName = updatedFileName
+                    onFileNameChange(updatedFileName)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
+                    .padding(8.dp)
+            )
+
             Spacer(modifier = Modifier.height(8.dp))
-            Row() {
-                Text("Label:")
-                var expanded by remember { mutableStateOf(false) }
+            Text("Label:", style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(4.dp))
 
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    Button(
-                        onClick = { expanded = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Select Label: $newLabel")
-                    }
-
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        classLabels.forEachIndexed { index, classLabel ->
-                            DropdownMenuItem(
-                                text = { Text("$index - $classLabel") }, // Display number and item
-                                onClick = {
-                                    newLabel = index
-                                    onLabelChange(newLabel.toString())
-                                    expanded = false
-                                }
-                            )
-                        }
+            // Dropdown for selecting labels
+            var expanded by remember { mutableStateOf(false) }
+            Box {
+                Button(onClick = { expanded = true }) {
+                    Text("Label: $newLabel")
+                }
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    classLabels.forEachIndexed { index, classLabel ->
+                        DropdownMenuItem(
+                            text = { Text("$index - $classLabel") },
+                            onClick = {
+                                newLabel = index
+                                onLabelChange(newLabel.toString())
+                                expanded = false
+                            }
+                        )
                     }
                 }
             }
-
         }
+
+        // Image preview
         Image(
             bitmap = loadImageBitmap(imageFilePath),
             contentDescription = null,
-            modifier = Modifier.size(64.dp)
+            modifier = Modifier
+                .size(64.dp)
+                .padding(8.dp)
         )
+
+        // Delete button
         IconButton(onClick = onDelete) {
             Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
         }
