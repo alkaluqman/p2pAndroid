@@ -42,10 +42,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Bluetooth"
+        app:layout_constraintTop_toBottomOf="@+id/btWifi"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/btMarketplace" />
+
+    <Button
+        android:id="@+id/btMarketplace"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Marketplace"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btWifi" />
+        app:layout_constraintTop_toBottomOf="@+id/btBluetooth" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
