@@ -8,8 +8,8 @@ data class Dataset(
     @PrimaryKey val uniqueIdentifier: String,
     var model_task: String = "object_detection",
     var description: String = "",
-    var numImages: Int = 0,
-    var class_labels: String = "airplane,automobile,bird,cat,deer,dog,frog,horse,ship,truck"
+    var class_labels: String = "T-shirt/top,Trouser,Pullover,Dress,Coat,Sandal,Shirt,Sneaker,Bag,Ankle boot",
+    var isUploaded: Boolean = false
 ) {
     fun getClassLabelsAsList(): List<String> {
         return class_labels.split(",").map { it.trim() }

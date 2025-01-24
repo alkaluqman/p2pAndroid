@@ -11,7 +11,7 @@ import com.example.applayout.Data.Model.Dataset
 import com.example.applayout.Data.Model.LocalModel
 import com.example.applayout.Data.Model.LocalRelationship
 
-@Database(entities = [LocalModel::class, LocalRelationship::class, Dataset::class], version = 1)
+@Database(entities = [LocalModel::class, LocalRelationship::class, Dataset::class], version = 2)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun localModelDao(): LocalModelDao
     abstract fun localRelationshipDao(): LocalRelationshipDao

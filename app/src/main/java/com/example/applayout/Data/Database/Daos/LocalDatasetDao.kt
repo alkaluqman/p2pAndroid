@@ -21,6 +21,12 @@ interface LocalDatasetDao {
         task: String,
     )
 
+    @Query("UPDATE LocalDatasets SET isUploaded= :uploadedStatus WHERE uniqueIdentifier = :uniqueIdentifier")
+    fun updateDatasetUpload(
+        uniqueIdentifier: String,
+        uploadedStatus: Boolean
+    )
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertDataset(dataset: Dataset)
 

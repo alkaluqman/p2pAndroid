@@ -1,7 +1,6 @@
 package com.example.applayout.LocalAssets
 
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -21,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
@@ -41,15 +39,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.applayout.Data.Model.Dataset
 import com.example.applayout.Data.Model.modelTasks
+import com.example.applayout.Models.loadImageBitmap
+import com.example.applayout.Models.readLabels
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -143,6 +141,7 @@ fun EditDatasetDialog(
                 LazyColumn(modifier = Modifier.fillMaxHeight(0.6f)) {
                     items(fileNames) { filename ->
                         DatasetItemCard(
+                            classLabels = datasetData.getClassLabelsAsList(),
                             datasetDir = datasetDir,
                             fileName = filename,
                             label = datasetLabels[filename] ?: "0",
@@ -206,6 +205,7 @@ fun EditDatasetDialog(
 
 @Composable
 fun DatasetItemCard(
+    classLabels: List<String>,
     datasetDir: File,
     fileName: String,
     label: String,
@@ -240,29 +240,37 @@ fun DatasetItemCard(
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Label:")
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            ) {
-                items((0..9).toList()) { number ->
+            Row() {
+                Text("Label:")
+                var expanded by remember { mutableStateOf(false) }
+
+                Box(modifier = Modifier.fillMaxWidth()) {
                     Button(
-                        onClick = {
-                            newLabel = number
-                            onLabelChange(number.toString()) // Pass the selected number as a string
-                        },
-                        modifier = Modifier
-                            .border(
-                                width = if (newLabel == number) 2.dp else 1.dp,
-                                color = if (newLabel == number) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                            )
+                        onClick = { expanded = true },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(number.toString())
+                        Text("Select Label: $newLabel")
+                    }
+
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        classLabels.forEachIndexed { index, classLabel ->
+                            DropdownMenuItem(
+                                text = { Text("$index - $classLabel") }, // Display number and item
+                                onClick = {
+                                    newLabel = index
+                                    onLabelChange(newLabel.toString())
+                                    expanded = false
+                                }
+                            )
+                        }
                     }
                 }
             }
+
         }
         Image(
             bitmap = loadImageBitmap(imageFilePath),
@@ -276,27 +284,7 @@ fun DatasetItemCard(
 }
 
 
-fun loadImageBitmap(filePath: String): androidx.compose.ui.graphics.ImageBitmap {
-    val bitmap = BitmapFactory.decodeFile(filePath)
-    return bitmap?.asImageBitmap() ?: androidx.compose.ui.graphics.ImageBitmap(1, 1)
-}
 
-
-fun readLabels(datasetDir: File): Map<String, String> {
-    val labelsFile = File(datasetDir, "labels.json")
-    return if (labelsFile.exists()) {
-        try {
-            val jsonContent = labelsFile.readText()
-            val type = object : TypeToken<Map<String, String>>() {}.type
-            Gson().fromJson(jsonContent, type)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emptyMap()
-        }
-    } else {
-        emptyMap()
-    }
-}
 
 
 fun saveImageToDataset(context: Context, uri: Uri, datasetDir: File): String? {

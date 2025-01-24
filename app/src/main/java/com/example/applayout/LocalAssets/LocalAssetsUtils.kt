@@ -8,6 +8,7 @@ import com.example.applayout.Data.Model.Dataset
 import com.example.applayout.Data.Model.LocalModel
 import com.example.applayout.Data.Model.LocalRelationship
 import com.example.applayout.Data.Model.Model
+import com.example.applayout.Models.evaluationApi
 import com.example.applayout.R
 import com.google.auth.oauth2.ServiceAccountCredentials
 import com.google.cloud.storage.BlobId
@@ -130,6 +131,22 @@ fun deleteLocalFile(fileName: String, fileDir: File, parentFolder: String): Bool
         false
     }
 }
+
+fun countFilesInDirectory(fileDir: File, parentFolder: String): Int {
+    return try {
+        val parentDir = File(fileDir, parentFolder)
+        if (parentDir.exists() && parentDir.isDirectory) {
+            parentDir.listFiles()
+                ?.count { it.isFile } ?: 0
+        } else {
+            0
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        0
+    }
+}
+
 
 fun listLocalResources(fileDir: File, parentFolder: String, isFile: Boolean): List<String> {
     return try {
@@ -295,7 +312,7 @@ data class DatasetForApi(
     val uniqueIdentifier: String,
     val model_task: String,
     val description: String,
-    val numImages: Int,
+    val num_images: Int,
     val class_labels: List<String>
 )
 
@@ -308,15 +325,17 @@ data class UploadDatasetPayload(
 suspend fun uploadDataset(
     datasetData: Dataset,
     username: String,
+    filesDir: File
 ) {
     try {
         val client = OkHttpClient()
         val gson = Gson()
+        val numImages = countFilesInDirectory(filesDir, "datasets/${datasetData.uniqueIdentifier}")
         val datasetForApi = DatasetForApi(
             uniqueIdentifier = datasetData.uniqueIdentifier,
             model_task = datasetData.model_task,
             description = datasetData.description,
-            numImages = datasetData.numImages,
+            num_images = numImages - 1, //remove labels.json count
             class_labels = datasetData.getClassLabelsAsList()
         )
 
@@ -346,6 +365,47 @@ suspend fun uploadDataset(
 }
 
 
+data class uploadEvaluationPayload(
+    val dataset_id: String,
+    val weight_id: String,
+    val evaluate: evaluationApi
+)
+
+suspend fun uploadEvaluationResults(weightId: String, datasetId: String, evaluate: evaluationApi) {
+    try {
+        val client = OkHttpClient()
+        val gson = Gson()
+
+        val payload =
+            gson.toJson(
+                uploadEvaluationPayload(
+                    evaluate = evaluate,
+                    dataset_id = datasetId,
+                    weight_id = weightId
+                )
+            )
+        Log.d("uploadResults", "Generated JSON Payload: $payload")
+
+        val requestBody = payload.toRequestBody("application/json".toMediaType())
+        val request = Request.Builder()
+//            .url("http://10.0.2.2:8000/weights/create")
+            .url("https://android-p2p-backend.onrender.com/weights/evaluation")
+            .post(requestBody)
+            .build()
+
+        Log.d("uploadResults", "Sending POST request to serverUrl")
+        withContext(Dispatchers.IO) {
+            val response = client.newCall(request).execute()
+            Log.d(
+                "uploadResults",
+                "Response Code: ${response.code}, Response Body: ${response.body?.string()}"
+            )
+        }
+    } catch (e: Exception) {
+        Log.e("uploadResults", "Error during model upload: ${e.message}", e)
+        e.printStackTrace()
+    }
+}
 
 data class UploadRelationshipPayload(
     val resultant_id: String,

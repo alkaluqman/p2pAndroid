@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -25,7 +26,8 @@ fun LocalDatasetCard(
     datasetName: String,
     onUpload: (String) -> Unit,
     onRemove: (String) -> Unit,
-    onEdit: (String) -> Unit
+    onEdit: (String) -> Unit,
+    onRun: (String) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -62,6 +64,12 @@ fun LocalDatasetCard(
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete Dataset",
+                        )
+                    }
+                    IconButton(onClick = { onRun(datasetName) }) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Run Inference",
                         )
                     }
                 }
