@@ -21,7 +21,8 @@ import android.net.TrafficStats;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.example.applayout.R;
 
@@ -36,7 +37,9 @@ public class DeviceUsageActivity extends AppCompatActivity {
     private long lastRxBytes = 0;
     private long lastTxBytes = 0;
 
-    private final String pid = Integer.toString(Process.myPid());
+    private final int APP_PID = Process.myPid();
+
+    private final int DELAY_MILLIS = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,9 +70,9 @@ public class DeviceUsageActivity extends AppCompatActivity {
             @Override
             public void run() {
                 displayResourceUsage();
-                handler.postDelayed(this, 1000); // Update every second
+                handler.postDelayed(this, DELAY_MILLIS); // Update every second
             }
-        }, 1000);
+        }, DELAY_MILLIS);
     }
 
     private void displayResourceUsage() {
@@ -77,6 +80,7 @@ public class DeviceUsageActivity extends AppCompatActivity {
         displayCpuUsage();
         displayNetworkUsage();
         displayBatteryUsage();
+        getChildProcesses();
     }
 
     private void displayBatteryUsage() {
@@ -144,22 +148,74 @@ public class DeviceUsageActivity extends AppCompatActivity {
     }
 
     private void displayCpuUsage() {
-        double cpuUsage = getAppCpuUsage();
+        double cpuUsage = calculateAppCpuUsage();
         String cpuUsageStr = "App CPU Usage: " + String.format("%.2f", cpuUsage) + "%";
         cpuUsageText.setText(cpuUsageStr);
     }
 
-    private double getAppCpuUsage() {
+    private double calculateAppCpuUsage() {
+        double totalCpu = 0.0;
         try {
-            String Result;
+            // Fetch CPU usage for the parent process
+            totalCpu += getCpuUsageForProcess(APP_PID);
 
-            java.lang.Process p = Runtime.getRuntime().exec("top -p " + pid);
+            // Fetch CPU usage for all child processes
+            List<Integer> childPids = getChildProcesses();
+            for (int pid : childPids) {
+                totalCpu += getCpuUsageForProcess(pid);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return totalCpu;
+    }
+
+    private List<Integer> getChildProcesses() {
+        List<Integer> childPids = new ArrayList<>();
+        try {
+            String command = "ps -o pid,ppid | grep " + APP_PID;
+
+            java.lang.Process process = Runtime.getRuntime().exec(new String[]{"sh", "-c", command});
+            BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                String[] parts = line.split("\\s+");
+                if (parts.length >= 2) {
+                    int ppid = Integer.parseInt(parts[1]);
+                    int pid = Integer.parseInt(parts[0]);
+                    if (ppid == APP_PID) {
+                        childPids.add(pid);
+                    }
+                }
+            }
+            br.close();
+//            System.out.println("Child PIDs: ");
+//            System.out.println(childPids);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return childPids;
+    }
+
+    // Example Output of `top` command.
+    // PID   | USER    | PR | NI  | VIRT | RES  | SHR  | S | [%CPU] | %MEM | TIME+   | ARGS
+    // 31767 | u0_a483 | 10 | -10 |  16G | 232M | 142M | S |   0.0  | 3.1  | 0:37.45 | com.example.applayout
+    //   0        1      2     3      4      5     6     7      8       9      10    |  11
+
+    private double getCpuUsageForProcess(int pid) {
+        try {
+            String line;
+
+            java.lang.Process p = Runtime.getRuntime().exec("top -b -n 1 -p " + pid);
             BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            while ((Result = br.readLine()) != null) {
-                if (Result.contains(pid)) {
-                    String[] info = Result.trim().replaceAll(" +", " ").split(" ");
-                    if (info.length < 10) return 0.0;
-                    return Double.parseDouble(info[9]);
+            while ((line = br.readLine()) != null) {
+                if (line.contains(Integer.toString(pid))) {
+                    String[] info = line.trim().replaceAll(" +", " ").split(" ");
+                    if (info.length < 9) return 0.0;
+                    br.close();
+                    return Double.parseDouble(info[8]);
                 }
             }
         } catch (IOException e) {

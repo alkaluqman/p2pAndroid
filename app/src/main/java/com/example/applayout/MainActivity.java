@@ -9,11 +9,13 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.applayout.FederatedLearning.FederatedLearningActivity;
 import com.example.applayout.Report.ReportActivity;
 
 public class MainActivity extends BaseActivity {
     TextView status;
     Button btConfirm;
+    Button btTrain;
     ListView lvApplications;
     String[] applications;
     public static String string;
@@ -24,6 +26,7 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         lvApplications = findViewById(R.id.lvApplication);
         btConfirm = findViewById(R.id.btConfirmApplication);
+        btTrain = findViewById(R.id.btTrain);
         status = findViewById(R.id.statusApplication);
 
         applications = new String[2];
@@ -47,6 +50,15 @@ public class MainActivity extends BaseActivity {
                 startActivity(intent);
             }
         });
+
+        btTrain.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(view.getContext(), FederatedLearningActivity.class);
+                startActivity(intent);
+            }
+        });
+
 
     }
 }
