@@ -1,7 +1,10 @@
 package com.example.applayout;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.UserManager;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -11,6 +14,10 @@ import android.widget.TextView;
 
 import com.example.applayout.FederatedLearning.FederatedLearningActivity;
 import com.example.applayout.Report.ReportActivity;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class MainActivity extends BaseActivity {
     TextView status;
@@ -54,8 +61,63 @@ public class MainActivity extends BaseActivity {
         btTrain.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(view.getContext(), FederatedLearningActivity.class);
-                startActivity(intent);
+
+                final boolean PROCESS_TEST = false;
+
+                if (PROCESS_TEST) {
+                    final int NUM_MODELS = 1;
+
+                    final int APP_PID = android.os.Process.myPid();
+                    System.out.println("APP_PID: " + APP_PID);
+
+//                int currentUid = android.os.Process.myUid();
+//                UserManager userManager = (UserManager) getSystemService(Context.USER_SERVICE);
+//                int currentUserId = userManager.getUserHandle();
+//                try {
+//                    ProcessBuilder pb = new ProcessBuilder("whoami");
+//                    Process userP = pb.start();
+//                    BufferedReader r = new BufferedReader(new InputStreamReader(userP.getInputStream()));
+//                    String l;
+//                    while ((l = r.readLine()) != null) {
+//                        System.out.println("Output: " + l);
+//                    }
+////                    System.out.println("User UID: " + currentUid);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+
+//                 EXPERIMENT USING PROCESSES
+                    for (int i = 0; i < NUM_MODELS; i++) {
+                        new Thread(() -> {
+                            try {
+                                ProcessBuilder processBuilder = new ProcessBuilder(
+                                        "sh", "-c", "am start -n com.example.applayout.FederatedLearning/.FederatedLearningActivity");
+
+                                Process process = processBuilder.start();
+
+                                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    System.out.println("Output: " + line);
+                                }
+
+                                BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                                while ((line = errorReader.readLine()) != null) {
+                                    System.err.println("Error: " + line);
+                                }
+
+                                process.waitFor();
+
+                            } catch (IOException | InterruptedException
+                                    e) {
+                                e.printStackTrace();
+                            }
+                        }).start();
+                    }
+                } else {
+                    Intent intent = new Intent(view.getContext(), FederatedLearningActivity.class);
+                    startActivity(intent);
+                }
             }
         });
 

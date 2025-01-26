@@ -191,8 +191,8 @@ public class DeviceUsageActivity extends AppCompatActivity {
                 }
             }
             br.close();
-//            System.out.println("Child PIDs: ");
-//            System.out.println(childPids);
+            System.out.println("Child PIDs: ");
+            System.out.println(childPids);
         } catch (IOException e) {
             e.printStackTrace();
         }
