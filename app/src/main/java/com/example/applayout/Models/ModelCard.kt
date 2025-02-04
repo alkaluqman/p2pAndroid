@@ -107,19 +107,19 @@ fun ModelCard(
                                 contentDescription = "Upload Model",
                             )
                         }
-                    } else {
-                        IconButton(onClick = {
-                            val encodedUrl =
-                                Uri.encode("https://android-p2p-frontend-xoxm.vercel.app/weight/${modelData.uniqueIdentifier}")
-//                    Uri.encode("http://10.0.2.2:3000/weight/${modelData.uniqueIdentifier}")
-                            navController.navigate("webview/$encodedUrl")
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.ExitToApp,
-                                contentDescription = "Explore Model",
-                            )
-                        }
                     }
+                    IconButton(onClick = {
+                        val encodedUrl =
+                            Uri.encode("https://android-p2p-frontend-xoxm.vercel.app/weight/${modelData.uniqueIdentifier}")
+//                    Uri.encode("http://10.0.2.2:3000/weight/${modelData.uniqueIdentifier}")
+                        navController.navigate("webview/$encodedUrl")
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.ExitToApp,
+                            contentDescription = "Explore Model",
+                        )
+                    }
+
                     IconButton(onClick = {
                         onDelete(modelData.uniqueIdentifier)
                     }) {
