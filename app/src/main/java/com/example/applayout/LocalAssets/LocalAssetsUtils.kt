@@ -29,7 +29,7 @@ import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.util.UUID
 
-fun saveModelintoDB(context: Context, fileName: String) {
+fun saveModelintoDB(context: Context, fileName: String): LocalModel {
     val db = AppDatabase.getDatabase(context)
     val modelDao = db.localModelDao()
     val newModel = LocalModel(
@@ -37,6 +37,7 @@ fun saveModelintoDB(context: Context, fileName: String) {
     )
     modelDao.insertModel(newModel)
     logDatabaseContents(db)
+    return newModel
 }
 
 fun saveDatasetintoDB(context: Context, fileName: String) {
@@ -66,9 +67,10 @@ suspend fun createDatasetFolder(context: Context, fileDir: File) {
     }
 }
 
-suspend fun downloadFile(context: Context, fileDir: File, parentFolder: String) {
+
+suspend fun downloadFile(context: Context, fileDir: File, parentFolder: String): LocalModel? {
     val TAG = "DownloadFile"
-    withContext(Dispatchers.IO) {
+    return withContext(Dispatchers.IO) {
         try {
             val client = OkHttpClient()
             val fileUrl = "https://storage.googleapis.com/android-p2p/weights/test.tflite"
@@ -81,33 +83,37 @@ suspend fun downloadFile(context: Context, fileDir: File, parentFolder: String) 
             if (!modelsDir.exists()) {
                 modelsDir.mkdirs()
             }
+
             val randomID = UUID.randomUUID()
             val randomFileName = "${randomID}.tflite"
-            saveModelintoDB(context, randomID.toString()) //save an entry into db
+            val newModel = LocalModel(
+                uniqueIdentifier = randomID.toString()
+            )
             val outputFile = File(modelsDir, randomFileName)
+
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
                     Log.e(TAG, "Download failed: HTTP ${response.code}")
-                    return@use
+                    return@withContext null // Exit early in case of failure
                 }
                 Log.d(TAG, "Download successful, saving to: ${outputFile.absolutePath}")
 
-                val inputStream = response.body?.byteStream()
-                val outputStream = FileOutputStream(outputFile)
-
-                inputStream?.use { input ->
-                    outputStream.use { output ->
+                response.body?.byteStream()?.use { input ->
+                    FileOutputStream(outputFile).use { output ->
                         input.copyTo(output)
                     }
                 }
 
                 Log.d(TAG, "File successfully saved: ${outputFile.absolutePath}")
+                return@withContext newModel // Ensure the function returns `newModel`
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error downloading file: ${e.message}", e)
+            return@withContext null // Return null if an exception occurs
         }
     }
 }
+
 
 fun deleteLocalDirectory(directoryName: String, fileDir: File): Boolean {
     val tag = "DeleteDirectory"
@@ -167,7 +173,7 @@ fun listLocalResources(fileDir: File, parentFolder: String, isFile: Boolean): Li
 
 data class ModelResponse(
     val uploadedModels: List<Model>,
-    val notUploadedModels: List<String>
+    val notUploadedModels: List<Model>
 )
 
 suspend fun fetchModelOwner(modelUniqueIdentifier: String, username: String): Boolean {
@@ -198,7 +204,7 @@ suspend fun fetchModelOwner(modelUniqueIdentifier: String, username: String): Bo
 suspend fun fetchModelsInfo(filesDir: File): ModelResponse {
     val fileNames = listLocalResources(filesDir, "models", true)
     val uploadedModels = mutableListOf<Model>()
-    val notUploadedModels = mutableListOf<String>()
+    val notUploadedModels = mutableListOf<Model>()
     val client = OkHttpClient()
     val gson = Gson()
     withContext(Dispatchers.IO) {
@@ -212,14 +218,12 @@ suspend fun fetchModelsInfo(filesDir: File): ModelResponse {
                 if (response.isSuccessful) {
                     val body = response.body?.string()
                     val model = gson.fromJson<Model>(body, object : TypeToken<Model>() {}.type)
-                    if (model != null) {
+                    if (model != null && model.is_uploaded) {
                         uploadedModels.add(model)
-                    } else {
-                        notUploadedModels.add(fileName)
+                    } else if (model != null) { //!model.is_uploaded
+                        model.isOwner = true
+                        notUploadedModels.add(model)
                     }
-                } else {
-//                    Log.e("FetchModels", "Error: ${response.code}")
-                    notUploadedModels.add(fileName)
                 }
             } catch (e: Exception) {
                 Log.e("FetchModels", "Exception: ${e.message}", e)
@@ -230,12 +234,12 @@ suspend fun fetchModelsInfo(filesDir: File): ModelResponse {
 }
 
 
-data class UploadModelPayload(
+data class createModelPayload(
     val weight: Model,
     val username: String
 )
 
-suspend fun editModel(modelUniqueIdentifier: String, formData: LocalModel) {
+suspend fun editModel(modelUniqueIdentifier: String, formData: Model) {
     val client = OkHttpClient()
     val gson = Gson()
     val payload = gson.toJson(formData)
@@ -258,35 +262,26 @@ suspend fun editModel(modelUniqueIdentifier: String, formData: LocalModel) {
     }
 }
 
-suspend fun uploadModel(
+suspend fun uploadModelNode(
     filesDir: File,
     localModelData: LocalModel,
-    fileName: String,
-    username: String,
-    context: Context
+    username: String
 ) {
     try {
         val client = OkHttpClient()
         val gson = Gson()
-        val modelFile = File(filesDir, "/models/$fileName.tflite")
-
-        Log.d("UploadModel", "Preparing to upload model: $fileName")
-        Log.d("UploadModel", "File exists: ${modelFile.exists()}, File size: ${modelFile.length()}")
-
-        val publicLink = uploadFileToGCS(fileName, modelFile, context)
-        Log.d("UploadModel", "File uploaded to GCS. Public Link: $publicLink")
+        val modelFile = File(filesDir, "/models/${localModelData.uniqueIdentifier}.tflite")
 
         val modelData = Model(
-            uniqueIdentifier = fileName,
+            uniqueIdentifier = localModelData.uniqueIdentifier,
             model_task = localModelData.model_task,
-            last_trained = System.currentTimeMillis().toString(), // Current timestamp
+            last_trained = System.currentTimeMillis().toString(),
             description = localModelData.description,
             weight_size = modelFile.length(),
-            public_link = publicLink
         )
 
-        val payload = gson.toJson(UploadModelPayload(weight = modelData, username = username))
-        Log.d("UploadModel", "Generated JSON Payload: $payload")
+        val payload = gson.toJson(createModelPayload(weight = modelData, username = username))
+        Log.d("uploadModelNode", "Generated JSON Payload: $payload")
 
         val requestBody = payload.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
@@ -295,7 +290,66 @@ suspend fun uploadModel(
             .post(requestBody)
             .build()
 
-        Log.d("UploadModel", "Sending POST request to serverUrl")
+        Log.d("uploadModelNode", "Sending POST request to serverUrl")
+        withContext(Dispatchers.IO) {
+            val response = client.newCall(request).execute()
+            Log.d(
+                "uploadModelNode",
+                "Response Code: ${response.code}, Response Body: ${response.body?.string()}"
+            )
+        }
+    } catch (e: Exception) {
+        Log.e("uploadModelNode", "Error during model upload: ${e.message}", e)
+        e.printStackTrace()
+    }
+}
+
+data class uploadModelPayload(
+    val uniqueIdentifier: String,
+    val is_uploaded: Boolean = false,
+    val public_link: String = ""
+)
+
+suspend fun uploadModel(
+    filesDir: File,
+    modelUniqueIdentifier: String,
+    context: Context
+) {
+    try {
+        val client = OkHttpClient()
+        val gson = Gson()
+        val modelFile = File(filesDir, "/models/${modelUniqueIdentifier}.tflite")
+
+        Log.d("UploadModel", "Preparing to upload model: $modelUniqueIdentifier")
+        Log.d("UploadModel", "File exists: ${modelFile.exists()}, File size: ${modelFile.length()}")
+
+        val publicLink = uploadFileToGCS(modelUniqueIdentifier, modelFile, context)
+        Log.d("UploadModel", "File uploaded to GCS. Public Link: $publicLink")
+
+
+        val payload = gson.toJson(
+            uploadModelPayload(
+                uniqueIdentifier = modelUniqueIdentifier,
+                public_link = publicLink,
+                is_uploaded = true
+            )
+        )
+        Log.d("UploadModel", "Generated JSON Payload: $payload")
+
+        val requestBody = payload.toRequestBody("application/json".toMediaType())
+//        val request = Request.Builder()
+////            .url("http://10.0.2.2:8000/weights/create")
+//            .url("https://android-p2p-backend.onrender.com/weights/create")
+//            .post(requestBody)
+//            .build()
+
+        val request = Request.Builder()
+//        .url("http://10.0.2.2:8000/weights/${modelUniqueIdentifier}")
+            .url("https://android-p2p-backend.onrender.com/weights/${modelUniqueIdentifier}")
+            .patch(requestBody)
+            .build()
+
+        Log.d("UploadModel", "Sending PATCH request to serverUrl")
         withContext(Dispatchers.IO) {
             val response = client.newCall(request).execute()
             Log.d(

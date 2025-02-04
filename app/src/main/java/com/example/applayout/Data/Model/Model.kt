@@ -12,7 +12,7 @@ data class Model(
     var likes: Int = 0,
     var public_link: String = "",
     var architecture: String = "",
-    var isOwner: Boolean = true,
+    var isOwner: Boolean = false,
 
     ) {
     fun toLocalModel(): LocalModel {

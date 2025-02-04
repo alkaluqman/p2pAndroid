@@ -25,17 +25,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.example.applayout.Data.Model.LocalModel
+import com.example.applayout.Data.Model.Model
 import com.example.applayout.Data.Model.modelTasks
 
 @Composable
 fun EditModelDialog(
     onDismiss: () -> Unit,
-    localModelData: LocalModel,
-    onSubmit: (LocalModel) -> Unit
+    modelData: Model,
+    onSubmit: (Model) -> Unit
 ) {
-    var modelTask by remember { mutableStateOf(localModelData.model_task) }
-    var description by remember { mutableStateOf(localModelData.description) }
+    var modelTask by remember { mutableStateOf(modelData.model_task) }
+    var description by remember { mutableStateOf(modelData.description) }
 
 
     Dialog(
@@ -108,12 +108,11 @@ fun EditModelDialog(
                 // Submit Button
                 Button(
                     onClick = {
+                        modelData.model_task = modelTask
+                        modelData.description = description
+
                         onSubmit(
-                            LocalModel(
-                                uniqueIdentifier = localModelData.uniqueIdentifier,
-                                model_task = modelTask,
-                                description = description
-                            )
+                            modelData
                         )
                     },
                     modifier = Modifier.fillMaxWidth()

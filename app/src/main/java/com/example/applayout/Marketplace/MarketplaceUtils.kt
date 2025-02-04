@@ -15,32 +15,34 @@ import java.net.URL
 
 val TAG = "MarketplaceUtils"
 
-fun downloadModelFile(downloadUrl: String, filesDir: File, fileName: String) {
-    try {
-        // Ensure the /models directory exists
-        val modelsDir = File(filesDir, "models")
-        if (!modelsDir.exists()) {
-            modelsDir.mkdirs()
-        }
-
-        val outputFile = File(modelsDir, "$fileName.tflite")
-        if (outputFile.exists()) {
-            Log.d(TAG, "File already exists: ${outputFile.absolutePath}")
-            return
-        }
-
-        // Download the file
-        val inputStream = URL(downloadUrl).openStream()
-        val outputStream = FileOutputStream(outputFile)
-        inputStream.use { input ->
-            outputStream.use { output ->
-                input.copyTo(output)
+suspend fun downloadModelFile(downloadUrl: String, filesDir: File, fileName: String) {
+    withContext(Dispatchers.IO) {
+        try {
+            // Ensure the /models directory exists
+            val modelsDir = File(filesDir, "models")
+            if (!modelsDir.exists()) {
+                modelsDir.mkdirs()
             }
+
+            val outputFile = File(modelsDir, "$fileName.tflite")
+            if (outputFile.exists()) {
+                Log.d(TAG, "File already exists: ${outputFile.absolutePath}")
+                return@withContext
+            }
+
+            // Download the file
+            val inputStream = URL(downloadUrl).openStream()
+            val outputStream = FileOutputStream(outputFile)
+            inputStream.use { input ->
+                outputStream.use { output ->
+                    input.copyTo(output)
+                }
+            }
+            Log.d(TAG, "File downloaded successfully: ${outputFile.absolutePath}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error downloading file: ${e.message}", e)
+            e.printStackTrace()
         }
-        Log.d(TAG, "File downloaded successfully: ${outputFile.absolutePath}")
-    } catch (e: Exception) {
-        Log.e(TAG, "Error downloading file: ${e.message}", e)
-        e.printStackTrace()
     }
 }
 
@@ -68,5 +70,25 @@ suspend fun getMarketplaceFiles(): List<Model> {
     } catch (e: IOException) {
         Log.e(TAG, "Exception occurred during network call: ${e.message}", e)
         emptyList()
+    }
+}
+
+suspend fun increment(modelUniqueIdentifier: String, isUsage: Boolean) {
+    val client = OkHttpClient()
+    withContext(Dispatchers.IO) {
+        try {
+            val url = if (isUsage)
+                "https://android-p2p-backend.onrender.com/weights/$modelUniqueIdentifier/increment-usage"
+            else
+                "https://android-p2p-backend.onrender.com/weights/$modelUniqueIdentifier/increment-likes"
+            val request = Request.Builder()
+                .url(url)
+                .patch(okhttp3.RequestBody.create(null, ByteArray(0))) // Empty PATCH body
+                .build()
+            client.newCall(request).execute()
+
+        } catch (e: Exception) {
+            Log.e("Increment", "Exception: ${e.message}", e)
+        }
     }
 }
