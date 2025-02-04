@@ -29,17 +29,15 @@ import com.example.applayout.Data.Model.LocalRelationship
 import com.example.applayout.Data.Model.Model
 
 @Composable
-fun EditRelationshipDialog(
+fun EditFederatedLearningRelationshipDialog(
     onDismiss: () -> Unit,
     models: List<Model>,
+
     onSubmit: (LocalRelationship) -> Unit
 ) {
 
-    var relationshipType by remember { mutableStateOf("Model") }
-    val relationshipTypes = listOf("Model", "Dataset")
     var selectedModel by remember { mutableStateOf("") }
     var selectedSourceIds by remember { mutableStateOf(emptyList<String>()) }
-    var expandedRelationshipType by remember { mutableStateOf(false) }
     var expandedModel by remember { mutableStateOf(false) }
     var expandedSourceIds by remember { mutableStateOf(false) }
 
@@ -63,37 +61,6 @@ fun EditRelationshipDialog(
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
-
-                // Dropdown for Relationship Type
-                Text("Relationship Type")
-                Box {
-                    Text(
-                        text = relationshipType,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .clickable { expandedRelationshipType = true }
-                            .border(1.dp, MaterialTheme.colorScheme.primary)
-                    )
-                    DropdownMenu(
-                        expanded = expandedRelationshipType,
-                        onDismissRequest = { expandedRelationshipType = false }
-                    ) {
-                        relationshipTypes.forEach { type ->
-                            DropdownMenuItem(
-                                text = { Text(type) },
-                                onClick = {
-                                    relationshipType = type
-                                    expandedRelationshipType = false
-                                }
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Dropdown for selecting Model Unique Identifier
                 Text("Model Unique Identifier")
                 Box {
                     Text(
@@ -121,8 +88,6 @@ fun EditRelationshipDialog(
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
-
-                // Dropdown for selecting multiple Source IDs
                 Text("Source Unique Identifiers")
                 Box {
                     Text(
@@ -156,16 +121,13 @@ fun EditRelationshipDialog(
                         }
                     }
                 }
-
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Submit Button
                 Button(
                     onClick = {
-                        // Create LocalRelationship object and submit
                         val localRelationship = LocalRelationship(
                             modelUniqueIdentifier = selectedModel,
-                            relationshipType = relationshipType,
+                            relationshipType = "Model",
                             sourceUniqueIdentifiers = selectedSourceIds.joinToString(",")
                         )
                         onSubmit(localRelationship)

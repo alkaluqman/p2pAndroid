@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,11 +40,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.applayout.Data.Database.AppDatabase
 import com.example.applayout.Data.Model.Dataset
-import com.example.applayout.Data.Model.LocalRelationship
 import com.example.applayout.Data.Model.Model
-import com.example.applayout.Dataset.LocalDatasetCard
+import com.example.applayout.Dataset.DatasetCard
 import com.example.applayout.Marketplace.MarketplaceScreen
 import com.example.applayout.Marketplace.WebViewScreen
 import com.example.applayout.Models.ModelCard
@@ -82,15 +79,13 @@ val USERNAME = "alice"
 fun LocalAssetsScreen(filesDir: File, navController: NavController) {
     val uploadedModelListState = remember { mutableStateOf<List<Model>>(emptyList()) }
     val localModelListState = remember { mutableStateOf<List<Model>>(emptyList()) }
-    val localRelationshipListState =
-        remember { mutableStateOf<List<LocalRelationship>>(emptyList()) }
-    val localDatasetListState = remember { mutableStateOf<List<String>>(emptyList()) }
+    val localDatasetListState = remember { mutableStateOf<List<Dataset>>(emptyList()) }
     var showEditInstallDialog by remember { mutableStateOf(false) }
     var showEditDatabaseDialog by remember { mutableStateOf(false) }
-    var showRelationshipDialog by remember { mutableStateOf(false) }
+    var showFederatedLearningRelationshipDialog by remember { mutableStateOf(false) }
+    var showFinetuningRelationshipDialog by remember { mutableStateOf(false) }
     var selectedInstalledModel by remember { mutableStateOf<Model?>(null) }
-    var selectedLocalDataset by remember { mutableStateOf<String?>(null) }
-    var selectedLocalDatasetData by remember { mutableStateOf<Dataset?>(null) }
+    var selectedLocalDataset by remember { mutableStateOf<Dataset?>(null) }
     var showResultsDialog by remember { mutableStateOf(false) }
     var highlightedModel by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
@@ -115,19 +110,12 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                     )
                 }
             }.toMutableList()
+            val localDatasetNameList = listLocalResources(filesDir, "datasets", false)
 
             withContext(Dispatchers.Main) { // Switch back to Main thread for UI updates
                 uploadedModelListState.value = updatedModels
                 localModelListState.value = results.notUploadedModels
-                localDatasetListState.value = listLocalResources(filesDir, "datasets", false)
-            }
-
-            //fetch local relationships
-            val db = AppDatabase.getDatabase(context)
-            val relationshipDao = db.localRelationshipDao()
-            val relationships = relationshipDao.getAll().toMutableList()
-            withContext(Dispatchers.Main) { // Update UI state on the Main thread
-                localRelationshipListState.value = relationships.toMutableList()
+                localDatasetListState.value = fetchDatasetInfo(localDatasetNameList)
             }
         }
     }
@@ -235,7 +223,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             Button(
                 onClick = {
                     coroutineScope.launch {
-                        val newModel = downloadFile(context, filesDir, "models")
+                        val newModel = downloadFile(filesDir, "models")
                         uploadModelNode(
                             filesDir,
                             newModel!!,
@@ -294,73 +282,6 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 )
             }
         }
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(top = 16.dp),
-//            verticalAlignment = Alignment.CenterVertically
-//        ) {
-//            Text(
-//                text = "Local Relationships",
-//                fontSize = 20.sp,
-//                fontWeight = FontWeight.Bold,
-//                modifier = Modifier.weight(1f)
-//            )
-//            Button(
-//                onClick = {
-//                    showRelationshipDialog = true
-//                },
-//                modifier = Modifier.padding(top = 16.dp)
-//            ) {
-//                Text("Create Relationship")
-//            }
-//        }
-//        LazyColumn(
-//            modifier = Modifier
-//                .padding(top = 8.dp)
-//                .height(250.dp)
-//        ) {
-//            items(localRelationshipListState.value) { localRelationship ->
-//                LocalRelationshipCard(
-//                    relationship = localRelationship,
-//                    onSend = { relationshipData ->
-//                        val allIds =
-//                            relationshipData.sourceUniqueIdentifiers.split(",") + relationshipData.modelUniqueIdentifier
-//
-//                        val db = AppDatabase.getDatabase(context)
-//                        val relationshipDao = db.localRelationshipDao()
-//                        coroutineScope.launch(Dispatchers.IO) {
-//                            val missingIds = checkModelExistence(allIds)
-//                            if (missingIds.isNotEmpty()) {
-//                                withContext(Dispatchers.Main) {
-//                                    Toast.makeText(
-//                                        context,
-//                                        "The following IDs do not exist: $missingIds",
-//                                        Toast.LENGTH_LONG
-//                                    ).show()
-//                                }
-//                                return@launch
-//                            }
-//                            relationshipDao.deleteById(relationshipData.modelUniqueIdentifier)
-//                            uploadRelationship(
-//                                relationshipData
-//                            )
-//                            localRelationshipListState.value =
-//                                relationshipDao.getAll().toMutableList()
-//                        }
-//                    },
-//                    onDelete = { relationshipID ->
-//                        val db = AppDatabase.getDatabase(context)
-//                        val relationshipDao = db.localRelationshipDao()
-//                        coroutineScope.launch(Dispatchers.IO) {
-//                            relationshipDao.deleteById(relationshipID)
-//                            localRelationshipListState.value =
-//                                relationshipDao.getAll().toMutableList()
-//                        }
-//                    }
-//                )
-//            }
-//        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -377,9 +298,11 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             Button(
                 onClick = {
                     coroutineScope.launch {
-                        createDatasetFolder(context, filesDir)
-                        localDatasetListState.value =
-                            listLocalResources(filesDir, "datasets", false)
+                        createDatasetFolder(filesDir)
+                        val localDatasetNameList = listLocalResources(filesDir, "datasets", false)
+                        withContext(Dispatchers.Main) {
+                            localDatasetListState.value = fetchDatasetInfo(localDatasetNameList)
+                        }
                     }
                 },
                 modifier = Modifier.padding(top = 16.dp)
@@ -393,25 +316,20 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 .height(250.dp)
         ) {
             items(localDatasetListState.value) { dataset ->
-                LocalDatasetCard(
+                DatasetCard(
                     dataset,
-                    onUpload = { selectedDataset ->
-                        val db = AppDatabase.getDatabase(context)
-                        val datasetDao = db.localDatasetDao()
+                    numImages = countFilesInDirectory(
+                        filesDir,
+                        "datasets/${dataset.uniqueIdentifier}"
+                    ) - 1,
+                    onRemove = { selectedDatasetName ->
+                        deleteLocalDirectory(selectedDatasetName, filesDir)
                         coroutineScope.launch(Dispatchers.IO) {
-                            val selectedDatasetData = datasetDao.getDataset(selectedDataset)
-                            uploadDataset(selectedDatasetData!!, USERNAME, filesDir)
-                            datasetDao.updateDatasetUpload(selectedDataset, true)
-                        }
-                    },
-                    onRemove = { selectedDataset ->
-                        deleteLocalDirectory(selectedDataset, filesDir)
-                        val db = AppDatabase.getDatabase(context)
-                        val datasetDao = db.localDatasetDao()
-                        coroutineScope.launch(Dispatchers.IO) {
-                            datasetDao.deleteDataset(selectedDataset)
-                            localDatasetListState.value =
+                            val localDatasetNameList =
                                 listLocalResources(filesDir, "datasets", false)
+                            withContext(Dispatchers.Main) {
+                                localDatasetListState.value = fetchDatasetInfo(localDatasetNameList)
+                            }
                         }
                     },
                     onEdit = { selectedDataset ->
@@ -427,16 +345,13 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                             evaluationResults = runInferenceOnDirectory(
                                 context,
                                 modelId = highlightedModel!!,
-                                datasetId = selectedDataset
+                                datasetId = selectedDataset.uniqueIdentifier
                             )
-                            val db = AppDatabase.getDatabase(context)
-                            val datasetDao = db.localDatasetDao()
                             coroutineScope.launch(Dispatchers.IO) {
-                                val selectedDatasetData = datasetDao.getDataset(selectedDataset)
-                                evaluationClasses = selectedDatasetData!!.getClassLabelsAsList()
-                                evaluatedDatasetId = selectedDatasetData.uniqueIdentifier
+                                evaluationClasses = selectedDataset.getClassLabelsAsList()
+                                evaluatedDatasetId = selectedDataset.uniqueIdentifier
                                 evaluatedModelId = highlightedModel
-                                evaluatedDatasetUploadStatus = selectedDatasetData.isUploaded
+                                evaluatedDatasetUploadStatus = selectedDataset.isUploaded
                             }
                             showResultsDialog = true
                         } else {
@@ -453,7 +368,32 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             }
 
         }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
 
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(
+                onClick = {
+                    showFederatedLearningRelationshipDialog = true
+
+                },
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text("Federated Learn")
+            }
+            Button(
+                onClick = {
+                    showFinetuningRelationshipDialog = true
+
+                },
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text("Finetune")
+            }
+        }
         if (showEditInstallDialog && selectedInstalledModel != null) {
             EditModelDialog(
                 onDismiss = { showEditInstallDialog = false },
@@ -478,99 +418,69 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 }
             )
         }
-        if (showRelationshipDialog) {
-            EditRelationshipDialog(
-                onDismiss = { showRelationshipDialog = false },
-                uploadedModels = uploadedModelListState.value.map { it.uniqueIdentifier },
-                localModels = localModelListState.value.map { it.uniqueIdentifier },
+        if (showFederatedLearningRelationshipDialog) {
+            EditFederatedLearningRelationshipDialog(
+                onDismiss = { showFederatedLearningRelationshipDialog = false },
+                models = uploadedModelListState.value + localModelListState.value,
                 onSubmit = { localRelationship ->
                     coroutineScope.launch(Dispatchers.IO) {
-                        val db = AppDatabase.getDatabase(context)
-                        val relationshipDao = db.localRelationshipDao()
-                        try {
-                            relationshipDao.insert(localRelationship)
-                            localRelationshipListState.value =
-                                relationshipDao.getAll().toMutableList()
-                        } catch (e: Exception) {
-                            Log.e("LocalAssetsScreen", "Error updating relationship: ${e.message}")
-                        }
+                        uploadFederatedLearningRelationship(localRelationship)
                     }
-                    showRelationshipDialog = false
+                    showFederatedLearningRelationshipDialog = false
+                }
+            )
+        }
+        if (showFinetuningRelationshipDialog) {
+            EditFinetuningRelationshipDialog(
+                onDismiss = { showFinetuningRelationshipDialog = false },
+                models = uploadedModelListState.value + localModelListState.value,
+                dataset = localDatasetListState.value,
+                onSubmit = { localRelationship ->
+                    coroutineScope.launch(Dispatchers.IO) {
+                        uploadFinetuningRelationship(localRelationship)
+                    }
+                    showFinetuningRelationshipDialog = false
                 }
             )
         }
 
         if (showEditDatabaseDialog && selectedLocalDataset != null) {
-            LaunchedEffect(selectedLocalDataset) {
-                Log.d("EditDataset", "Selected Dataset ID: $selectedLocalDataset")
-                val db = AppDatabase.getDatabase(context)
-                val datasetDao = db.localDatasetDao()
-                try {
-                    selectedLocalDatasetData = withContext(Dispatchers.IO) {
-                        datasetDao.getDataset(selectedLocalDataset!!)
-                    }
-                    Log.d("EditDataset", "Fetched Dataset: $selectedLocalDatasetData")
-                } catch (e: Exception) {
-                    Log.e("EditDataset", "Error fetching dataset: ${e.message}")
-                    showEditDatabaseDialog = false
-                }
-            }
-            if (selectedLocalDatasetData != null) {
-                EditDatasetDialog(
-                    datasetData = selectedLocalDatasetData!!,
-                    filesDir = filesDir,
-                    onDismiss = { showEditDatabaseDialog = false },
-                    onSubmit = { newDatasetData ->
-                        coroutineScope.launch(Dispatchers.IO) {
-                            val db = AppDatabase.getDatabase(context)
-                            val datasetDao = db.localDatasetDao()
-                            try {
-                                datasetDao.updateDataset(
-                                    selectedLocalDatasetData!!.uniqueIdentifier,
-                                    newDatasetData.description,
-                                    newDatasetData.model_task
-                                )
-                                logDatabaseContents(db)
-                                withContext(Dispatchers.Main) {
-                                    showEditDatabaseDialog = false
-                                    selectedLocalDatasetData = null // Reset state after saving
-                                }
-                            } catch (e: Exception) {
-                                Log.e("LocalAssetsScreen", "Error updating data: ${e.message}")
-                            }
-                        }
-                    }
-                )
-            } else {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-
-        }
-        if (showResultsDialog) {
-            EvaluationResultsDialog(
-                isUploadable = evaluatedDatasetUploadStatus && uploadedModelListState.value.any { it.uniqueIdentifier == highlightedModel },
-                results = evaluationResults,
-                classLabels = evaluationClasses,
-                onDismiss = { showResultsDialog = false },
-                onUpload = { results ->
+            EditDatasetDialog(
+                datasetData = selectedLocalDataset!!,
+                filesDir = filesDir,
+                onDismiss = { showEditDatabaseDialog = false },
+                onSubmit = { newDatasetData ->
                     coroutineScope.launch(Dispatchers.IO) {
-                        uploadEvaluationResults(evaluatedModelId!!, evaluatedDatasetId!!, results)
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(
-                                context,
-                                "Results uploaded successfully!",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            uploadDataset(selectedLocalDataset!!, USERNAME, filesDir)
+                            showEditDatabaseDialog = false
+                            selectedLocalDataset = null // Reset state after saving
                         }
                     }
                 }
             )
         }
+    }
+    if (showResultsDialog) {
+        EvaluationResultsDialog(
+            isUploadable = true,
+//                isUploadable = evaluatedDatasetUploadStatus && uploadedModelListState.value.any { it.uniqueIdentifier == highlightedModel },
+            results = evaluationResults,
+            classLabels = evaluationClasses,
+            onDismiss = { showResultsDialog = false },
+            onUpload = { results ->
+                coroutineScope.launch(Dispatchers.IO) {
+                    uploadEvaluationResults(evaluatedModelId!!, evaluatedDatasetId!!, results)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            context,
+                            "Results uploaded successfully!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+        )
     }
 
 }

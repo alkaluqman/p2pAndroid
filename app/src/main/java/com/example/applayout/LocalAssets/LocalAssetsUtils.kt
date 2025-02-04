@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.util.Log
 import com.example.applayout.Data.Database.AppDatabase
 import com.example.applayout.Data.Model.Dataset
+import com.example.applayout.Data.Model.Finetune
 import com.example.applayout.Data.Model.LocalModel
 import com.example.applayout.Data.Model.LocalRelationship
 import com.example.applayout.Data.Model.Model
@@ -52,7 +53,7 @@ fun saveDatasetintoDB(context: Context, fileName: String) {
 }
 
 
-suspend fun createDatasetFolder(context: Context, fileDir: File) {
+fun createDatasetFolder(fileDir: File) {
     val datasetsDir = File(fileDir, "datasets")
     if (!datasetsDir.exists()) {
         datasetsDir.mkdirs() // Create the datasets directory if it doesn't exist
@@ -62,13 +63,10 @@ suspend fun createDatasetFolder(context: Context, fileDir: File) {
     newDatasetDir.mkdirs()
     val labelsFile = File(newDatasetDir, "labels.json")
     labelsFile.writeText("{}")
-    withContext(Dispatchers.IO) {
-        saveDatasetintoDB(context, randomID.toString()) //save an entry into db
-    }
 }
 
 
-suspend fun downloadFile(context: Context, fileDir: File, parentFolder: String): LocalModel? {
+suspend fun downloadFile(fileDir: File, parentFolder: String): LocalModel? {
     val TAG = "DownloadFile"
     return withContext(Dispatchers.IO) {
         try {
@@ -231,6 +229,57 @@ suspend fun fetchModelsInfo(filesDir: File): ModelResponse {
         }
     }
     return ModelResponse(uploadedModels, notUploadedModels)
+}
+
+data class RemoteDataset(
+    val uniqueIdentifier: String,
+    var model_task: String,
+    var description: String,
+    var class_labels: List<String>,
+    var isUploaded: Boolean = false
+) {
+    fun toDataset(): Dataset {
+        return Dataset(
+            uniqueIdentifier = uniqueIdentifier,
+            model_task = model_task,
+            description = description ?: "",
+            class_labels = class_labels.joinToString(", "),
+            isUploaded = isUploaded
+        )
+    }
+}
+
+suspend fun fetchDatasetInfo(localDatasetList: List<String>): List<Dataset> {
+    val datasetDataList = mutableListOf<Dataset>()
+    val client = OkHttpClient()
+    val gson = Gson()
+    withContext(Dispatchers.IO) {
+        localDatasetList
+            .forEach { datasetName ->
+                try {
+                    val url = "https://android-p2p-backend.onrender.com/dataset/$datasetName"
+                    val request = Request.Builder().url(url).build()
+                    val response = client.newCall(request).execute()
+                    if (response.isSuccessful) {
+                        val body = response.body?.string()
+                        val dataset = gson.fromJson<RemoteDataset>(
+                            body,
+                            object : TypeToken<RemoteDataset>() {}.type
+                        )
+                        if (dataset != null) {
+                            datasetDataList.add(dataset.toDataset())
+                        } else {
+                            Log.e("fetchDataset", "invalid data fetched")
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("fetchDataset", "Exception: ${e.message}", e)
+                }
+            }
+    }
+    Log.d("fetchDataset", localDatasetList.toString())
+    Log.d("fetchDataset", datasetDataList.toString())
+    return datasetDataList
 }
 
 
@@ -461,20 +510,19 @@ suspend fun uploadEvaluationResults(weightId: String, datasetId: String, evaluat
     }
 }
 
-data class UploadRelationshipPayload(
+data class UploadFederatedLearningRelationshipPayload(
     val resultant_id: String,
     val component_ids: List<String>
 )
 
-suspend fun uploadRelationship(
+suspend fun uploadFederatedLearningRelationship(
     relationshipData: LocalRelationship,
 ) {
     try {
         val client = OkHttpClient()
         val gson = Gson()
-        if (relationshipData.relationshipType == "Model") {
             val payload = gson.toJson(
-                UploadRelationshipPayload(
+                UploadFederatedLearningRelationshipPayload(
                     resultant_id = relationshipData.modelUniqueIdentifier,
                     component_ids = relationshipData.sourceUniqueIdentifiers.split(",")
                 )
@@ -495,14 +543,55 @@ suspend fun uploadRelationship(
                     "Response Code: ${response.code}, Response Body: ${response.body?.string()}"
                 )
             }
-        } else {
-            Log.d("uploadRelationship", "not of type model")
+    } catch (e: Exception) {
+        Log.e("UploadModel", "Error during model upload: ${e.message}", e)
+        e.printStackTrace()
+    }
+}
+
+data class UploadFinetuningRelationshipPayload(
+    val dataset_id: String,
+    val weight_id: String,
+    val finetune: Finetune
+)
+
+
+suspend fun uploadFinetuningRelationship(
+    relationshipData: LocalRelationship,
+) {
+    try {
+        val client = OkHttpClient()
+        val gson = Gson()
+        val finetune = Finetune()
+        val payload = gson.toJson(
+            UploadFinetuningRelationshipPayload(
+                weight_id = relationshipData.modelUniqueIdentifier,
+                dataset_id = relationshipData.sourceUniqueIdentifiers,
+                finetune = finetune
+            )
+        )
+        Log.d("uploadRelationship", "Generated JSON Payload: $payload")
+        val requestBody = payload.toRequestBody("application/json".toMediaType())
+        val request = Request.Builder()
+            .url("https://android-p2p-backend.onrender.com/weights/finetuned")
+            .post(requestBody)
+            .build()
+
+        Log.d("uploadRelationship", "Sending POST request to serverUrl")
+        withContext(Dispatchers.IO) {
+            val response = client.newCall(request).execute()
+            Log.d(
+                "uploadRelationship",
+                "Response Code: ${response.code}, Response Body: ${response.body?.string()}"
+            )
         }
     } catch (e: Exception) {
         Log.e("UploadModel", "Error during model upload: ${e.message}", e)
         e.printStackTrace()
     }
 }
+
+
 
 suspend fun uploadFileToGCS(
     fileName: String,
