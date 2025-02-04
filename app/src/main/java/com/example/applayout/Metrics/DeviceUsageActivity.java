@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.example.applayout.R;
@@ -40,6 +41,53 @@ public class DeviceUsageActivity extends AppCompatActivity {
     private final int APP_PID = Process.myPid();
 
     private final int DELAY_MILLIS = 1000;
+
+    // Variables for tracking the usage during model training. Should be reset after each run.
+    private boolean isTracking = false;
+    private double minCpu = Double.MAX_VALUE;
+    private double maxCpu = Double.MIN_VALUE;
+    private double totalCpu = 0.0;
+    private int cpuSamples = 0;
+
+    private double minMem = Long.MAX_VALUE;
+    private double maxMem = Long.MIN_VALUE;
+    private double totalMem = 0;
+    private int memSamples = 0;
+
+    private HashMap<String, Object> trackingResults = new HashMap<>();
+
+    /**
+     * API for clients to invoke when model.train() is called.
+     */
+    public void startTracking() {
+        resetTrackingVariables();
+        isTracking = true;
+
+        handler.postDelayed(trackingRunnable, DELAY_MILLIS);
+    }
+
+    public void stopTracking() {
+        handler.removeCallbacks(trackingRunnable);
+
+        // Calculate averages
+        double avgCpu = cpuSamples > 0 ? totalCpu / cpuSamples : 0.0;
+        double avgMem = memSamples > 0 ? totalMem / memSamples : 0.0;
+
+        // Save results in the HashMap
+        trackingResults.put("minCpu", minCpu);
+        trackingResults.put("maxCpu", maxCpu);
+        trackingResults.put("avgCpu", avgCpu);
+
+        trackingResults.put("minMem", minMem);
+        trackingResults.put("maxMem", maxMem);
+        trackingResults.put("avgMem", avgMem);
+
+        // Log results (replace this with saving to a file or another desired action)
+        System.out.println("Tracking Results: " + trackingResults);
+
+        resetTrackingVariables();
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,8 +128,49 @@ public class DeviceUsageActivity extends AppCompatActivity {
         displayCpuUsage();
         displayNetworkUsage();
         displayBatteryUsage();
-        getChildProcesses();
     }
+
+    private void resetTrackingVariables() {
+        isTracking = false;
+
+        minCpu = Double.MAX_VALUE;
+        maxCpu = Double.MIN_VALUE;
+        totalCpu = 0.0;
+        cpuSamples = 0;
+
+        minMem = Long.MAX_VALUE;
+        maxMem = Long.MIN_VALUE;
+        totalMem = 0;
+        memSamples = 0;
+
+        trackingResults = new HashMap<>();
+    }
+
+    private final Runnable trackingRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!isTracking) return;
+
+            double[] usage = calculateAppCpuAndMemUsage();
+            double currentCpu = usage[0];
+            double currentMem = usage[1];
+
+            // Update CPU usage
+            minCpu = Math.min(minCpu, currentCpu);
+            maxCpu = Math.max(maxCpu, currentCpu);
+            totalCpu += currentCpu;
+            cpuSamples++;
+
+            // Update memory usage
+            minMem = Math.min(minMem, currentMem);
+            maxMem = Math.max(maxMem, currentMem);
+            totalMem += currentMem;
+            memSamples++;
+
+            // Continue tracking
+            handler.postDelayed(this, DELAY_MILLIS);
+        }
+    };
 
     private void displayBatteryUsage() {
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
@@ -120,54 +209,59 @@ public class DeviceUsageActivity extends AppCompatActivity {
         networkUsageText.setText(networkUsageStr);
     }
 
-    private void displayMemoryUsage() {
-        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
-        activityManager.getMemoryInfo(memoryInfo);
+        private void displayMemoryUsage() {
+            ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+            activityManager.getMemoryInfo(memoryInfo);
 
-        long availableMemory = memoryInfo.availMem / (1024 * 1024);
+            long availableMemory = memoryInfo.availMem / (1024 * 1024);
 
-        long totalMemory = memoryInfo.totalMem / (1024 * 1024);
+            long totalMemory = memoryInfo.totalMem / (1024 * 1024);
 
-        Runtime runtime = Runtime.getRuntime();
-        long usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
-        long maxMemory = runtime.maxMemory() / (1024 * 1024);
+            Runtime runtime = Runtime.getRuntime();
+            long usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+            long maxMemory = runtime.maxMemory() / (1024 * 1024);
 
-        double availableMemoryPercentage = (availableMemory * 100.0) / totalMemory;
-        availableMemoryProgressBar.setProgress((int) availableMemoryPercentage);
+            double availableMemoryPercentage = (availableMemory * 100.0) / totalMemory;
+            availableMemoryProgressBar.setProgress((int) availableMemoryPercentage);
 
-        double appUsedMemoryPercentage = (usedMemory * 100.0) / maxMemory;
-        appUsedMemoryProgressBar.setProgress((int) appUsedMemoryPercentage);
+            double appUsedMemoryPercentage = (usedMemory * 100.0) / maxMemory;
+            appUsedMemoryProgressBar.setProgress((int) appUsedMemoryPercentage);
 
-        String memoryUsageStr = "Device Available Memory: " + availableMemory + " MB\n" +
-                "Device Total Memory: " + totalMemory + " MB\n" +
-                "App Used Memory: " + usedMemory + " MB\n" +
-                "App Max Memory: " + maxMemory + " MB";
+            String memoryUsageStr = "Device Available Memory: " + availableMemory + " MB\n" +
+                    "Device Total Memory: " + totalMemory + " MB\n" +
+                    "App Used Memory: " + usedMemory + " MB\n" +
+                    "App Max Memory: " + maxMemory + " MB";
 
-        memoryUsageText.setText(memoryUsageStr);
-    }
+            memoryUsageText.setText(memoryUsageStr);
+        }
 
     private void displayCpuUsage() {
-        double cpuUsage = calculateAppCpuUsage();
+        double cpuUsage = calculateAppCpuAndMemUsage()[0];
         String cpuUsageStr = "App CPU Usage: " + String.format("%.2f", cpuUsage) + "%";
         cpuUsageText.setText(cpuUsageStr);
     }
 
-    private double calculateAppCpuUsage() {
+    private double[] calculateAppCpuAndMemUsage() {
         double totalCpu = 0.0;
+        double totalMem = 0.0;
         try {
             // Fetch CPU usage for the parent process
-            totalCpu += getCpuUsageForProcess(APP_PID);
+            double[] usage = getCpuAndMemUsageForProcess(APP_PID);
+            totalCpu += usage[0];
+            totalMem += usage[1];
 
             // Fetch CPU usage for all child processes
             List<Integer> childPids = getChildProcesses();
             for (int pid : childPids) {
-                totalCpu += getCpuUsageForProcess(pid);
+                usage = getCpuAndMemUsageForProcess(pid);
+                totalCpu += usage[0];
+                totalMem += usage[1];
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return totalCpu;
+        return new double[]{totalCpu, totalMem};
     }
 
     private List<Integer> getChildProcesses() {
@@ -204,7 +298,8 @@ public class DeviceUsageActivity extends AppCompatActivity {
     // 31767 | u0_a483 | 10 | -10 |  16G | 232M | 142M | S |   0.0  | 3.1  | 0:37.45 | com.example.applayout
     //   0        1      2     3      4      5     6     7      8       9      10    |  11
 
-    private double getCpuUsageForProcess(int pid) {
+    // Returns CPU, Mem
+    private double[] getCpuAndMemUsageForProcess(int pid) {
         try {
             String line;
 
@@ -213,14 +308,14 @@ public class DeviceUsageActivity extends AppCompatActivity {
             while ((line = br.readLine()) != null) {
                 if (line.contains(Integer.toString(pid))) {
                     String[] info = line.trim().replaceAll(" +", " ").split(" ");
-                    if (info.length < 9) return 0.0;
+                    if (info.length < 10) return new double[]{0.0, 0.0};
                     br.close();
-                    return Double.parseDouble(info[8]);
+                    return new double[]{Double.parseDouble(info[8]), Double.parseDouble(info[9])};
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return 0.0;
+        return new double[]{0.0, 0.0};
     }
 }

@@ -46,7 +46,7 @@ public class FederatedLearningActivity extends BaseActivity {
     ProgressBar progressBar;
     TextView status, text;
     Button btConfirm;
-    final boolean THREAD_TEST = true;
+    final boolean THREAD_TEST = false;
 
     private class TrainModelTask extends AsyncTask<Void, Integer, Void> {
 
