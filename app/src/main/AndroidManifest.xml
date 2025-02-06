@@ -1,31 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<<<<<<< HEAD
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <!-- Bluetooth Permissions-->
-    <uses-permission android:name="android.permission.BLUETOOTH"
-        android:maxSdkVersion="30"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
-        android:maxSdkVersion="30"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:required="true"
-        android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:required="true"
-        android:name="android.permission.CHANGE_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-=======
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!-- Bluetooth Permissions -->
+
+    <!-- Bluetooth Permissions-->
     <uses-permission
         android:name="android.permission.BLUETOOTH"
         android:maxSdkVersion="30" />
@@ -48,7 +25,7 @@
     <uses-permission
         android:name="android.permission.CHANGE_WIFI_STATE"
         android:required="true" />
->>>>>>> 79752c5 (feat: add DeviceUsageActivity class, refactor MainActivity layout)
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -57,20 +34,14 @@
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-<<<<<<< HEAD
         android:theme="@style/Theme.AppLayout"
-        android:requestLegacyExternalStorage="true"
         android:usesCleartextTraffic="true">
 
-        <activity android:name=".MainActivity"
-=======
-        android:theme="@style/Theme.AppLayout">
         <activity
             android:name=".Metrics.DeviceUsageActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"
->>>>>>> 79752c5 (feat: add DeviceUsageActivity class, refactor MainActivity layout)
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -78,50 +49,31 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-<<<<<<< HEAD
 
-        <activity android:name=".Report.ReportActivity"
-            android:exported="true">
-        </activity>
-
-        <activity android:name=".Communications.CommunicationActivity"
-            android:exported="true">
-        </activity>
-
-        <activity android:name=".Communications.BluetoothActivity"
-            android:exported="true">
-        </activity>
-
-        <activity android:name=".Communications.WifiActivity"
-            android:exported="true">
-        </activity>
-        <activity android:name=".FederatedLearning.FederatedLearningActivity"
-            android:exported="true">
-        </activity>
-        <activity android:name=".Report.ReportActivity2"
-            android:exported="true"/>
-        <activity android:name=".LocalAssets.LocalAssetActivity"
-            android:exported="true"/>
-=======
         <activity
             android:name=".Report.ReportActivity"
             android:exported="true"></activity>
+
         <activity
             android:name=".Communications.CommunicationActivity"
             android:exported="true"></activity>
+
         <activity
             android:name=".Communications.BluetoothActivity"
             android:exported="true"></activity>
+
         <activity
             android:name=".Communications.WifiActivity"
             android:exported="true"></activity>
         <activity
             android:name=".FederatedLearning.FederatedLearningActivity"
-            android:exported="true" />
+            android:exported="true"></activity>
         <activity
             android:name=".Report.ReportActivity2"
             android:exported="true" />
->>>>>>> 79752c5 (feat: add DeviceUsageActivity class, refactor MainActivity layout)
+        <activity
+            android:name=".LocalAssets.LocalAssetActivity"
+            android:exported="true" />
     </application>
 
 </manifest>
