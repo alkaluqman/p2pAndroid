@@ -14,8 +14,8 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.applayout.BaseActivity;
 import com.example.applayout.Communications.CommunicationActivity;
 import com.example.applayout.R;
 
@@ -37,14 +37,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ReportActivity2 extends AppCompatActivity {
+public class ReportActivity2 extends BaseActivity {
     TextView modelDetails;
     ListView lvReport;
     private Context context;
     Button btStart;
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_report);
+        super.onCreate(savedInstanceState);
 
         modelDetails = findViewById(R.id.modelDetails);
         modelDetails.setText("Model Name: model.tflite\nLast Trained On: 23/04/2024\n");

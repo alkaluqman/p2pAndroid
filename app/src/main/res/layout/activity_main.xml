@@ -73,18 +73,6 @@
         app:layout_constraintTop_toBottomOf="@+id/statusApplication">
 
         <Button
-            android:id="@+id/btDeviceUsage"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/device_usage" />
-
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
-
-        <Button
             android:id="@+id/btConfirmApplication"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

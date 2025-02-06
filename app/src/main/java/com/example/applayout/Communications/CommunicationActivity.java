@@ -5,18 +5,19 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.applayout.LocalAssets.LocalAssetActivity;
 import com.example.applayout.R;
 
-public class CommunicationActivity extends AppCompatActivity {
+    
+import com.example.applayout.BaseActivity;
+
+public class CommunicationActivity extends BaseActivity {
     Button btWifi, btBluetooth, btMarketPlace;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_communications);
+        super.onCreate(savedInstanceState);
         btWifi = findViewById(R.id.btWifi);
         btBluetooth = findViewById(R.id.btBluetooth);
         btMarketPlace= findViewById(R.id.btMarketplace);

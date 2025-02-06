@@ -9,13 +9,11 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.example.applayout.Metrics.DeviceUsageActivity;
 import com.example.applayout.Report.ReportActivity;
 
 public class MainActivity extends BaseActivity {
     TextView status;
     Button btConfirm;
-    Button btDeviceUsage;
     ListView lvApplications;
     String[] applications;
     public static String string;
@@ -26,7 +24,6 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         lvApplications = findViewById(R.id.lvApplication);
         btConfirm = findViewById(R.id.btConfirmApplication);
-        btDeviceUsage = findViewById(R.id.btDeviceUsage);
         status = findViewById(R.id.statusApplication);
 
         applications = new String[2];
@@ -51,12 +48,5 @@ public class MainActivity extends BaseActivity {
             }
         });
 
-        btDeviceUsage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(view.getContext(), DeviceUsageActivity.class);
-                startActivity(intent);
-            }
-        });
     }
 }

@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
@@ -28,10 +27,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.example.applayout.BaseActivity;
 import com.example.applayout.FederatedLearning.FederatedLearningActivity;
 import com.example.applayout.R;
 
@@ -46,7 +45,7 @@ import java.nio.channels.FileChannel;
 import java.util.Set;
 import java.util.UUID;
 
-public class BluetoothActivity extends AppCompatActivity {
+public class BluetoothActivity extends BaseActivity {
     BluetoothActivity context;
     Button listen, send, listDevices, selectFile;
     ListView listView;
@@ -75,8 +74,8 @@ public class BluetoothActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bluetooth);
+        super.onCreate(savedInstanceState);
         requestWriteExternalStoragePermission();
         findViewByIdes();
 

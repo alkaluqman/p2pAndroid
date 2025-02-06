@@ -14,8 +14,8 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.applayout.BaseActivity;
 import com.example.applayout.MainActivity;
 import com.example.applayout.R;
 import com.example.applayout.Report.ReportActivity2;
@@ -38,7 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FederatedLearningActivity extends AppCompatActivity{
+public class FederatedLearningActivity extends BaseActivity {
     Context context = this;
     ProgressBar progressBar;
     TextView status, text;
@@ -139,9 +139,9 @@ public class FederatedLearningActivity extends AppCompatActivity{
         }
     }
     protected void onCreate(Bundle savedInstanceState) {
+        setContentView(R.layout.activity_federatedlearning);
         super.onCreate(savedInstanceState);
         //OnDeviceTraining.onDeviceTraining();
-        setContentView(R.layout.activity_federatedlearning);
         text = findViewById(R.id.federated_learning_text);
         status = findViewById(R.id.federated_learning_status);
         btConfirm = findViewById(R.id.btConfirmFederatedLearning);

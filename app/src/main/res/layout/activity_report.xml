@@ -7,6 +7,9 @@
     android:layout_height="match_parent"
     tools:context=".Report.ReportActivity">
 
+    <include layout="@layout/deviceusage_fab" />
+
+
     <TextView
         android:id="@+id/titleReport"
         android:text="ML Model Report"
