@@ -53,7 +53,7 @@ fun saveDatasetintoDB(context: Context, fileName: String) {
 }
 
 
-fun createDatasetFolder(fileDir: File) {
+fun createDatasetFolder(fileDir: File): String {
     val datasetsDir = File(fileDir, "datasets")
     if (!datasetsDir.exists()) {
         datasetsDir.mkdirs() // Create the datasets directory if it doesn't exist
@@ -63,6 +63,7 @@ fun createDatasetFolder(fileDir: File) {
     newDatasetDir.mkdirs()
     val labelsFile = File(newDatasetDir, "labels.json")
     labelsFile.writeText("{}")
+    return randomID.toString()
 }
 
 
@@ -425,7 +426,7 @@ data class UploadDatasetPayload(
     val username: String
 )
 
-suspend fun uploadDataset(
+suspend fun uploadDatasetNode(
     datasetData: Dataset,
     username: String,
     filesDir: File
@@ -463,6 +464,45 @@ suspend fun uploadDataset(
         }
     } catch (e: Exception) {
         Log.e("UploadModel", "Error during model upload: ${e.message}", e)
+        e.printStackTrace()
+    }
+}
+
+
+suspend fun editDataset(
+    datasetData: Dataset,
+    filesDir: File
+) {
+    try {
+        val client = OkHttpClient()
+        val gson = Gson()
+        val numImages = countFilesInDirectory(filesDir, "datasets/${datasetData.uniqueIdentifier}")
+        val payload =
+            gson.toJson(
+                DatasetForApi(
+                    uniqueIdentifier = datasetData.uniqueIdentifier,
+                    model_task = datasetData.model_task,
+                    description = datasetData.description,
+                    num_images = numImages - 1, //remove labels.json count
+                    class_labels = datasetData.getClassLabelsAsList()
+                )
+            )
+
+        val requestBody = payload.toRequestBody("application/json".toMediaType())
+        val request = Request.Builder()
+            .url("https://android-p2p-backend.onrender.com/dataset/${datasetData.uniqueIdentifier}")
+            .patch(requestBody)
+            .build()
+        Log.d("editDataset", "Sending patch request to serverUrl")
+        withContext(Dispatchers.IO) {
+            val response = client.newCall(request).execute()
+            Log.d(
+                "editDataset",
+                "Response Code: ${response.code}, Response Body: ${response.body?.string()}"
+            )
+        }
+    } catch (e: Exception) {
+        Log.e("editDataset", "Error during dataset upload: ${e.message}", e)
         e.printStackTrace()
     }
 }

@@ -298,7 +298,12 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             Button(
                 onClick = {
                     coroutineScope.launch {
-                        createDatasetFolder(filesDir)
+                        val datasetName = createDatasetFolder(filesDir)
+                        uploadDatasetNode(
+                            Dataset(uniqueIdentifier = datasetName),
+                            USERNAME,
+                            filesDir
+                        )
                         val localDatasetNameList = listLocalResources(filesDir, "datasets", false)
                         withContext(Dispatchers.Main) {
                             localDatasetListState.value = fetchDatasetInfo(localDatasetNameList)
@@ -452,7 +457,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 onSubmit = { newDatasetData ->
                     coroutineScope.launch(Dispatchers.IO) {
                         withContext(Dispatchers.Main) {
-                            uploadDataset(selectedLocalDataset!!, USERNAME, filesDir)
+                            editDataset(selectedLocalDataset!!, filesDir)
                             showEditDatabaseDialog = false
                             selectedLocalDataset = null // Reset state after saving
                         }
