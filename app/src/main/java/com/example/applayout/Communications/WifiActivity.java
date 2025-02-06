@@ -47,12 +47,12 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.applayout.BaseActivity;
 import com.example.applayout.FederatedLearning.FederatedLearningActivity;
 import com.example.applayout.R;
 
-public class WifiActivity extends AppCompatActivity {
+public class WifiActivity extends BaseActivity {
     Button aSwitch, discoverButton, selectButton, sendButton;
     ListView listView;
     TextView connectionStatus;
@@ -81,8 +81,8 @@ public class WifiActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wifi);
+        super.onCreate(savedInstanceState);
         requestWriteExternalStoragePermission();
         initialWork();
         exqListener();

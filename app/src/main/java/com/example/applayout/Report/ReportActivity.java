@@ -7,7 +7,6 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.renderscript.ScriptGroup;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -15,19 +14,13 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import org.checkerframework.checker.units.qual.A;
-import org.tensorflow.lite.task.vision.detector.ObjectDetector;
-import org.tensorflow.lite.support.model.Model;
-import org.tensorflow.lite.gpu.CompatibilityList;
-import org.tensorflow.lite.gpu.GpuDelegate;
-
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.applayout.BaseActivity;
 import com.example.applayout.Communications.CommunicationActivity;
 import com.example.applayout.R;
 
 import org.tensorflow.lite.Interpreter;
-import org.tensorflow.lite.Tensor;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -47,14 +40,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ReportActivity extends AppCompatActivity {
+public class ReportActivity extends BaseActivity {
     TextView modelDetails;
     ListView lvReport;
     private Context context;
     Button btStart;
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_report);
+        super.onCreate(savedInstanceState);
 
         modelDetails = findViewById(R.id.modelDetails);
         modelDetails.setText("Model Name: model.tflite\nLast Trained On: 23/04/2024\n");

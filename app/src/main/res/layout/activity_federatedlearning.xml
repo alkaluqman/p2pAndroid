@@ -7,6 +7,9 @@
     android:layout_height="wrap_content"
     tools:context=".FederatedLearning.FederatedLearningActivity">
 
+    <include layout="@layout/deviceusage_fab" />
+
+
     <TextView
         android:id="@+id/federated_learning_title"
         android:text="Federated Learning"
@@ -58,6 +61,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/federated_learning_status"
+        style="@style/CustomButtonStyle"
         app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -7,6 +7,9 @@
     android:layout_height="wrap_content"
     tools:context=".Communications.BluetoothActivity">
 
+    <include layout="@layout/deviceusage_fab" />
+
+
     <TextView
         android:id="@+id/bluetooth"
         android:text="Bluetooth"
@@ -66,6 +69,7 @@
         app:layout_constraintTop_toBottomOf="@id/status_title"
         app:layout_constraintBottom_toTopOf="@+id/btListDeviceBluetooth"
         android:layout_marginLeft="20dp"
+        style="@style/CustomButtonStyle"
         android:layout_marginRight="20dp"/>
 
     <Button
@@ -80,6 +84,7 @@
         app:layout_constraintTop_toBottomOf="@id/btListenBluetooth"
         app:layout_constraintBottom_toTopOf="@+id/btSelectBluetooth"
         app:layout_constraintEnd_toEndOf="parent"
+        style="@style/CustomButtonStyle"
         app:layout_constraintBottom_toBottomOf="parent"/>
 
     <Button
@@ -94,6 +99,7 @@
         app:layout_constraintBottom_toTopOf="@+id/btSendBluetooth"
         android:id="@+id/btSelectBluetooth"
         app:layout_constraintEnd_toEndOf="parent"
+        style="@style/CustomButtonStyle"
         app:layout_constraintBottom_toBottomOf="parent"/>
 
     <Button
@@ -108,6 +114,7 @@
         android:id="@+id/btSendBluetooth"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
+        style="@style/CustomButtonStyle"
         android:layout_marginBottom="10dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

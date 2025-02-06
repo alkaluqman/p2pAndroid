@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">AppLayout</string>
+    <string name="p2p_fl_header">P2P FL</string>
+    <string name="choose_application_prompt">Choose the Neural Network application that you want to use</string>
+    <string name="no_application_selected">No Application Selected</string>
+    <string name="privacy_disclaimer">Privacy Disclaimer</string>
+    <string name="device_usage">Device Usage</string>
+    <string name="confirm">Confirm</string>
 </resources>

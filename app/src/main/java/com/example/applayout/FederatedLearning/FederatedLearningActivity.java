@@ -1,6 +1,5 @@
 package com.example.applayout.FederatedLearning;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
@@ -11,22 +10,19 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.applayout.BaseActivity;
 import com.example.applayout.MainActivity;
 import com.example.applayout.R;
-import com.example.applayout.Report.ReportActivity;
 import com.example.applayout.Report.ReportActivity2;
 
 import org.tensorflow.lite.Interpreter;
 
 import java.io.BufferedReader;
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -41,23 +37,34 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class FederatedLearningActivity extends AppCompatActivity{
+public class FederatedLearningActivity extends BaseActivity {
     Context context = this;
     ProgressBar progressBar;
     TextView status, text;
     Button btConfirm;
+    final boolean THREAD_TEST = false;
 
-    private class TrainModelTask extends AsyncTask<Void,Integer,Void>{
-        protected void onPreExecute(){
+    private class TrainModelTask extends AsyncTask<Void, Integer, Void> {
+
+        String model;
+
+        public TrainModelTask(String model) {
+            this.model = model;
+        }
+        protected void onPreExecute() {
             super.onPreExecute();
             progressBar = findViewById(R.id.progressBar);
             progressBar.setVisibility(View.VISIBLE);
         }
 
-        protected Void doInBackground(Void... voids){
-            try (Interpreter anotherInterpreter = new Interpreter(loadModelFile(context.getAssets(),"model.tflite"))) {
+        protected Void doInBackground(Void... voids) {
+            try (Interpreter anotherInterpreter = new Interpreter(loadModelFile(context.getAssets(), model))) {
                 int NUM_EPOCHS = 100;
+//                int NUM_EPOCHS = 100;
                 int BATCH_SIZE = 100;
                 int IMG_HEIGHT = 28;
                 int IMG_WIDTH = 28;
@@ -118,38 +125,42 @@ public class FederatedLearningActivity extends AppCompatActivity{
                     }
 
                     // Print the loss output for every 10 epochs.
+                    String message = "Finished " + (epoch + 1) + " epochs, current loss: " + losses[epoch];
+                    if (THREAD_TEST) {
+                        message += " in Thread ID: " + Thread.currentThread().getId();
+                    }
                     if ((epoch + 1) % 10 == 0) {
-                        System.out.println(
-                                "Finished " + (epoch + 1) + " epochs, current loss: " + losses[epoch]);
+                        System.out.println(message);
                     }
                 }
                 saveModelWeights(anotherInterpreter);
-            } catch (IOException e){
-                Log.e("ReportActivity","Error",e);
+            } catch (IOException e) {
+                Log.e("ReportActivity", "Error", e);
             }
             return null;
         }
 
-        protected void onProgressUpdate(Integer... progress){
+        protected void onProgressUpdate(Integer... progress) {
             super.onProgressUpdate(progress);
             progressBar.setProgress(progress[0]);
         }
 
-        protected void onPostExecute(Void result){
+        protected void onPostExecute(Void result) {
             super.onPostExecute(result);
             progressBar.setVisibility(View.GONE);
             text.setText("Training Completed");
             btConfirm.setVisibility(View.VISIBLE);
         }
     }
+
     protected void onCreate(Bundle savedInstanceState) {
+        setContentView(R.layout.activity_federatedlearning);
         super.onCreate(savedInstanceState);
         //OnDeviceTraining.onDeviceTraining();
-        setContentView(R.layout.activity_federatedlearning);
         text = findViewById(R.id.federated_learning_text);
         status = findViewById(R.id.federated_learning_status);
         btConfirm = findViewById(R.id.btConfirmFederatedLearning);
-        status.setText("Learning From: OPPO R11\nML Objective: "+ MainActivity.string +"\nML Model Size: 0.82MB");
+        status.setText("Learning From: OPPO R11\nML Objective: " + MainActivity.string + "\nML Model Size: 0.82MB");
         btConfirm.setVisibility(View.GONE);
 
         btConfirm.setOnClickListener(new View.OnClickListener() {
@@ -160,7 +171,24 @@ public class FederatedLearningActivity extends AppCompatActivity{
             }
         });
 
-        new TrainModelTask().execute();
+        if (THREAD_TEST) {
+            final int NUM_MODELS = 10;
+
+            // EXPERIMENT USING THREADS
+            ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+            System.out.println("Size: " + Runtime.getRuntime().availableProcessors());
+
+            for (int i = 0; i < NUM_MODELS; i++) {
+                executor.execute(() -> {
+                    new TrainModelTask("model.tflite").execute();
+                });
+            }
+
+            executor.shutdown(); // Ensures all tasks finish
+        } else {
+
+            new TrainModelTask("model.tflite").execute();
+        }
 
         /*context = this;
 

@@ -7,6 +7,9 @@
     android:layout_height="match_parent"
     tools:context=".Report.ReportActivity">
 
+    <include layout="@layout/deviceusage_fab" />
+
+
     <TextView
         android:id="@+id/titleReport2"
         android:text="ML Model Report"
@@ -58,7 +61,9 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/lvReport2"
+        style="@style/CustomButtonStyle"
         app:layout_constraintEnd_toEndOf="parent"
+
         android:layout_marginBottom="10dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
