@@ -9,7 +9,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.example.applayout.Finetune.FederatedLearningActivity;
+import com.example.applayout.Finetune.FinetuneActivity;
 import com.example.applayout.Report.ReportActivity;
 
 import java.io.BufferedReader;
@@ -112,7 +112,7 @@ public class MainActivity extends BaseActivity {
                         }).start();
                     }
                 } else {
-                    Intent intent = new Intent(view.getContext(), FederatedLearningActivity.class);
+                    Intent intent = new Intent(view.getContext(), FinetuneActivity.class);
                     startActivity(intent);
                 }
             }
