@@ -31,7 +31,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.applayout.BaseActivity;
-import com.example.applayout.FederatedLearning.FederatedLearningActivity;
+import com.example.applayout.Finetune.FederatedLearningActivity;
 import com.example.applayout.R;
 
 import java.io.File;

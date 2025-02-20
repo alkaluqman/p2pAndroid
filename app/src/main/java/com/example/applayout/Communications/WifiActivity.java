@@ -49,7 +49,7 @@ import java.util.List;
 
 
 import com.example.applayout.BaseActivity;
-import com.example.applayout.FederatedLearning.FederatedLearningActivity;
+import com.example.applayout.Finetune.FederatedLearningActivity;
 import com.example.applayout.R;
 
 public class WifiActivity extends BaseActivity {

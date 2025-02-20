@@ -1,4 +1,4 @@
-package com.example.applayout.FederatedLearning;
+package com.example.applayout.Finetune;
 
 import android.content.Context;
 import android.content.Intent;
@@ -37,11 +37,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class FederatedLearningActivity extends BaseActivity {
+public class FinetuneActivity extends BaseActivity {
     Context context = this;
     ProgressBar progressBar;
     TextView status, text;
@@ -50,11 +49,22 @@ public class FederatedLearningActivity extends BaseActivity {
 
     private class TrainModelTask extends AsyncTask<Void, Integer, Void> {
 
-        String model;
+        private String model;
+        private int numEpochs;
+        private int batchSize;
+        private int imgHeight;
+        private int imgWidth;
+        private int numTrainings;
 
-        public TrainModelTask(String model) {
+        public TrainModelTask(String model, int numEpochs, int batchSize, int imgHeight, int imgWidth, int numTrainings) {
             this.model = model;
+            this.numEpochs = numEpochs;
+            this.batchSize = batchSize;
+            this.imgHeight = imgHeight;
+            this.imgWidth = imgWidth;
+            this.numTrainings = numTrainings;
         }
+
         protected void onPreExecute() {
             super.onPreExecute();
             progressBar = findViewById(R.id.progressBar);
@@ -63,13 +73,13 @@ public class FederatedLearningActivity extends BaseActivity {
 
         protected Void doInBackground(Void... voids) {
             try (Interpreter anotherInterpreter = new Interpreter(loadModelFile(context.getAssets(), model))) {
-                int NUM_EPOCHS = 100;
 //                int NUM_EPOCHS = 100;
-                int BATCH_SIZE = 100;
-                int IMG_HEIGHT = 28;
-                int IMG_WIDTH = 28;
-                int NUM_TRAININGS = 60000;
-                int NUM_BATCHES = NUM_TRAININGS / BATCH_SIZE;
+////                int NUM_EPOCHS = 100;
+//                int BATCH_SIZE = 100;
+//                int IMG_HEIGHT = 28;
+//                int IMG_WIDTH = 28;
+//                int NUM_TRAININGS = 60000;
+//                int NUM_BATCHES = NUM_TRAININGS / BATCH_SIZE;
 
                 //List<FloatBuffer> trainImageBatches = new ArrayList<>(NUM_BATCHES);
                 //List<FloatBuffer> trainLabelBatches = new ArrayList<>(NUM_BATCHES);
@@ -79,14 +89,14 @@ public class FederatedLearningActivity extends BaseActivity {
                 for (int i = 0; i < 10; ++i) {
                     String imagePath = "test_images/image" + i + ".png";
                     String labelPath = "labels/label" + i + ".txt";
-                    FloatBuffer trainImages = readImageAsFloatBuffer(context, imagePath, IMG_WIDTH, IMG_HEIGHT);
+                    FloatBuffer trainImages = readImageAsFloatBuffer(context, imagePath, imgWidth, imgHeight);
                     FloatBuffer trainLabels = readLabelAsFloatBuffer(context, labelPath, 10); // Assuming 10 classes
 
                     if (trainImages != null && trainLabels != null) {
                         trainImageBatches.add(trainImages);
                         trainLabelBatches.add(trainLabels);
                     } else {
-                        Log.e("FederatedLearning", "Failed to read image or label for batch " + i);
+                        Log.e("FinetuneActivity", "Failed to read image or label for batch " + i);
                     }
                 }
 
@@ -104,8 +114,8 @@ public class FederatedLearningActivity extends BaseActivity {
                 }*/
 
                 // Run training for a few steps.
-                float[] losses = new float[NUM_EPOCHS];
-                for (int epoch = 0; epoch < NUM_EPOCHS; ++epoch) {
+                float[] losses = new float[numEpochs];
+                for (int epoch = 0; epoch < numEpochs; ++epoch) {
                     for (int batchIdx = 0; batchIdx < 10; ++batchIdx) {
                         Map<String, Object> inputs = new HashMap<>();
                         inputs.put("x", trainImageBatches.get(batchIdx));
@@ -116,7 +126,7 @@ public class FederatedLearningActivity extends BaseActivity {
                         outputs.put("loss", lossBuffer);
 
                         anotherInterpreter.runSignature(inputs, outputs, "train");
-                        final int progressPercentage = (epoch * 100) / NUM_EPOCHS;
+                        final int progressPercentage = (epoch * 100) / numEpochs;
                         progressBar.setProgress(progressPercentage);
                         //float lossValue = lossBuffer.get(0);
 
@@ -154,12 +164,12 @@ public class FederatedLearningActivity extends BaseActivity {
     }
 
     protected void onCreate(Bundle savedInstanceState) {
-        setContentView(R.layout.activity_federatedlearning);
+        setContentView(R.layout.activity_finetune);
         super.onCreate(savedInstanceState);
         //OnDeviceTraining.onDeviceTraining();
-        text = findViewById(R.id.federated_learning_text);
-        status = findViewById(R.id.federated_learning_status);
-        btConfirm = findViewById(R.id.btConfirmFederatedLearning);
+        text = findViewById(R.id.finetune_text);
+        status = findViewById(R.id.finetune_status);
+        btConfirm = findViewById(R.id.btConfirmFinetune);
         status.setText("Learning From: OPPO R11\nML Objective: " + MainActivity.string + "\nML Model Size: 0.82MB");
         btConfirm.setVisibility(View.GONE);
 
@@ -180,14 +190,14 @@ public class FederatedLearningActivity extends BaseActivity {
 
             for (int i = 0; i < NUM_MODELS; i++) {
                 executor.execute(() -> {
-                    new TrainModelTask("model.tflite").execute();
+                    new TrainModelTask("model.tflite", 100, 100, 28, 28, 60000).execute();
                 });
             }
 
             executor.shutdown(); // Ensures all tasks finish
         } else {
 
-            new TrainModelTask("model.tflite").execute();
+            new TrainModelTask("model.tflite", 100, 100, 28, 28, 60000).execute();
         }
 
         /*context = this;
@@ -308,6 +318,6 @@ public class FederatedLearningActivity extends BaseActivity {
         Map<String, Object> outputs = new HashMap<>();
 
         interpreter.runSignature(inputs, outputs, "save");
-        Log.d("FederatedLearning", "Model weights saved to " + file.getAbsolutePath());
+        Log.d("FinetuneActivity", "Model weights saved to " + file.getAbsolutePath());
     }
 }

@@ -5,13 +5,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    tools:context=".FederatedLearning.FederatedLearningActivity">
+    tools:context=".Finetune.FinetuneActivity">
 
     <include layout="@layout/deviceusage_fab" />
 
 
     <TextView
-        android:id="@+id/federated_learning_title"
+        android:id="@+id/finetune_title"
         android:text="Federated Learning"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -21,7 +21,7 @@
         app:layout_constraintTop_toTopOf="parent"/>
 
     <TextView
-        android:id="@+id/federated_learning_text"
+        android:id="@+id/finetune_text"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:text="Federated Learning in progress,\nplease wait..."
@@ -30,37 +30,37 @@
         android:layout_marginBottom="60sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/progressBar"
-        app:layout_constraintBottom_toTopOf="@id/federated_learning_status"
-        app:layout_constraintTop_toBottomOf="@id/federated_learning_title" />
+        app:layout_constraintBottom_toTopOf="@id/finetune_status"
+        app:layout_constraintTop_toBottomOf="@id/finetune_title" />
 
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="75dp"
         android:layout_height="75dp"
-        app:layout_constraintEnd_toStartOf="@id/federated_learning_text"
+        app:layout_constraintEnd_toStartOf="@id/finetune_text"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/federated_learning_status"
-        app:layout_constraintTop_toBottomOf="@id/federated_learning_title" />
+        app:layout_constraintBottom_toTopOf="@id/finetune_status"
+        app:layout_constraintTop_toBottomOf="@id/finetune_title" />
 
     <TextView
-        android:id="@+id/federated_learning_status"
+        android:id="@+id/finetune_status"
         android:text="Learning From: [device name]\nML Objective: [objectives]\nML Model Size: [file size in MB]"
         android:textSize="15sp"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="@id/btConfirmFederatedLearning"
-        app:layout_constraintTop_toBottomOf="@+id/federated_learning_text" />
+        app:layout_constraintBottom_toBottomOf="@id/btConfirmFinetune"
+        app:layout_constraintTop_toBottomOf="@+id/finetune_text" />
 
     <Button
-        android:id="@+id/btConfirmFederatedLearning"
+        android:id="@+id/btConfirmFinetune"
         android:text="Confirm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/federated_learning_status"
+        app:layout_constraintTop_toBottomOf="@+id/finetune_status"
         style="@style/CustomButtonStyle"
         app:layout_constraintEnd_toEndOf="parent"/>
 
