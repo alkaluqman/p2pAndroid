@@ -53,8 +53,7 @@ suspend fun getMarketplaceFiles(): List<Model> {
     val client = OkHttpClient()
     val gson = Gson()
     val request = Request.Builder()
-//        .url("http://$BASE_URL:8000/weights")
-        .url("https://android-p2p-backend.onrender.com/weights")
+        .url("http://$BASE_URL:8000/weights")
         .get()
         .build()
     return try {
@@ -81,11 +80,9 @@ suspend fun increment(modelUniqueIdentifier: String, isUsage: Boolean) {
     withContext(Dispatchers.IO) {
         try {
             val url = if (isUsage)
-                "https://android-p2p-backend.onrender.com/weights/$modelUniqueIdentifier/increment-usage"
-//                "http://$BASE_URL:3000/weights/$modelUniqueIdentifier/increment-usage"
+                "http://$BASE_URL:3000/weights/$modelUniqueIdentifier/increment-usage"
             else
-                "https://android-p2p-backend.onrender.com/weights/$modelUniqueIdentifier/increment-likes"
-//                "http://$BASE_URL:3000/weights/$modelUniqueIdentifier/increment-likes"
+                "http://$BASE_URL:3000/weights/$modelUniqueIdentifier/increment-likes"
             val request = Request.Builder()
                 .url(url)
                 .patch(okhttp3.RequestBody.create(null, ByteArray(0))) // Empty PATCH body

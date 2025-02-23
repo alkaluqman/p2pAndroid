@@ -110,8 +110,7 @@ fun ModelCard(
                     }
                     IconButton(onClick = {
                         val encodedUrl =
-                            Uri.encode("https://android-p2p-frontend-xoxm.vercel.app/weight/${modelData.uniqueIdentifier}")
-//                    Uri.encode("http://$BASE_URL:3000/weight/${modelData.uniqueIdentifier}")
+                            Uri.encode("http://$BASE_URL:3000/weight/${modelData.uniqueIdentifier}")
                         navController.navigate("webview/$encodedUrl")
                     }) {
                         Icon(

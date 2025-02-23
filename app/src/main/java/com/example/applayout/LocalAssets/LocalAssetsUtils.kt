@@ -183,8 +183,7 @@ suspend fun fetchModelOwner(modelUniqueIdentifier: String, username: String): Bo
     return withContext(Dispatchers.IO) {
 
         try {
-//            val url = "http://$BASE_URL:8000/weights/$modelUniqueIdentifier/user"
-            val url = "https://android-p2p-backend.onrender.com/weights/$modelUniqueIdentifier/user"
+            val url = "http://$BASE_URL:8000/weights/$modelUniqueIdentifier/user"
             val request = Request.Builder().url(url).build()
             val response = client.newCall(request).execute()
 
@@ -212,8 +211,7 @@ suspend fun fetchModelsInfo(filesDir: File): ModelResponse {
         fileNames.map{ it.substringBeforeLast(".") } //remove file extensions
             .forEach { fileName ->
             try {
-//                val url="http://$BASE_URL:8000/weights/$fileName"
-                val url = "https://android-p2p-backend.onrender.com/weights/$fileName"
+                val url = "http://$BASE_URL:8000/weights/$fileName"
                 val request = Request.Builder().url(url).build()
                 val response = client.newCall(request).execute()
                 if (response.isSuccessful) {
@@ -260,8 +258,7 @@ suspend fun fetchDatasetInfo(localDatasetList: List<String>): List<Dataset> {
         localDatasetList
             .forEach { datasetName ->
                 try {
-                    val url = "https://android-p2p-backend.onrender.com/dataset/$datasetName"
-                    //val url= "http://$BASE_URL:8000/dataset/$datasetName"
+                    val url = "http://$BASE_URL:8000/dataset/$datasetName"
                     val request = Request.Builder().url(url).build()
                     val response = client.newCall(request).execute()
                     if (response.isSuccessful) {
@@ -300,8 +297,7 @@ suspend fun editModel(modelUniqueIdentifier: String, formData: Model) {
 
     val requestBody = payload.toRequestBody("application/json".toMediaType())
     val request = Request.Builder()
-//        .url("http://$BASE_URL:8000/weights/${modelUniqueIdentifier}")
-        .url("https://android-p2p-backend.onrender.com/weights/${modelUniqueIdentifier}")
+        .url("http://$BASE_URL:8000/weights/${modelUniqueIdentifier}")
         .patch(requestBody)
         .build()
 
@@ -338,8 +334,7 @@ suspend fun uploadModelNode(
 
         val requestBody = payload.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
-//            .url("http://$BASE_URL:8000/weights/create")
-            .url("https://android-p2p-backend.onrender.com/weights/create")
+            .url("http://$BASE_URL:8000/weights/create")
             .post(requestBody)
             .build()
 
@@ -392,8 +387,7 @@ suspend fun uploadModel(
         val requestBody = payload.toRequestBody("application/json".toMediaType())
 
         val request = Request.Builder()
-//            .url("http://$BASE_URL:8000/weights/${modelUniqueIdentifier}")
-            .url("https://android-p2p-backend.onrender.com/weights/${modelUniqueIdentifier}")
+            .url("http://$BASE_URL:8000/weights/${modelUniqueIdentifier}")
             .patch(requestBody)
             .build()
 
@@ -447,8 +441,7 @@ suspend fun uploadDataset(
 
         val requestBody = payload.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
-//            .url("http://$BASE_URL:8000/dataset/${datasetData.uniqueIdentifier}")
-            .url("https://android-p2p-backend.onrender.com/dataset/${datasetData.uniqueIdentifier}")
+            .url("http://$BASE_URL:8000/dataset/${datasetData.uniqueIdentifier}")
             .patch(requestBody)
             .build()
 
@@ -490,8 +483,7 @@ suspend fun uploadDatasetNode(
 
         val requestBody = payload.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
-//            .url("http://$BASE_URL:8000/dataset/create")
-            .url("https://android-p2p-backend.onrender.com/dataset/create")
+            .url("http://$BASE_URL:8000/dataset/create")
             .post(requestBody)
             .build()
 
@@ -533,8 +525,7 @@ suspend fun uploadEvaluationResults(weightId: String, datasetId: String, evaluat
 
         val requestBody = payload.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
-//            .url("http://$BASE_URL:8000/weights/evaluation")
-            .url("https://android-p2p-backend.onrender.com/weights/evaluation")
+            .url("http://$BASE_URL:8000/weights/evaluation")
             .post(requestBody)
             .build()
 
@@ -572,8 +563,7 @@ suspend fun uploadFederatedLearningRelationship(
             Log.d("uploadRelationship", "Generated JSON Payload: $payload")
             val requestBody = payload.toRequestBody("application/json".toMediaType())
             val request = Request.Builder()
-//                .url("http://$BASE_URL:8000/weights/combine")
-                .url("https://android-p2p-backend.onrender.com/weights/combine")
+                .url("http://$BASE_URL:8000/weights/combine")
                 .post(requestBody)
                 .build()
 
@@ -615,8 +605,7 @@ suspend fun uploadFinetuningRelationship(
         Log.d("uploadRelationship", "Generated JSON Payload: $payload")
         val requestBody = payload.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
-            .url("https://android-p2p-backend.onrender.com/weights/finetuned")
-//            .url("http://$BASE_URL:8000/weights/finetuned")
+            .url("http://$BASE_URL:8000/weights/finetuned")
             .post(requestBody)
             .build()
 
@@ -717,8 +706,7 @@ suspend fun checkModelExistence(ids: List<String>): List<String> {
     for (id in ids) {
         try {
             val request = Request.Builder()
-//                .url("http://$BASE_URL:8000/weights/$id")
-                .url("https://android-p2p-backend.onrender.com/weights/$id")
+                .url("http://$BASE_URL:8000/weights/$id")
                 .get()
                 .build()
             val response = withContext(Dispatchers.IO) {

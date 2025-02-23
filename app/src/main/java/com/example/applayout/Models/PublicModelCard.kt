@@ -39,8 +39,7 @@ fun PublicModelCard(
             .padding(vertical = 8.dp)
             .clickable {
                 val encodedUrl =
-                    Uri.encode("https://android-p2p-frontend-xoxm.vercel.app/weight/${modelData.uniqueIdentifier}")
-//                Uri.encode("http://$BASE_URL:3000/weight/${modelData.uniqueIdentifier}")
+                    Uri.encode("http://$BASE_URL:3000/weight/${modelData.uniqueIdentifier}")
                 navController.navigate("webview/$encodedUrl")
             },
         elevation = CardDefaults.cardElevation(4.dp)
