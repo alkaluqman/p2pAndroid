@@ -19,7 +19,7 @@ import java.io.InputStreamReader;
 public class MainActivity extends BaseActivity {
     TextView status;
     Button btConfirm;
-    Button btTrain;
+    Button btFinetune;
     ListView lvApplications;
     String[] applications;
     public static String string;
@@ -30,7 +30,7 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         lvApplications = findViewById(R.id.lvApplication);
         btConfirm = findViewById(R.id.btConfirmApplication);
-        btTrain = findViewById(R.id.btTrain);
+        btFinetune = findViewById(R.id.btFinetune);
         status = findViewById(R.id.statusApplication);
 
         applications = new String[2];
@@ -55,7 +55,7 @@ public class MainActivity extends BaseActivity {
             }
         });
 
-        btTrain.setOnClickListener(new View.OnClickListener() {
+        btFinetune.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 

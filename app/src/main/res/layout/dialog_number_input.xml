@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <EditText
+        android:id="@+id/inputNumEpochs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Number of Epochs"
+        android:inputType="number" />
+
+    <EditText
+        android:id="@+id/inputBatchSize"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Batch Size"
+        android:inputType="number" />
+
+    <EditText
+        android:id="@+id/inputImgHeight"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Image Height"
+        android:inputType="number" />
+
+    <EditText
+        android:id="@+id/inputImgWidth"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Image Width"
+        android:inputType="number" />
+
+    <EditText
+        android:id="@+id/inputNumTrainings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Number of Trainings"
+        android:inputType="number" />
+</LinearLayout>

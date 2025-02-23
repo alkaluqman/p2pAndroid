@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     tools:context=".Finetune.FinetuneActivity">
@@ -12,56 +11,88 @@
 
     <TextView
         android:id="@+id/finetune_title"
-        android:text="Finetune"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textStyle="bold"
-        android:textSize="30sp"
+        android:text="Finetune"
         android:textAlignment="center"
-        app:layout_constraintTop_toTopOf="parent"/>
+        android:textSize="30sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/finetune_text"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
+        android:layout_marginTop="200sp"
+        android:layout_marginBottom="200sp"
         android:text="Finetune in progress,\nplease wait..."
         android:textSize="15sp"
-        android:layout_marginTop="50sp"
-        android:layout_marginBottom="60sp"
+        app:layout_constraintBottom_toTopOf="@id/finetune_status"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/progressBar"
-        app:layout_constraintBottom_toTopOf="@id/finetune_status"
         app:layout_constraintTop_toBottomOf="@id/finetune_title" />
 
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="75dp"
         android:layout_height="75dp"
+        app:layout_constraintBottom_toTopOf="@id/finetune_status"
         app:layout_constraintEnd_toStartOf="@id/finetune_text"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/finetune_status"
         app:layout_constraintTop_toBottomOf="@id/finetune_title" />
 
     <TextView
         android:id="@+id/finetune_status"
-        android:text="Learning From: [device name]\nML Objective: [objectives]\nML Model Size: [file size in MB]"
-        android:textSize="15sp"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:text="Learning From: [device name]\nML Objective: [objectives]\nML Model Size: [file size in MB]"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toTopOf="@id/finetune_parameters"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="@id/btConfirmFinetune"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/finetune_text" />
 
+    <TextView
+        android:id="@+id/finetune_parameters"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toTopOf="@id/btOpenDialog"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/finetune_status" />
+
     <Button
-        android:id="@+id/btConfirmFinetune"
-        android:text="Confirm"
+        android:id="@+id/btOpenDialog"
+        style="@style/CustomButtonStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:text="Enter Finetune Parameters"
+        app:layout_constraintBottom_toTopOf="@id/btStartFinetune"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/finetune_status"
+        app:layout_constraintTop_toBottomOf="@id/finetune_parameters" />
+
+    <Button
+        android:id="@+id/btStartFinetune"
         style="@style/CustomButtonStyle"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start Finetune"
+        app:layout_constraintBottom_toTopOf="@id/btReport"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btOpenDialog" />
+
+    <Button
+        android:id="@+id/btReport"
+        style="@style/CustomButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="View Report"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btOpenDialog" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

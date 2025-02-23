@@ -40,12 +40,30 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
 public class FinetuneActivity extends BaseActivity {
     Context context = this;
     ProgressBar progressBar;
-    TextView status, text;
-    Button btConfirm;
+    TextView status, text, parameters;
+
+    Button btStartFinetune;
+    Button btReport;
     final boolean THREAD_TEST = false;
+
+    private String model;
+    private int numEpochs;
+    private int batchSize;
+    private int imgHeight;
+    private int imgWidth;
+    private int numTrainings;
 
     private class TrainModelTask extends AsyncTask<Void, Integer, Void> {
 
@@ -159,7 +177,7 @@ public class FinetuneActivity extends BaseActivity {
             super.onPostExecute(result);
             progressBar.setVisibility(View.GONE);
             text.setText("Training Completed");
-            btConfirm.setVisibility(View.VISIBLE);
+            btReport.setVisibility(View.VISIBLE);
         }
     }
 
@@ -169,17 +187,27 @@ public class FinetuneActivity extends BaseActivity {
         //OnDeviceTraining.onDeviceTraining();
         text = findViewById(R.id.finetune_text);
         status = findViewById(R.id.finetune_status);
-        btConfirm = findViewById(R.id.btConfirmFinetune);
+        btReport = findViewById(R.id.btReport);
         status.setText("Learning From: OPPO R11\nML Objective: " + MainActivity.string + "\nML Model Size: 0.82MB");
-        btConfirm.setVisibility(View.GONE);
+        btReport.setVisibility(View.GONE);
 
-        btConfirm.setOnClickListener(new View.OnClickListener() {
+        btReport.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(view.getContext(), ReportActivity2.class);
                 startActivity(intent);
             }
         });
+
+        Button btOpenDialog = findViewById(R.id.btOpenDialog);
+        btOpenDialog.setOnClickListener(v -> showNumberInputDialog());
+
+        parameters = findViewById(R.id.finetune_parameters);
+        parameters.setText("No parameters set. Please enter finetune parameters.");
+
+        btStartFinetune = findViewById(R.id.btStartFinetune);
+        btStartFinetune.setOnClickListener(v -> finetune());
+
 
         if (THREAD_TEST) {
             final int NUM_MODELS = 10;
@@ -255,6 +283,81 @@ public class FinetuneActivity extends BaseActivity {
         } catch (IOException e){
             e.printStackTrace();
         }*/
+    }
+
+    private void showNumberInputDialog() {
+        // Inflate custom layout for the dialog
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View dialogView = inflater.inflate(R.layout.dialog_number_input, null);
+
+        EditText inputNumEpochs = dialogView.findViewById(R.id.inputNumEpochs);
+        EditText inputBatchSize = dialogView.findViewById(R.id.inputBatchSize);
+        EditText inputImgHeight = dialogView.findViewById(R.id.inputImgHeight);
+        EditText inputImgWidth = dialogView.findViewById(R.id.inputImgWidth);
+        EditText inputNumTrainings = dialogView.findViewById(R.id.inputNumTrainings);
+
+        // Pre-fill with default values
+        inputNumEpochs.setText("100");
+        inputBatchSize.setText("100");
+        inputImgHeight.setText("28");
+        inputImgWidth.setText("28");
+        inputNumTrainings.setText("60000");
+
+        // Build the AlertDialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Enter Finetune Parameters")
+                .setView(dialogView)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    String numEpochs = inputNumEpochs.getText().toString().trim();
+                    String batchSize = inputBatchSize.getText().toString().trim();
+                    String imgHeight = inputImgHeight.getText().toString().trim();
+                    String imgWidth = inputImgWidth.getText().toString().trim();
+                    String numTrainings = inputNumTrainings.getText().toString().trim();
+
+                    if (numEpochs.isBlank() || batchSize.isBlank() || imgHeight.isBlank() || imgWidth.isBlank() || numTrainings.isBlank()) {
+                        Toast.makeText(this, "One or more fields are empty!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        parseAndSetFinetuneParameters(numEpochs, batchSize, imgHeight, imgWidth, numTrainings);
+                        Toast.makeText(this, "Input Saved", Toast.LENGTH_SHORT).show();
+                    }
+
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+        builder.create().show();
+    }
+
+    private void finetune() {
+
+        if (this.model == "" || this.numEpochs == 0 || this.batchSize == 0 || this.imgHeight == 0 || this.imgWidth == 0 || this.numTrainings == 0) {
+            Toast.makeText(this, "No parameters set!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        new TrainModelTask("model.tflite", this.numEpochs, this.batchSize, 28, this.imgWidth, this.numTrainings).execute();
+    }
+
+    private void parseAndSetFinetuneParameters(String inputNumEpochs, String inputBatchSize, String inputImgHeight, String inputImgWidth, String inputNumTrainings) {
+        try {
+            int numEpochs = Integer.parseInt(inputNumEpochs);
+            int batchSize = Integer.parseInt(inputBatchSize);
+            int imgHeight = Integer.parseInt(inputImgHeight);
+            int imgWidth = Integer.parseInt(inputImgWidth);
+            int numTrainings = Integer.parseInt(inputNumTrainings);
+
+            this.numEpochs = numEpochs;
+            this.batchSize = batchSize;
+            this.imgHeight = imgHeight;
+            this.imgWidth = imgWidth;
+            this.numTrainings = numTrainings;
+
+            String params = "Number of Epochs: " + numEpochs + " \n Batch Size: " + batchSize + "\n Image Height: " + imgHeight + "\n Image Width: " + imgWidth + "\n Number of Trainings: " + numTrainings;
+
+            parameters.setText(params);
+
+        } catch (NumberFormatException e) {
+            Toast.makeText(getApplicationContext(), "Error: Please enter a valid number!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private static MappedByteBuffer loadModelFile(AssetManager assets, String modelFilename)
