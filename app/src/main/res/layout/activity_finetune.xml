@@ -23,8 +23,8 @@
         android:id="@+id/finetune_text"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_marginTop="200sp"
-        android:layout_marginBottom="200sp"
+        android:layout_marginTop="150sp"
+        android:layout_marginBottom="150sp"
         android:text="Finetune in progress,\nplease wait..."
         android:textSize="15sp"
         app:layout_constraintBottom_toTopOf="@id/finetune_status"
@@ -93,6 +93,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btOpenDialog" />
+        app:layout_constraintTop_toBottomOf="@+id/btStartFinetune" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

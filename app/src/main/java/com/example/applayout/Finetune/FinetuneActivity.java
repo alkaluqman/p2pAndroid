@@ -37,17 +37,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.example.applayout.Metrics.MetricTracking;
 
 public class FinetuneActivity extends BaseActivity {
     Context context = this;
@@ -85,8 +84,14 @@ public class FinetuneActivity extends BaseActivity {
 
         protected void onPreExecute() {
             super.onPreExecute();
-            progressBar = findViewById(R.id.progressBar);
-            progressBar.setVisibility(View.VISIBLE);
+//            progressBar = findViewById(R.id.progressBar);
+//            progressBar.setVisibility(View.VISIBLE);
+
+            // Ensure UI update happens on the main thread
+            runOnUiThread(() -> {
+                progressBar = findViewById(R.id.progressBar);
+                progressBar.setVisibility(View.VISIBLE);
+            });
         }
 
         protected Void doInBackground(Void... voids) {
@@ -170,14 +175,22 @@ public class FinetuneActivity extends BaseActivity {
 
         protected void onProgressUpdate(Integer... progress) {
             super.onProgressUpdate(progress);
-            progressBar.setProgress(progress[0]);
+
+            // Ensure UI update happens on the main thread
+            runOnUiThread(() -> {
+                progressBar.setProgress(progress[0]);
+            });
         }
 
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
-            progressBar.setVisibility(View.GONE);
-            text.setText("Training Completed");
-            btReport.setVisibility(View.VISIBLE);
+
+            // Ensure UI update happens on the main thread
+            runOnUiThread(() -> {
+                progressBar.setVisibility(View.GONE);
+                text.setText("Training Completed");
+                btReport.setVisibility(View.VISIBLE);
+            });
         }
     }
 
@@ -206,8 +219,15 @@ public class FinetuneActivity extends BaseActivity {
         parameters.setText("No parameters set. Please enter finetune parameters.");
 
         btStartFinetune = findViewById(R.id.btStartFinetune);
-        btStartFinetune.setOnClickListener(v -> finetune());
-
+        btStartFinetune.setOnClickListener(v -> {
+                    new Thread(() -> {
+                        HashMap<String, Object> trackingResults = MetricTracking.doWithTracking(FinetuneActivity.this::finetune);
+                        // Log results (replace this with saving to a file or another desired action)
+                        System.out.println("Tracking Results: " + trackingResults);
+                    }
+                    ).start();
+                }
+        );
 
         if (THREAD_TEST) {
             final int NUM_MODELS = 10;
@@ -224,7 +244,6 @@ public class FinetuneActivity extends BaseActivity {
 
             executor.shutdown(); // Ensures all tasks finish
         } else {
-
             new TrainModelTask("model.tflite", 100, 100, 28, 28, 60000).execute();
         }
 
@@ -327,14 +346,28 @@ public class FinetuneActivity extends BaseActivity {
         builder.create().show();
     }
 
-    private void finetune() {
-
-        if (this.model == "" || this.numEpochs == 0 || this.batchSize == 0 || this.imgHeight == 0 || this.imgWidth == 0 || this.numTrainings == 0) {
-            Toast.makeText(this, "No parameters set!", Toast.LENGTH_SHORT).show();
-            return;
+    private boolean hasMissingParams() {
+        if (this.numEpochs == 0 || this.batchSize == 0 || this.imgHeight == 0 || this.imgWidth == 0 || this.numTrainings == 0) {
+            runOnUiThread(() -> {
+                Toast.makeText(getApplicationContext(), "No parameters set!", Toast.LENGTH_SHORT).show();
+            });
+            return true;
         }
+        return false;
+    }
 
-        new TrainModelTask("model.tflite", this.numEpochs, this.batchSize, 28, this.imgWidth, this.numTrainings).execute();
+    /**
+     * This is a blocking method as .get() is required to ensure knowledge of the doInBackground() method's completion.
+     * To avoid blocking the UI thread, ensure that this function's caller is a separate Thread.
+     */
+    private void finetune() {
+        if (hasMissingParams()) return;
+
+        try {
+            new TrainModelTask("model.tflite", this.numEpochs, this.batchSize, 28, this.imgWidth, this.numTrainings).execute().get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void parseAndSetFinetuneParameters(String inputNumEpochs, String inputBatchSize, String inputImgHeight, String inputImgWidth, String inputNumTrainings) {
