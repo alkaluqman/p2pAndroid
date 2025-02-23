@@ -30,6 +30,8 @@ import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.util.UUID
 
+private const val BASE_URL = "10.96.181.80"
+
 fun saveModelintoDB(context: Context, fileName: String): LocalModel {
     val db = AppDatabase.getDatabase(context)
     val modelDao = db.localModelDao()
@@ -53,7 +55,7 @@ fun saveDatasetintoDB(context: Context, fileName: String) {
 }
 
 
-fun createDatasetFolder(fileDir: File) {
+suspend fun createDatasetFolder(fileDir: File, username: String) {
     val datasetsDir = File(fileDir, "datasets")
     if (!datasetsDir.exists()) {
         datasetsDir.mkdirs() // Create the datasets directory if it doesn't exist
@@ -63,6 +65,7 @@ fun createDatasetFolder(fileDir: File) {
     newDatasetDir.mkdirs()
     val labelsFile = File(newDatasetDir, "labels.json")
     labelsFile.writeText("{}")
+    uploadDatasetNode(Dataset(randomID.toString()), username, fileDir)
 }
 
 
@@ -180,7 +183,7 @@ suspend fun fetchModelOwner(modelUniqueIdentifier: String, username: String): Bo
     return withContext(Dispatchers.IO) {
 
         try {
-//            val url = "http://10.0.2.2:8000/weights/$modelUniqueIdentifier/user"
+//            val url = "http://$BASE_URL:8000/weights/$modelUniqueIdentifier/user"
             val url = "https://android-p2p-backend.onrender.com/weights/$modelUniqueIdentifier/user"
             val request = Request.Builder().url(url).build()
             val response = client.newCall(request).execute()
@@ -209,7 +212,7 @@ suspend fun fetchModelsInfo(filesDir: File): ModelResponse {
         fileNames.map{ it.substringBeforeLast(".") } //remove file extensions
             .forEach { fileName ->
             try {
-//                val url = "http://10.0.2.2:8000/weights/$fileName"
+//                val url="http://$BASE_URL:8000/weights/$fileName"
                 val url = "https://android-p2p-backend.onrender.com/weights/$fileName"
                 val request = Request.Builder().url(url).build()
                 val response = client.newCall(request).execute()
@@ -258,6 +261,7 @@ suspend fun fetchDatasetInfo(localDatasetList: List<String>): List<Dataset> {
             .forEach { datasetName ->
                 try {
                     val url = "https://android-p2p-backend.onrender.com/dataset/$datasetName"
+                    //val url= "http://$BASE_URL:8000/dataset/$datasetName"
                     val request = Request.Builder().url(url).build()
                     val response = client.newCall(request).execute()
                     if (response.isSuccessful) {
@@ -296,7 +300,7 @@ suspend fun editModel(modelUniqueIdentifier: String, formData: Model) {
 
     val requestBody = payload.toRequestBody("application/json".toMediaType())
     val request = Request.Builder()
-//        .url("http://10.0.2.2:8000/weights/${modelUniqueIdentifier}")
+//        .url("http://$BASE_URL:8000/weights/${modelUniqueIdentifier}")
         .url("https://android-p2p-backend.onrender.com/weights/${modelUniqueIdentifier}")
         .patch(requestBody)
         .build()
@@ -334,7 +338,7 @@ suspend fun uploadModelNode(
 
         val requestBody = payload.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
-//            .url("http://10.0.2.2:8000/weights/create")
+//            .url("http://$BASE_URL:8000/weights/create")
             .url("https://android-p2p-backend.onrender.com/weights/create")
             .post(requestBody)
             .build()
@@ -386,14 +390,9 @@ suspend fun uploadModel(
         Log.d("UploadModel", "Generated JSON Payload: $payload")
 
         val requestBody = payload.toRequestBody("application/json".toMediaType())
-//        val request = Request.Builder()
-////            .url("http://10.0.2.2:8000/weights/create")
-//            .url("https://android-p2p-backend.onrender.com/weights/create")
-//            .post(requestBody)
-//            .build()
 
         val request = Request.Builder()
-//        .url("http://10.0.2.2:8000/weights/${modelUniqueIdentifier}")
+//            .url("http://$BASE_URL:8000/weights/${modelUniqueIdentifier}")
             .url("https://android-p2p-backend.onrender.com/weights/${modelUniqueIdentifier}")
             .patch(requestBody)
             .build()
@@ -434,6 +433,49 @@ suspend fun uploadDataset(
         val client = OkHttpClient()
         val gson = Gson()
         val numImages = countFilesInDirectory(filesDir, "datasets/${datasetData.uniqueIdentifier}")
+        val payload =
+            gson.toJson(
+                DatasetForApi(
+                    uniqueIdentifier = datasetData.uniqueIdentifier,
+                    model_task = datasetData.model_task,
+                    description = datasetData.description,
+                    num_images = numImages - 1, //remove labels.json count
+                    class_labels = datasetData.getClassLabelsAsList()
+                )
+            )
+        Log.d("uploadDataset", "Generated JSON Payload: $payload")
+
+        val requestBody = payload.toRequestBody("application/json".toMediaType())
+        val request = Request.Builder()
+//            .url("http://$BASE_URL:8000/dataset/${datasetData.uniqueIdentifier}")
+            .url("https://android-p2p-backend.onrender.com/dataset/${datasetData.uniqueIdentifier}")
+            .patch(requestBody)
+            .build()
+
+        Log.d("uploadDataset", "Sending PATCH request to serverUrl")
+        withContext(Dispatchers.IO) {
+            val response = client.newCall(request).execute()
+            Log.d(
+                "uploadDataset",
+                "Response Code: ${response.code}, Response Body: ${response.body?.string()}"
+            )
+        }
+    } catch (e: Exception) {
+        Log.e("UploadModel", "Error during model upload: ${e.message}", e)
+        e.printStackTrace()
+    }
+}
+
+
+suspend fun uploadDatasetNode(
+    datasetData: Dataset,
+    username: String,
+    filesDir: File
+) {
+    try {
+        val client = OkHttpClient()
+        val gson = Gson()
+        val numImages = countFilesInDirectory(filesDir, "datasets/${datasetData.uniqueIdentifier}")
         val datasetForApi = DatasetForApi(
             uniqueIdentifier = datasetData.uniqueIdentifier,
             model_task = datasetData.model_task,
@@ -444,25 +486,25 @@ suspend fun uploadDataset(
 
         val payload =
             gson.toJson(UploadDatasetPayload(dataset = datasetForApi, username = username))
-        Log.d("uploadDataset", "Generated JSON Payload: $payload")
+        Log.d("uploadDatasetNode", "Generated JSON Payload: $payload")
 
         val requestBody = payload.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
-//            .url("http://10.0.2.2:8000/weights/create")
+//            .url("http://$BASE_URL:8000/dataset/create")
             .url("https://android-p2p-backend.onrender.com/dataset/create")
             .post(requestBody)
             .build()
 
-        Log.d("uploadDataset", "Sending POST request to serverUrl")
+        Log.d("uploadDatasetNode", "Sending POST request to serverUrl")
         withContext(Dispatchers.IO) {
             val response = client.newCall(request).execute()
             Log.d(
-                "uploadDataset",
+                "uploadDatasetNode",
                 "Response Code: ${response.code}, Response Body: ${response.body?.string()}"
             )
         }
     } catch (e: Exception) {
-        Log.e("UploadModel", "Error during model upload: ${e.message}", e)
+        Log.e("uploadDatasetNode", "Error during model upload: ${e.message}", e)
         e.printStackTrace()
     }
 }
@@ -491,7 +533,7 @@ suspend fun uploadEvaluationResults(weightId: String, datasetId: String, evaluat
 
         val requestBody = payload.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
-//            .url("http://10.0.2.2:8000/weights/create")
+//            .url("http://$BASE_URL:8000/weights/evaluation")
             .url("https://android-p2p-backend.onrender.com/weights/evaluation")
             .post(requestBody)
             .build()
@@ -530,7 +572,7 @@ suspend fun uploadFederatedLearningRelationship(
             Log.d("uploadRelationship", "Generated JSON Payload: $payload")
             val requestBody = payload.toRequestBody("application/json".toMediaType())
             val request = Request.Builder()
-//                .url("http://10.0.2.2:8000/weights/combine")
+//                .url("http://$BASE_URL:8000/weights/combine")
                 .url("https://android-p2p-backend.onrender.com/weights/combine")
                 .post(requestBody)
                 .build()
@@ -574,6 +616,7 @@ suspend fun uploadFinetuningRelationship(
         val requestBody = payload.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
             .url("https://android-p2p-backend.onrender.com/weights/finetuned")
+//            .url("http://$BASE_URL:8000/weights/finetuned")
             .post(requestBody)
             .build()
 
@@ -674,7 +717,7 @@ suspend fun checkModelExistence(ids: List<String>): List<String> {
     for (id in ids) {
         try {
             val request = Request.Builder()
-//                .url("http://10.0.2.2:8000/weights/$id")
+//                .url("http://$BASE_URL:8000/weights/$id")
                 .url("https://android-p2p-backend.onrender.com/weights/$id")
                 .get()
                 .build()

@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.applayout.Data.Model.Model
 
+private const val BASE_URL = "10.96.181.80"
 @Composable
 fun PublicModelCard(
     modelData: Model, navController: NavController,
@@ -39,7 +40,7 @@ fun PublicModelCard(
             .clickable {
                 val encodedUrl =
                     Uri.encode("https://android-p2p-frontend-xoxm.vercel.app/weight/${modelData.uniqueIdentifier}")
-                //Uri.encode("http://10.0.2.2:3000/weight/${modelData.uniqueIdentifier}")
+//                Uri.encode("http://$BASE_URL:3000/weight/${modelData.uniqueIdentifier}")
                 navController.navigate("webview/$encodedUrl")
             },
         elevation = CardDefaults.cardElevation(4.dp)
