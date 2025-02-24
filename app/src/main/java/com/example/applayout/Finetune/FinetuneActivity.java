@@ -316,11 +316,11 @@ public class FinetuneActivity extends BaseActivity {
         EditText inputNumTrainings = dialogView.findViewById(R.id.inputNumTrainings);
 
         // Pre-fill with default values
-        inputNumEpochs.setText("100");
-        inputBatchSize.setText("100");
-        inputImgHeight.setText("28");
-        inputImgWidth.setText("28");
-        inputNumTrainings.setText("60000");
+        inputNumEpochs.setText(this.numEpochs == 0 ? "100" : Integer.toString(this.numEpochs));
+        inputBatchSize.setText(this.batchSize == 0 ? "100" : Integer.toString(this.batchSize));
+        inputImgHeight.setText(this.imgHeight == 0 ? "28" : Integer.toString(this.imgHeight));
+        inputImgWidth.setText(this.imgWidth == 0 ? "28" : Integer.toString(this.imgWidth));
+        inputNumTrainings.setText(this.numTrainings == 0 ? "60000" : Integer.toString(this.numTrainings));
 
         // Build the AlertDialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
