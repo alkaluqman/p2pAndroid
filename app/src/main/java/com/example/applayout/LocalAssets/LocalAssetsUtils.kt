@@ -87,10 +87,11 @@ suspend fun downloadFile(fileDir: File, parentFolder: String): LocalModel? {
 
             val randomID = UUID.randomUUID()
             val randomFileName = "${randomID}.tflite"
-            val newModel = LocalModel(
-                uniqueIdentifier = randomID.toString()
-            )
             val outputFile = File(modelsDir, randomFileName)
+            val newModel = LocalModel(
+                uniqueIdentifier = randomID.toString(),
+                absoluteFilePath = outputFile.absolutePath
+            )
 
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
@@ -127,6 +128,7 @@ fun deleteLocalDirectory(directoryName: String, fileDir: File): Boolean {
         false
     }
 }
+
 fun deleteLocalFile(fileName: String, fileDir: File, parentFolder: String): Boolean {
     val tag = "DeleteFile"
     val modelsDir = File(fileDir, parentFolder)
@@ -208,28 +210,34 @@ suspend fun fetchModelsInfo(filesDir: File): ModelResponse {
     val notUploadedModels = mutableListOf<Model>()
     val client = OkHttpClient()
     val gson = Gson()
+    val modelDir = File(filesDir, "models")
+    val modelFileExt = ".tflite"
     withContext(Dispatchers.IO) {
-        fileNames.map{ it.substringBeforeLast(".") } //remove file extensions
+        fileNames.map { it.substringBeforeLast(".") } //remove file extensions
             .forEach { fileName ->
-            try {
+                try {
 //                val url="http://$BASE_URL:8000/weights/$fileName"
-                val url = "https://android-p2p-backend.onrender.com/weights/$fileName"
-                val request = Request.Builder().url(url).build()
-                val response = client.newCall(request).execute()
-                if (response.isSuccessful) {
-                    val body = response.body?.string()
-                    val model = gson.fromJson<Model>(body, object : TypeToken<Model>() {}.type)
-                    if (model != null && model.is_uploaded) {
-                        uploadedModels.add(model)
-                    } else if (model != null) { //!model.is_uploaded
-                        model.isOwner = true
-                        notUploadedModels.add(model)
+                    val url = "https://android-p2p-backend.onrender.com/weights/$fileName"
+                    val request = Request.Builder().url(url).build()
+                    val response = client.newCall(request).execute()
+                    if (response.isSuccessful) {
+                        val body = response.body?.string()
+                        val model = gson.fromJson<Model>(body, object : TypeToken<Model>() {}.type)
+                        if (model != null) {
+                            model.absoluteFilePath =
+                                modelDir.resolve(fileName + modelFileExt).absolutePath
+                            if (model.is_uploaded) {
+                                uploadedModels.add(model)
+                            } else { //!model.is_uploaded
+                                model.isOwner = true
+                                notUploadedModels.add(model)
+                            }
+                        }
                     }
+                } catch (e: Exception) {
+                    Log.e("FetchModels", "Exception: ${e.message}", e)
                 }
-            } catch (e: Exception) {
-                Log.e("FetchModels", "Exception: ${e.message}", e)
             }
-        }
     }
     return ModelResponse(uploadedModels, notUploadedModels)
 }
@@ -410,6 +418,7 @@ suspend fun uploadModel(
         e.printStackTrace()
     }
 }
+
 data class DatasetForApi(
     val uniqueIdentifier: String,
     val model_task: String,
@@ -563,28 +572,28 @@ suspend fun uploadFederatedLearningRelationship(
     try {
         val client = OkHttpClient()
         val gson = Gson()
-            val payload = gson.toJson(
-                UploadFederatedLearningRelationshipPayload(
-                    resultant_id = relationshipData.modelUniqueIdentifier,
-                    component_ids = relationshipData.sourceUniqueIdentifiers.split(",")
-                )
+        val payload = gson.toJson(
+            UploadFederatedLearningRelationshipPayload(
+                resultant_id = relationshipData.modelUniqueIdentifier,
+                component_ids = relationshipData.sourceUniqueIdentifiers.split(",")
             )
-            Log.d("uploadRelationship", "Generated JSON Payload: $payload")
-            val requestBody = payload.toRequestBody("application/json".toMediaType())
-            val request = Request.Builder()
+        )
+        Log.d("uploadRelationship", "Generated JSON Payload: $payload")
+        val requestBody = payload.toRequestBody("application/json".toMediaType())
+        val request = Request.Builder()
 //                .url("http://$BASE_URL:8000/weights/combine")
-                .url("https://android-p2p-backend.onrender.com/weights/combine")
-                .post(requestBody)
-                .build()
+            .url("https://android-p2p-backend.onrender.com/weights/combine")
+            .post(requestBody)
+            .build()
 
-            Log.d("uploadRelationship", "Sending POST request to serverUrl")
-            withContext(Dispatchers.IO) {
-                val response = client.newCall(request).execute()
-                Log.d(
-                    "uploadRelationship",
-                    "Response Code: ${response.code}, Response Body: ${response.body?.string()}"
-                )
-            }
+        Log.d("uploadRelationship", "Sending POST request to serverUrl")
+        withContext(Dispatchers.IO) {
+            val response = client.newCall(request).execute()
+            Log.d(
+                "uploadRelationship",
+                "Response Code: ${response.code}, Response Body: ${response.body?.string()}"
+            )
+        }
     } catch (e: Exception) {
         Log.e("UploadModel", "Error during model upload: ${e.message}", e)
         e.printStackTrace()
@@ -633,7 +642,6 @@ suspend fun uploadFinetuningRelationship(
         e.printStackTrace()
     }
 }
-
 
 
 suspend fun uploadFileToGCS(

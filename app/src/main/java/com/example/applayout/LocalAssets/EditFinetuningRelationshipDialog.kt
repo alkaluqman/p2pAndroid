@@ -77,6 +77,7 @@ fun EditFinetuningRelationshipDialog(
                             DropdownMenuItem(text = { Text(model.uniqueIdentifier) }, onClick = {
                                 selectedModel = model
                                 expandedModel = false
+                                print("\n\n\nModel abs path: " + model.absoluteFilePath)
                             })
                         }
                     }
