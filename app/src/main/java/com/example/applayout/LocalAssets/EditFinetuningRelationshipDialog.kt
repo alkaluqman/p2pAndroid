@@ -37,10 +37,10 @@ fun EditFinetuningRelationshipDialog(
     onSubmit: (LocalRelationship) -> Unit
 ) {
 
-    var selectedModel by remember { mutableStateOf("") }
-    var selectedSourceIds by remember { mutableStateOf(emptyList<String>()) }
-    var expandedModel by remember { mutableStateOf(false) }
-    var expandedSourceIds by remember { mutableStateOf(false) }
+    var selectedModelId by remember { mutableStateOf("") }
+    var selectedDatasetId by remember { mutableStateOf("") }
+    var expandedModelId by remember { mutableStateOf(false) }
+    var expandedDatasetId by remember { mutableStateOf(false) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -64,26 +64,19 @@ fun EditFinetuningRelationshipDialog(
                 )
                 Text("Model Unique Identifier")
                 Box {
-                    Text(
-                        text = selectedModel.ifEmpty { "Select Model" },
+                    Text(text = selectedModelId.ifEmpty { "Select Model" },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(8.dp)
-                            .clickable { expandedModel = true }
-                            .border(1.dp, MaterialTheme.colorScheme.primary)
-                    )
-                    DropdownMenu(
-                        expanded = expandedModel,
-                        onDismissRequest = { expandedModel = false }
-                    ) {
+                            .clickable { expandedModelId = true }
+                            .border(1.dp, MaterialTheme.colorScheme.primary))
+                    DropdownMenu(expanded = expandedModelId,
+                        onDismissRequest = { expandedModelId = false }) {
                         models.forEach { model ->
-                            DropdownMenuItem(
-                                text = { Text(model.uniqueIdentifier) },
-                                onClick = {
-                                    selectedModel = model.uniqueIdentifier
-                                    expandedModel = false
-                                }
-                            )
+                            DropdownMenuItem(text = { Text(model.uniqueIdentifier) }, onClick = {
+                                selectedModelId = model.uniqueIdentifier
+                                expandedModelId = false
+                            })
                         }
                     }
                 }
@@ -91,34 +84,21 @@ fun EditFinetuningRelationshipDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("Source Unique Identifiers")
                 Box {
-                    Text(
-                        text = if (selectedSourceIds.isEmpty()) "Select Source Dataset" else selectedSourceIds.joinToString(),
+                    Text(text = selectedDatasetId.ifEmpty { "Select Source Dataset" },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(8.dp)
-                            .clickable { expandedSourceIds = true }
-                            .border(1.dp, MaterialTheme.colorScheme.primary)
-                    )
-                    DropdownMenu(
-                        expanded = expandedSourceIds,
-                        onDismissRequest = { expandedSourceIds = false }
-                    ) {
+                            .clickable { expandedDatasetId = true }
+                            .border(1.dp, MaterialTheme.colorScheme.primary))
+                    DropdownMenu(expanded = expandedDatasetId,
+                        onDismissRequest = { expandedDatasetId = false }) {
                         dataset.forEach { data ->
-                            val isSelected = selectedSourceIds.contains(data.uniqueIdentifier)
-                            DropdownMenuItem(
-                                text = {
-                                    Text(data.uniqueIdentifier + if (isSelected) " (Selected)" else "")
-                                },
-                                onClick = {
-                                    if (isSelected) {
-                                        selectedSourceIds =
-                                            selectedSourceIds - data.uniqueIdentifier
-                                    } else {
-                                        selectedSourceIds =
-                                            selectedSourceIds + data.uniqueIdentifier
-                                    }
-                                }
-                            )
+                            DropdownMenuItem(text = {
+                                Text(data.uniqueIdentifier)
+                            }, onClick = {
+                                selectedDatasetId = data.uniqueIdentifier
+                                expandedDatasetId = false
+                            })
                         }
                     }
                 }
@@ -127,13 +107,13 @@ fun EditFinetuningRelationshipDialog(
                 Button(
                     onClick = {
                         val localRelationship = LocalRelationship(
-                            modelUniqueIdentifier = selectedModel,
+                            modelUniqueIdentifier = selectedModelId,
                             relationshipType = "Dataset",
-                            sourceUniqueIdentifiers = selectedSourceIds.joinToString(",")
+                            sourceUniqueIdentifiers = selectedDatasetId
                         )
                         onSubmit(localRelationship)
                     },
-                    enabled = selectedModel.isNotEmpty() && selectedSourceIds.isNotEmpty(),
+                    enabled = selectedModelId.isNotEmpty() && selectedDatasetId.isNotEmpty(),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Submit")
