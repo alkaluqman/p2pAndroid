@@ -37,10 +37,10 @@ fun EditFinetuningRelationshipDialog(
     onSubmit: (LocalRelationship) -> Unit
 ) {
 
-    var selectedModelId by remember { mutableStateOf("") }
-    var selectedDatasetId by remember { mutableStateOf("") }
-    var expandedModelId by remember { mutableStateOf(false) }
-    var expandedDatasetId by remember { mutableStateOf(false) }
+    var selectedModel by remember { mutableStateOf<Model?>(null) }
+    var selectedDataset by remember { mutableStateOf<Dataset?>(null) }
+    var expandedModel by remember { mutableStateOf(false) }
+    var expandedDataset by remember { mutableStateOf(false) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -64,18 +64,19 @@ fun EditFinetuningRelationshipDialog(
                 )
                 Text("Model Unique Identifier")
                 Box {
-                    Text(text = selectedModelId.ifEmpty { "Select Model" },
+                    Text(text = selectedModel?.uniqueIdentifier ?: "Select Model",
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(8.dp)
-                            .clickable { expandedModelId = true }
+                            .clickable { expandedModel = true }
                             .border(1.dp, MaterialTheme.colorScheme.primary))
-                    DropdownMenu(expanded = expandedModelId,
-                        onDismissRequest = { expandedModelId = false }) {
+                    DropdownMenu(
+                        expanded = expandedModel,
+                        onDismissRequest = { expandedModel = false }) {
                         models.forEach { model ->
                             DropdownMenuItem(text = { Text(model.uniqueIdentifier) }, onClick = {
-                                selectedModelId = model.uniqueIdentifier
-                                expandedModelId = false
+                                selectedModel = model
+                                expandedModel = false
                             })
                         }
                     }
@@ -84,20 +85,21 @@ fun EditFinetuningRelationshipDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("Source Unique Identifiers")
                 Box {
-                    Text(text = selectedDatasetId.ifEmpty { "Select Source Dataset" },
+                    Text(text = selectedDataset?.uniqueIdentifier ?: "Select Source Dataset",
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(8.dp)
-                            .clickable { expandedDatasetId = true }
+                            .clickable { expandedDataset = true }
                             .border(1.dp, MaterialTheme.colorScheme.primary))
-                    DropdownMenu(expanded = expandedDatasetId,
-                        onDismissRequest = { expandedDatasetId = false }) {
+                    DropdownMenu(
+                        expanded = expandedDataset,
+                        onDismissRequest = { expandedDataset = false }) {
                         dataset.forEach { data ->
                             DropdownMenuItem(text = {
                                 Text(data.uniqueIdentifier)
                             }, onClick = {
-                                selectedDatasetId = data.uniqueIdentifier
-                                expandedDatasetId = false
+                                selectedDataset = data
+                                expandedDataset = false
                             })
                         }
                     }
@@ -107,13 +109,13 @@ fun EditFinetuningRelationshipDialog(
                 Button(
                     onClick = {
                         val localRelationship = LocalRelationship(
-                            modelUniqueIdentifier = selectedModelId,
+                            modelUniqueIdentifier = selectedModel!!.uniqueIdentifier,
                             relationshipType = "Dataset",
-                            sourceUniqueIdentifiers = selectedDatasetId
+                            sourceUniqueIdentifiers = selectedDataset!!.uniqueIdentifier
                         )
                         onSubmit(localRelationship)
                     },
-                    enabled = selectedModelId.isNotEmpty() && selectedDatasetId.isNotEmpty(),
+                    enabled = selectedModel != null && selectedDataset != null,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Submit")
