@@ -25,14 +25,21 @@ import java.util.Map;
 
 public class FinetuneUtils {
 
-    public static MappedByteBuffer loadModelFile(AssetManager assets, String modelFilename)
+    public static MappedByteBuffer loadModelFile(String modelFileAbsolutePath)
             throws IOException {
-        AssetFileDescriptor fileDescriptor = assets.openFd(modelFilename);
-        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+//        AssetFileDescriptor fileDescriptor = assets.openFd(modelFilename);
+//        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+//        FileChannel fileChannel = inputStream.getChannel();
+//        long startOffset = fileDescriptor.getStartOffset();
+//        long declaredLength = fileDescriptor.getDeclaredLength();
+//        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+
+        File file = new File(modelFileAbsolutePath);
+        FileInputStream inputStream = new FileInputStream(file);
         FileChannel fileChannel = inputStream.getChannel();
-        long startOffset = fileDescriptor.getStartOffset();
-        long declaredLength = fileDescriptor.getDeclaredLength();
-        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+        long fileSize = fileChannel.size();
+
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileSize);
     }
 
     public static FloatBuffer readImageAsFloatBuffer(Context context, String assetPath, int imgWidth, int imgHeight) {

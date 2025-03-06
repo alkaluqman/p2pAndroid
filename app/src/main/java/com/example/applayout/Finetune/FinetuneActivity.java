@@ -59,7 +59,7 @@ public class FinetuneActivity extends BaseActivity {
     Button btReport;
     final boolean THREAD_TEST = false;
 
-    private String model;
+    private String modelFileAbsolutePath;
     private int numEpochs;
     private int batchSize;
     private int imgHeight;
@@ -68,15 +68,15 @@ public class FinetuneActivity extends BaseActivity {
 
     private class TrainModelTask extends AsyncTask<Void, Integer, Void> {
 
-        private String model;
+        private String modelFileAbsolutePath;
         private int numEpochs;
         private int batchSize;
         private int imgHeight;
         private int imgWidth;
         private int numTrainings;
 
-        public TrainModelTask(String model, int numEpochs, int batchSize, int imgHeight, int imgWidth, int numTrainings) {
-            this.model = model;
+        public TrainModelTask(String modelFileAbsolutePath, int numEpochs, int batchSize, int imgHeight, int imgWidth, int numTrainings) {
+            this.modelFileAbsolutePath = modelFileAbsolutePath;
             this.numEpochs = numEpochs;
             this.batchSize = batchSize;
             this.imgHeight = imgHeight;
@@ -97,7 +97,7 @@ public class FinetuneActivity extends BaseActivity {
         }
 
         protected Void doInBackground(Void... voids) {
-            finetuneManual("model.tflite", numEpochs, batchSize, imgHeight, imgWidth, numTrainings);
+            finetuneManual(this.modelFileAbsolutePath, numEpochs, batchSize, imgHeight, imgWidth, numTrainings);
             return null;
         }
 
@@ -157,23 +157,23 @@ public class FinetuneActivity extends BaseActivity {
                 }
         );
 
-        if (THREAD_TEST) {
-            final int NUM_MODELS = 10;
-
-            // EXPERIMENT USING THREADS
-            ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-            System.out.println("Size: " + Runtime.getRuntime().availableProcessors());
-
-            for (int i = 0; i < NUM_MODELS; i++) {
-                executor.execute(() -> {
-                    new TrainModelTask("model.tflite", 100, 100, 28, 28, 60000).execute();
-                });
-            }
-
-            executor.shutdown(); // Ensures all tasks finish
-        } else {
-            new TrainModelTask("model.tflite", 100, 100, 28, 28, 60000).execute();
-        }
+//        if (THREAD_TEST) {
+//            final int NUM_MODELS = 10;
+//
+//            // EXPERIMENT USING THREADS
+//            ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+//            System.out.println("Size: " + Runtime.getRuntime().availableProcessors());
+//
+//            for (int i = 0; i < NUM_MODELS; i++) {
+//                executor.execute(() -> {
+//                    new TrainModelTask("model.tflite", 100, 100, 28, 28, 60000).execute();
+//                });
+//            }
+//
+//            executor.shutdown(); // Ensures all tasks finish
+//        } else {
+//            new TrainModelTask("model.tflite", 100, 100, 28, 28, 60000).execute();
+//        }
     }
 
 //    public void fineTuneWithModelMaker(Context context, String modelPath, String datasetPath, int numEpochs) {
@@ -216,8 +216,8 @@ public class FinetuneActivity extends BaseActivity {
 //        return new ArrayList<>();
 //    }
 
-    private void finetuneManual(String model, int numEpochs, int batchSize, int imgHeight, int imgWidth, int numTrainings) {
-        try (Interpreter anotherInterpreter = new Interpreter(FinetuneUtils.loadModelFile(context.getAssets(), model))) {
+    private void finetuneManual(String modelFileAbsolutePath, int numEpochs, int batchSize, int imgHeight, int imgWidth, int numTrainings) {
+        try (Interpreter anotherInterpreter = new Interpreter(FinetuneUtils.loadModelFile(modelFileAbsolutePath))) {
             List<FloatBuffer> trainImageBatches = new ArrayList<>(10);
             List<FloatBuffer> trainLabelBatches = new ArrayList<>(10);
 
@@ -345,7 +345,7 @@ public class FinetuneActivity extends BaseActivity {
         if (hasMissingParams()) return;
 
         try {
-            new TrainModelTask("model.tflite", this.numEpochs, this.batchSize, 28, this.imgWidth, this.numTrainings).execute().get();
+            new TrainModelTask(this.modelFileAbsolutePath, this.numEpochs, this.batchSize, 28, this.imgWidth, this.numTrainings).execute().get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
