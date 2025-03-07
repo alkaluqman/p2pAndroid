@@ -60,6 +60,7 @@ public class FinetuneActivity extends BaseActivity {
     final boolean THREAD_TEST = false;
 
     private String modelFileAbsolutePath;
+    private String datasetDirAbsolutePath;
     private int numEpochs;
     private int batchSize;
     private int imgHeight;
@@ -69,14 +70,16 @@ public class FinetuneActivity extends BaseActivity {
     private class TrainModelTask extends AsyncTask<Void, Integer, Void> {
 
         private String modelFileAbsolutePath;
+        private String datasetDirAbsolutePath;
         private int numEpochs;
         private int batchSize;
         private int imgHeight;
         private int imgWidth;
         private int numTrainings;
 
-        public TrainModelTask(String modelFileAbsolutePath, int numEpochs, int batchSize, int imgHeight, int imgWidth, int numTrainings) {
+        public TrainModelTask(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int batchSize, int imgHeight, int imgWidth, int numTrainings) {
             this.modelFileAbsolutePath = modelFileAbsolutePath;
+            this.datasetDirAbsolutePath = datasetDirAbsolutePath;
             this.numEpochs = numEpochs;
             this.batchSize = batchSize;
             this.imgHeight = imgHeight;
@@ -97,7 +100,7 @@ public class FinetuneActivity extends BaseActivity {
         }
 
         protected Void doInBackground(Void... voids) {
-            finetuneManual(this.modelFileAbsolutePath, numEpochs, batchSize, imgHeight, imgWidth, numTrainings);
+            finetuneManual(this.modelFileAbsolutePath, this.datasetDirAbsolutePath, numEpochs, batchSize, imgHeight, imgWidth, numTrainings);
             return null;
         }
 
@@ -216,21 +219,40 @@ public class FinetuneActivity extends BaseActivity {
 //        return new ArrayList<>();
 //    }
 
-    private void finetuneManual(String modelFileAbsolutePath, int numEpochs, int batchSize, int imgHeight, int imgWidth, int numTrainings) {
+    private void finetuneManual(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int batchSize, int imgHeight, int imgWidth, int numTrainings) {
         try (Interpreter anotherInterpreter = new Interpreter(FinetuneUtils.loadModelFile(modelFileAbsolutePath))) {
-            List<FloatBuffer> trainImageBatches = new ArrayList<>(10);
-            List<FloatBuffer> trainLabelBatches = new ArrayList<>(10);
+//            List<FloatBuffer> trainImageBatches = new ArrayList<>(10);
+//            List<FloatBuffer> trainLabelBatches = new ArrayList<>(10);
+//
+//            // TODO: Update with dataset
+//            for (int i = 0; i < 10; ++i) {
+//                String imagePath = "test_images/image" + i + ".png";
+//                String labelPath = "labels/label" + i + ".txt";
+//                FloatBuffer trainImages = FinetuneUtils.readImageAsFloatBuffer(context, imagePath, imgWidth, imgHeight);
+//                FloatBuffer trainLabels = FinetuneUtils.readLabelAsFloatBuffer(context, labelPath, 10); // Assuming 10 classes
+//            }
 
-            // TODO: Update with dataset
-            for (int i = 0; i < 10; ++i) {
-                String imagePath = "test_images/image" + i + ".png";
-                String labelPath = "labels/label" + i + ".txt";
-                FloatBuffer trainImages = FinetuneUtils.readImageAsFloatBuffer(context, imagePath, imgWidth, imgHeight);
-                FloatBuffer trainLabels = FinetuneUtils.readLabelAsFloatBuffer(context, labelPath, 10); // Assuming 10 classes
+            List<String> imageFileNames = FinetuneUtils.getImageFileNamesFromDataset(datasetDirAbsolutePath); // relative file names
+            HashMap<String, Integer> labelMap = FinetuneUtils.getLabelMapFromDataset(datasetDirAbsolutePath);
+            assert labelMap != null;
+            int numImages = imageFileNames.size();
 
-                if (trainImages != null && trainLabels != null) {
-                    trainImageBatches.add(trainImages);
-                    trainLabelBatches.add(trainLabels);
+            List<FloatBuffer> trainImageBatches = new ArrayList<>(numImages);
+            List<FloatBuffer> trainLabelBatches = new ArrayList<>(numImages);
+
+            for (int i = 0; i < numImages; ++i) {
+                String imageFileName = imageFileNames.get(i);
+                Integer labelIndex = labelMap.get(imageFileName);
+
+                if (labelIndex == null)
+                    throw new RuntimeException("No label found for image: " + imageFileName + " in dataset: " + datasetDirAbsolutePath);
+
+                FloatBuffer trainImage = FinetuneUtils.readImageAsFloatBuffer(datasetDirAbsolutePath, imageFileName, imgWidth, imgHeight);
+                FloatBuffer trainLabel = FinetuneUtils.readLabelAsFloatBuffer(labelIndex, numImages); // TODO: check if numImages is correct here
+
+                if (trainImage != null && trainLabel != null) {
+                    trainImageBatches.add(trainImage);
+                    trainLabelBatches.add(trainLabel);
                 } else {
                     Log.e("FinetuneActivity", "Failed to read image or label for batch " + i);
                 }
@@ -345,7 +367,7 @@ public class FinetuneActivity extends BaseActivity {
         if (hasMissingParams()) return;
 
         try {
-            new TrainModelTask(this.modelFileAbsolutePath, this.numEpochs, this.batchSize, 28, this.imgWidth, this.numTrainings).execute().get();
+            new TrainModelTask(this.modelFileAbsolutePath, this.datasetDirAbsolutePath, this.numEpochs, this.batchSize, 28, this.imgWidth, this.numTrainings).execute().get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
