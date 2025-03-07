@@ -260,10 +260,11 @@ data class RemoteDataset(
     }
 }
 
-suspend fun fetchDatasetInfo(localDatasetList: List<String>): List<Dataset> {
+suspend fun fetchDatasetInfo(filesDir: File, localDatasetList: List<String>): List<Dataset> {
     val datasetDataList = mutableListOf<Dataset>()
     val client = OkHttpClient()
     val gson = Gson()
+    val datasetDir = File(filesDir, "datasets")
     withContext(Dispatchers.IO) {
         localDatasetList
             .forEach { datasetName ->
@@ -274,12 +275,15 @@ suspend fun fetchDatasetInfo(localDatasetList: List<String>): List<Dataset> {
                     val response = client.newCall(request).execute()
                     if (response.isSuccessful) {
                         val body = response.body?.string()
-                        val dataset = gson.fromJson<RemoteDataset>(
+                        val remoteDataset = gson.fromJson<RemoteDataset>(
                             body,
                             object : TypeToken<RemoteDataset>() {}.type
                         )
-                        if (dataset != null) {
-                            datasetDataList.add(dataset.toDataset())
+                        if (remoteDataset != null) {
+                            val localDataset = remoteDataset.toDataset()
+                            localDataset.absoluteFilePath =
+                                datasetDir.resolve(datasetName).absolutePath
+                            datasetDataList.add(localDataset)
                         } else {
                             Log.e("fetchDataset", "invalid data fetched")
                         }
