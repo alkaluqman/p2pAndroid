@@ -41,6 +41,11 @@ fun EditFinetuningRelationshipDialog(
     var selectedDataset by remember { mutableStateOf<Dataset?>(null) }
     var expandedModel by remember { mutableStateOf(false) }
     var expandedDataset by remember { mutableStateOf(false) }
+    var numEpochs by remember { mutableStateOf("100") }
+    var batchSize by remember { mutableStateOf("100") }
+    var imgHeight by remember { mutableStateOf("28") }
+    var imgWidth by remember { mutableStateOf("28") }
+    var numTrainings by remember { mutableStateOf("60000") }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -70,8 +75,7 @@ fun EditFinetuningRelationshipDialog(
                             .padding(8.dp)
                             .clickable { expandedModel = true }
                             .border(1.dp, MaterialTheme.colorScheme.primary))
-                    DropdownMenu(
-                        expanded = expandedModel,
+                    DropdownMenu(expanded = expandedModel,
                         onDismissRequest = { expandedModel = false }) {
                         models.forEach { model ->
                             DropdownMenuItem(text = { Text(model.uniqueIdentifier) }, onClick = {
@@ -91,8 +95,7 @@ fun EditFinetuningRelationshipDialog(
                             .padding(8.dp)
                             .clickable { expandedDataset = true }
                             .border(1.dp, MaterialTheme.colorScheme.primary))
-                    DropdownMenu(
-                        expanded = expandedDataset,
+                    DropdownMenu(expanded = expandedDataset,
                         onDismissRequest = { expandedDataset = false }) {
                         dataset.forEach { data ->
                             DropdownMenuItem(text = {
@@ -106,6 +109,39 @@ fun EditFinetuningRelationshipDialog(
                 }
                 Spacer(modifier = Modifier.height(16.dp))
 
+                Box {
+                    NumberInputField(value = numEpochs,
+                        labelText = "Number of Epochs",
+                        onValueChange = {
+                            numEpochs = it
+                        })
+                }
+                Box {
+                    NumberInputField(value = batchSize, labelText = "Batch Size", onValueChange = {
+                        batchSize = it
+                    })
+                }
+                Box {
+                    NumberInputField(value = imgHeight,
+                        labelText = "Image Height",
+                        onValueChange = {
+                            imgHeight = it
+                        })
+                }
+                Box {
+                    NumberInputField(value = imgWidth, labelText = "Image Width", onValueChange = {
+                        imgWidth = it
+                    })
+                }
+                Box {
+                    NumberInputField(value = numTrainings,
+                        labelText = "Number of Trainings",
+                        onValueChange = {
+                            numTrainings = it
+                        })
+                }
+
+
                 Button(
                     onClick = {
                         val localRelationship = LocalRelationship(
@@ -115,7 +151,13 @@ fun EditFinetuningRelationshipDialog(
                         )
                         onSubmit(localRelationship)
                     },
-                    enabled = selectedModel != null && selectedDataset != null,
+                    enabled = selectedModel != null && selectedDataset != null && listOf(
+                        numEpochs,
+                        batchSize,
+                        imgHeight,
+                        imgWidth,
+                        numTrainings
+                    ).all { it.isNotBlank() && it.toIntOrNull()!! > 0 },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Submit")
