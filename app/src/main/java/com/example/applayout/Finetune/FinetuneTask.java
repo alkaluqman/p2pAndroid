@@ -20,16 +20,14 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
     private final String modelFileAbsolutePath;
     private final String datasetDirAbsolutePath;
     private final int numEpochs;
-    private final int batchSize;
     private final int imgHeight;
     private final int imgWidth;
     private final int numTrainings;
 
-    public FinetuneTask(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int batchSize, int imgHeight, int imgWidth, int numTrainings) {
+    public FinetuneTask(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int imgHeight, int imgWidth, int numTrainings) {
         this.modelFileAbsolutePath = modelFileAbsolutePath;
         this.datasetDirAbsolutePath = datasetDirAbsolutePath;
         this.numEpochs = numEpochs;
-        this.batchSize = batchSize;
         this.imgHeight = imgHeight;
         this.imgWidth = imgWidth;
         this.numTrainings = numTrainings;
@@ -45,7 +43,7 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
     }
 
     protected Void doInBackground(Void... voids) {
-        finetuneManual(this.modelFileAbsolutePath, this.datasetDirAbsolutePath, numEpochs, batchSize, imgHeight, imgWidth, numTrainings);
+        finetuneManual(this.modelFileAbsolutePath, this.datasetDirAbsolutePath, numEpochs, imgHeight, imgWidth, numTrainings);
         return null;
     }
 
@@ -69,7 +67,8 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
 //        });
     }
 
-    private void finetuneManual(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int batchSize, int imgHeight, int imgWidth, int numTrainings) {
+    private void finetuneManual(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int imgHeight, int imgWidth, int numTrainings) {
+        Log.d(this.getClass().getName(), "Beginning finetuneManual...");
         try (Interpreter anotherInterpreter = new Interpreter(FinetuneUtils.loadModelFile(modelFileAbsolutePath))) {
 //            List<FloatBuffer> trainImageBatches = new ArrayList<>(10);
 //            List<FloatBuffer> trainLabelBatches = new ArrayList<>(10);
@@ -84,13 +83,16 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
 
             List<String> imageFileNames = FinetuneUtils.getImageFileNamesFromDataset(datasetDirAbsolutePath); // relative file names
             HashMap<String, Integer> labelMap = FinetuneUtils.getLabelMapFromDataset(datasetDirAbsolutePath);
+            Log.d(this.getClass().getName(), "imageFileNames: " + imageFileNames);
             assert labelMap != null;
-            int numImages = imageFileNames.size();
+            Log.d(this.getClass().getName(), "labelMap: " + labelMap);
+            int batchSize = imageFileNames.size();
+            Log.d(this.getClass().getName(), "batchSize: " + batchSize);
 
-            List<FloatBuffer> trainImageBatches = new ArrayList<>(numImages);
-            List<FloatBuffer> trainLabelBatches = new ArrayList<>(numImages);
+            List<FloatBuffer> trainImageBatches = new ArrayList<>(batchSize);
+            List<FloatBuffer> trainLabelBatches = new ArrayList<>(batchSize);
 
-            for (int i = 0; i < numImages; ++i) {
+            for (int i = 0; i < batchSize; ++i) {
                 String imageFileName = imageFileNames.get(i);
                 Integer labelIndex = labelMap.get(imageFileName);
 
@@ -98,7 +100,7 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
                     throw new RuntimeException("No label found for image: " + imageFileName + " in dataset: " + datasetDirAbsolutePath);
 
                 FloatBuffer trainImage = FinetuneUtils.readImageAsFloatBuffer(datasetDirAbsolutePath, imageFileName, imgWidth, imgHeight);
-                FloatBuffer trainLabel = FinetuneUtils.readLabelAsFloatBuffer(labelIndex, numImages); // TODO: check if numImages is correct here
+                FloatBuffer trainLabel = FinetuneUtils.readLabelAsFloatBuffer(labelIndex, batchSize); // TODO: check if batchSize is correct here
 
                 if (trainImage != null && trainLabel != null) {
                     trainImageBatches.add(trainImage);
@@ -149,8 +151,9 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
                 }
             }
 //            FinetuneUtils.saveModelWeights(context, anotherInterpreter);
+            Log.d(this.getClass().getName(), "Completed finetuneManual!");
         } catch (IOException e) {
-            Log.e("ReportActivity", "Error", e);
+            Log.e(this.getClass().getName(), "Error", e);
         }
     }
 }

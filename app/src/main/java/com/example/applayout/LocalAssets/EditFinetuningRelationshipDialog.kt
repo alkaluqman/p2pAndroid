@@ -34,7 +34,7 @@ fun EditFinetuningRelationshipDialog(
     onDismiss: () -> Unit,
     models: List<Model>,
     dataset: List<Dataset>,
-    onSubmit: (LocalRelationship) -> Unit
+    onSubmit: (LocalRelationship, String, String, Int, Int, Int, Int) -> Unit
 ) {
 
     var selectedModel by remember { mutableStateOf<Model?>(null) }
@@ -42,7 +42,6 @@ fun EditFinetuningRelationshipDialog(
     var expandedModel by remember { mutableStateOf(false) }
     var expandedDataset by remember { mutableStateOf(false) }
     var numEpochs by remember { mutableStateOf("100") }
-    var batchSize by remember { mutableStateOf("100") }
     var imgHeight by remember { mutableStateOf("28") }
     var imgWidth by remember { mutableStateOf("28") }
     var numTrainings by remember { mutableStateOf("60000") }
@@ -117,11 +116,6 @@ fun EditFinetuningRelationshipDialog(
                         })
                 }
                 Box {
-                    NumberInputField(value = batchSize, labelText = "Batch Size", onValueChange = {
-                        batchSize = it
-                    })
-                }
-                Box {
                     NumberInputField(value = imgHeight,
                         labelText = "Image Height",
                         onValueChange = {
@@ -149,11 +143,18 @@ fun EditFinetuningRelationshipDialog(
                             relationshipType = "Dataset",
                             sourceUniqueIdentifiers = selectedDataset!!.uniqueIdentifier
                         )
-                        onSubmit(localRelationship)
+                        onSubmit(
+                            localRelationship,
+                            selectedModel!!.absoluteFilePath,
+                            selectedDataset!!.absoluteFilePath,
+                            numEpochs.toInt(),
+                            imgHeight.toInt(),
+                            imgWidth.toInt(),
+                            numTrainings.toInt()
+                        )
                     },
                     enabled = selectedModel != null && selectedDataset != null && listOf(
                         numEpochs,
-                        batchSize,
                         imgHeight,
                         imgWidth,
                         numTrainings

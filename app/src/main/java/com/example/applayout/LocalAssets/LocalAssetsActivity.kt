@@ -52,6 +52,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
+import com.example.applayout.Finetune.FinetuneAPI
+
 class LocalAssetActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -301,7 +303,8 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                         createDatasetFolder(filesDir, USERNAME)
                         val localDatasetNameList = listLocalResources(filesDir, "datasets", false)
                         withContext(Dispatchers.Main) {
-                            localDatasetListState.value = fetchDatasetInfo(filesDir, localDatasetNameList)
+                            localDatasetListState.value =
+                                fetchDatasetInfo(filesDir, localDatasetNameList)
                         }
                     }
                 },
@@ -328,7 +331,8 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                             val localDatasetNameList =
                                 listLocalResources(filesDir, "datasets", false)
                             withContext(Dispatchers.Main) {
-                                localDatasetListState.value = fetchDatasetInfo(filesDir, localDatasetNameList)
+                                localDatasetListState.value =
+                                    fetchDatasetInfo(filesDir, localDatasetNameList)
                             }
                         }
                     },
@@ -435,8 +439,16 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 onDismiss = { showFinetuningRelationshipDialog = false },
                 models = uploadedModelListState.value + localModelListState.value,
                 dataset = localDatasetListState.value,
-                onSubmit = { localRelationship ->
+                onSubmit = { localRelationship, modelAbsoluteFilePath, datasetAbsoluteFilePath, numEpochs, imgHeight, imgWidth, numTrainings ->
                     coroutineScope.launch(Dispatchers.IO) {
+                        FinetuneAPI.finetune(
+                            modelAbsoluteFilePath,
+                            datasetAbsoluteFilePath,
+                            numEpochs,
+                            imgHeight,
+                            imgWidth,
+                            numTrainings
+                        )
                         uploadFinetuningRelationship(localRelationship)
                     }
                     showFinetuningRelationshipDialog = false
