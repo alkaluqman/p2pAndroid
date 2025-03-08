@@ -9,7 +9,8 @@ data class Dataset(
     var model_task: String = "object_detection",
     var description: String = "",
     var class_labels: String = "T-shirt/top,Trouser,Pullover,Dress,Coat,Sandal,Shirt,Sneaker,Bag,Ankle boot",
-    var isUploaded: Boolean = false
+    var isUploaded: Boolean = false,
+    var absoluteFilePath: String = ""
 ) {
     fun getClassLabelsAsList(): List<String> {
         return class_labels.split(",").map { it.trim() }

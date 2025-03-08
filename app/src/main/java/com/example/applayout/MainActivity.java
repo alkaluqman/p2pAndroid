@@ -1,10 +1,7 @@
 package com.example.applayout;
 
-import android.app.ActivityManager;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.UserManager;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -12,7 +9,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.example.applayout.FederatedLearning.FederatedLearningActivity;
+import com.example.applayout.Finetune.FinetuneActivity;
 import com.example.applayout.Report.ReportActivity;
 
 import java.io.BufferedReader;
@@ -22,7 +19,7 @@ import java.io.InputStreamReader;
 public class MainActivity extends BaseActivity {
     TextView status;
     Button btConfirm;
-    Button btTrain;
+    Button btFinetune;
     ListView lvApplications;
     String[] applications;
     public static String string;
@@ -33,7 +30,7 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         lvApplications = findViewById(R.id.lvApplication);
         btConfirm = findViewById(R.id.btConfirmApplication);
-        btTrain = findViewById(R.id.btTrain);
+        btFinetune = findViewById(R.id.btFinetune);
         status = findViewById(R.id.statusApplication);
 
         applications = new String[2];
@@ -58,7 +55,7 @@ public class MainActivity extends BaseActivity {
             }
         });
 
-        btTrain.setOnClickListener(new View.OnClickListener() {
+        btFinetune.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
@@ -115,7 +112,7 @@ public class MainActivity extends BaseActivity {
                         }).start();
                     }
                 } else {
-                    Intent intent = new Intent(view.getContext(), FederatedLearningActivity.class);
+                    Intent intent = new Intent(view.getContext(), FinetuneActivity.class);
                     startActivity(intent);
                 }
             }

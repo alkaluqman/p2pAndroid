@@ -13,13 +13,15 @@ data class Model(
     var public_link: String = "",
     var architecture: String = "",
     var isOwner: Boolean = false,
+    var absoluteFilePath: String = ""
 
-    ) {
+) {
     fun toLocalModel(): LocalModel {
         return LocalModel(
             uniqueIdentifier = this.uniqueIdentifier,
             model_task = this.model_task,
-            description = this.description
+            description = this.description,
+            absoluteFilePath = this.absoluteFilePath
         )
     }
 }

@@ -73,12 +73,12 @@
         app:layout_constraintTop_toBottomOf="@+id/statusApplication">
 
         <Button
-            android:id="@+id/btTrain"
+            android:id="@+id/btFinetune"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             style="@style/CustomButtonStyle"
-            android:text="TRAIN" />
+            android:text="Finetune" />
 
         <Button
             android:id="@+id/btConfirmApplication"

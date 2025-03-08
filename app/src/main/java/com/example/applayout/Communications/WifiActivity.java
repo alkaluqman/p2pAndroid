@@ -49,7 +49,7 @@ import java.util.List;
 
 
 import com.example.applayout.BaseActivity;
-import com.example.applayout.FederatedLearning.FederatedLearningActivity;
+import com.example.applayout.Finetune.FinetuneActivity;
 import com.example.applayout.R;
 
 public class WifiActivity extends BaseActivity {
@@ -366,7 +366,7 @@ public class WifiActivity extends BaseActivity {
                         inputStream.close();
                         outputStream.close();
                         socket.close();
-                        Intent intent = new Intent(WifiActivity.this, FederatedLearningActivity.class);
+                        Intent intent = new Intent(WifiActivity.this, FinetuneActivity.class);
                         startActivity(intent);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -459,7 +459,7 @@ public class WifiActivity extends BaseActivity {
                         inputStream.close();
                         outputStream.close();
                         socket.close();
-                        Intent intent = new Intent(WifiActivity.this, FederatedLearningActivity.class);
+                        Intent intent = new Intent(WifiActivity.this, FinetuneActivity.class);
                         startActivity(intent);
                     } catch (IOException e) {
                         Log.e("WiFiActivity", "Error while receiving or writing file.", e);

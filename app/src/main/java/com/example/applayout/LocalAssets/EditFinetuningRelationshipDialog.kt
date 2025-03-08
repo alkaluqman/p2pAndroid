@@ -34,13 +34,17 @@ fun EditFinetuningRelationshipDialog(
     onDismiss: () -> Unit,
     models: List<Model>,
     dataset: List<Dataset>,
-    onSubmit: (LocalRelationship) -> Unit
+    onSubmit: (LocalRelationship, String, String, Int, Int, Int, Int) -> Unit
 ) {
 
-    var selectedModelId by remember { mutableStateOf("") }
-    var selectedDatasetId by remember { mutableStateOf("") }
-    var expandedModelId by remember { mutableStateOf(false) }
-    var expandedDatasetId by remember { mutableStateOf(false) }
+    var selectedModel by remember { mutableStateOf<Model?>(null) }
+    var selectedDataset by remember { mutableStateOf<Dataset?>(null) }
+    var expandedModel by remember { mutableStateOf(false) }
+    var expandedDataset by remember { mutableStateOf(false) }
+    var numEpochs by remember { mutableStateOf("100") }
+    var imgHeight by remember { mutableStateOf("28") }
+    var imgWidth by remember { mutableStateOf("28") }
+    var numTrainings by remember { mutableStateOf("60000") }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -64,18 +68,18 @@ fun EditFinetuningRelationshipDialog(
                 )
                 Text("Model Unique Identifier")
                 Box {
-                    Text(text = selectedModelId.ifEmpty { "Select Model" },
+                    Text(text = selectedModel?.uniqueIdentifier ?: "Select Model",
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(8.dp)
-                            .clickable { expandedModelId = true }
+                            .clickable { expandedModel = true }
                             .border(1.dp, MaterialTheme.colorScheme.primary))
-                    DropdownMenu(expanded = expandedModelId,
-                        onDismissRequest = { expandedModelId = false }) {
+                    DropdownMenu(expanded = expandedModel,
+                        onDismissRequest = { expandedModel = false }) {
                         models.forEach { model ->
                             DropdownMenuItem(text = { Text(model.uniqueIdentifier) }, onClick = {
-                                selectedModelId = model.uniqueIdentifier
-                                expandedModelId = false
+                                selectedModel = model
+                                expandedModel = false
                             })
                         }
                     }
@@ -84,36 +88,77 @@ fun EditFinetuningRelationshipDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("Source Unique Identifiers")
                 Box {
-                    Text(text = selectedDatasetId.ifEmpty { "Select Source Dataset" },
+                    Text(text = selectedDataset?.uniqueIdentifier ?: "Select Source Dataset",
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(8.dp)
-                            .clickable { expandedDatasetId = true }
+                            .clickable { expandedDataset = true }
                             .border(1.dp, MaterialTheme.colorScheme.primary))
-                    DropdownMenu(expanded = expandedDatasetId,
-                        onDismissRequest = { expandedDatasetId = false }) {
+                    DropdownMenu(expanded = expandedDataset,
+                        onDismissRequest = { expandedDataset = false }) {
                         dataset.forEach { data ->
                             DropdownMenuItem(text = {
                                 Text(data.uniqueIdentifier)
                             }, onClick = {
-                                selectedDatasetId = data.uniqueIdentifier
-                                expandedDatasetId = false
+                                selectedDataset = data
+                                expandedDataset = false
                             })
                         }
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
 
+                Box {
+                    NumberInputField(value = numEpochs,
+                        labelText = "Number of Epochs",
+                        onValueChange = {
+                            numEpochs = it
+                        })
+                }
+                Box {
+                    NumberInputField(value = imgHeight,
+                        labelText = "Image Height",
+                        onValueChange = {
+                            imgHeight = it
+                        })
+                }
+                Box {
+                    NumberInputField(value = imgWidth, labelText = "Image Width", onValueChange = {
+                        imgWidth = it
+                    })
+                }
+                Box {
+                    NumberInputField(value = numTrainings,
+                        labelText = "Number of Trainings",
+                        onValueChange = {
+                            numTrainings = it
+                        })
+                }
+
+
                 Button(
                     onClick = {
                         val localRelationship = LocalRelationship(
-                            modelUniqueIdentifier = selectedModelId,
+                            modelUniqueIdentifier = selectedModel!!.uniqueIdentifier,
                             relationshipType = "Dataset",
-                            sourceUniqueIdentifiers = selectedDatasetId
+                            sourceUniqueIdentifiers = selectedDataset!!.uniqueIdentifier
                         )
-                        onSubmit(localRelationship)
+                        onSubmit(
+                            localRelationship,
+                            selectedModel!!.absoluteFilePath,
+                            selectedDataset!!.absoluteFilePath,
+                            numEpochs.toInt(),
+                            imgHeight.toInt(),
+                            imgWidth.toInt(),
+                            numTrainings.toInt()
+                        )
                     },
-                    enabled = selectedModelId.isNotEmpty() && selectedDatasetId.isNotEmpty(),
+                    enabled = selectedModel != null && selectedDataset != null && listOf(
+                        numEpochs,
+                        imgHeight,
+                        imgWidth,
+                        numTrainings
+                    ).all { it.isNotBlank() && it.toIntOrNull()!! > 0 },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Submit")

@@ -31,7 +31,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.applayout.BaseActivity;
-import com.example.applayout.FederatedLearning.FederatedLearningActivity;
+import com.example.applayout.Finetune.FinetuneActivity;
 import com.example.applayout.R;
 
 import java.io.File;
@@ -253,7 +253,7 @@ public class BluetoothActivity extends BaseActivity {
                     break;
                 case STATE_MESSAGE_RECEIVED:
                     status.setText("File Received");
-                    Intent intent = new Intent(BluetoothActivity.this, FederatedLearningActivity.class);
+                    Intent intent = new Intent(BluetoothActivity.this, FinetuneActivity.class);
                     startActivity(intent);
                     break;
                 case STATE_MESSAGE_SENT:
