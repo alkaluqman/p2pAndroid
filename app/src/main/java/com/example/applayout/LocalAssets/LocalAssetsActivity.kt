@@ -53,6 +53,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 import com.example.applayout.Finetune.FinetuneAPI
+import com.example.applayout.Metrics.MetricTracking
 
 class LocalAssetActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -441,14 +442,18 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 dataset = localDatasetListState.value,
                 onSubmit = { localRelationship, modelAbsoluteFilePath, datasetAbsoluteFilePath, numEpochs, imgHeight, imgWidth, numTrainings ->
                     coroutineScope.launch(Dispatchers.IO) {
-                        FinetuneAPI.finetune(
-                            modelAbsoluteFilePath,
-                            datasetAbsoluteFilePath,
-                            numEpochs,
-                            imgHeight,
-                            imgWidth,
-                            numTrainings
-                        )
+                        val trackingResults: HashMap<String, Any> =
+                            MetricTracking.doWithTracking {
+                                FinetuneAPI.finetune(
+                                    modelAbsoluteFilePath,
+                                    datasetAbsoluteFilePath,
+                                    numEpochs,
+                                    imgHeight,
+                                    imgWidth,
+                                    numTrainings
+                                )
+                            }
+                        Log.d("LocalAssetsScreen", "Tracking Results: $trackingResults")
                         uploadFinetuningRelationship(localRelationship)
                     }
                     showFinetuningRelationshipDialog = false
