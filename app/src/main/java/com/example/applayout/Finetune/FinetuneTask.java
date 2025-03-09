@@ -22,15 +22,13 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
     private final int numEpochs;
     private final int imgHeight;
     private final int imgWidth;
-    private final int numTrainings;
 
-    public FinetuneTask(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int imgHeight, int imgWidth, int numTrainings) {
+    public FinetuneTask(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int imgHeight, int imgWidth) {
         this.modelFileAbsolutePath = modelFileAbsolutePath;
         this.datasetDirAbsolutePath = datasetDirAbsolutePath;
         this.numEpochs = numEpochs;
         this.imgHeight = imgHeight;
         this.imgWidth = imgWidth;
-        this.numTrainings = numTrainings;
     }
 
     protected void onPreExecute() {
@@ -43,7 +41,7 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
     }
 
     protected Void doInBackground(Void... voids) {
-        finetuneManual(this.modelFileAbsolutePath, this.datasetDirAbsolutePath, numEpochs, imgHeight, imgWidth, numTrainings);
+        finetuneManual(this.modelFileAbsolutePath, this.datasetDirAbsolutePath, numEpochs, imgHeight, imgWidth);
         return null;
     }
 
@@ -67,7 +65,7 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
 //        });
     }
 
-    private void finetuneManual(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int imgHeight, int imgWidth, int numTrainings) {
+    private void finetuneManual(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int imgHeight, int imgWidth) {
         Log.d(this.getClass().getName(), "Beginning finetuneManual...");
         try (Interpreter anotherInterpreter = new Interpreter(FinetuneUtils.loadModelFile(modelFileAbsolutePath))) {
 //            List<FloatBuffer> trainImageBatches = new ArrayList<>(10);

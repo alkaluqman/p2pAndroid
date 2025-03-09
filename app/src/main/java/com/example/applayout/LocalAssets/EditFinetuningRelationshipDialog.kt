@@ -34,7 +34,7 @@ fun EditFinetuningRelationshipDialog(
     onDismiss: () -> Unit,
     models: List<Model>,
     dataset: List<Dataset>,
-    onSubmit: (LocalRelationship, String, String, Int, Int, Int, Int) -> Unit
+    onSubmit: (LocalRelationship, String, String, Int, Int, Int) -> Unit
 ) {
 
     var selectedModel by remember { mutableStateOf<Model?>(null) }
@@ -44,7 +44,6 @@ fun EditFinetuningRelationshipDialog(
     var numEpochs by remember { mutableStateOf("100") }
     var imgHeight by remember { mutableStateOf("28") }
     var imgWidth by remember { mutableStateOf("28") }
-    var numTrainings by remember { mutableStateOf("60000") }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -127,13 +126,6 @@ fun EditFinetuningRelationshipDialog(
                         imgWidth = it
                     })
                 }
-                Box {
-                    NumberInputField(value = numTrainings,
-                        labelText = "Number of Trainings",
-                        onValueChange = {
-                            numTrainings = it
-                        })
-                }
 
 
                 Button(
@@ -149,15 +141,13 @@ fun EditFinetuningRelationshipDialog(
                             selectedDataset!!.absoluteFilePath,
                             numEpochs.toInt(),
                             imgHeight.toInt(),
-                            imgWidth.toInt(),
-                            numTrainings.toInt()
+                            imgWidth.toInt()
                         )
                     },
                     enabled = selectedModel != null && selectedDataset != null && listOf(
                         numEpochs,
                         imgHeight,
                         imgWidth,
-                        numTrainings
                     ).all { it.isNotBlank() && it.toIntOrNull()!! > 0 },
                     modifier = Modifier.fillMaxWidth()
                 ) {
