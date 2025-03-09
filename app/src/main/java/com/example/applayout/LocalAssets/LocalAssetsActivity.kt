@@ -454,6 +454,10 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                                 )
                             }
                         Log.d("LocalAssetsScreen", "Tracking Results: $trackingResults")
+
+                        val deviceSpecifications: HashMap<String, String> =
+                            getDeviceSpecifications()
+                        Log.d("LocalAssetsScreen", "Device Specs: $deviceSpecifications")
                         uploadFinetuningRelationship(localRelationship)
                     }
                     showFinetuningRelationshipDialog = false
