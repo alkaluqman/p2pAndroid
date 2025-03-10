@@ -41,6 +41,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.applayout.Data.Model.Dataset
+import com.example.applayout.Data.Model.Finetune
 import com.example.applayout.Data.Model.Model
 import com.example.applayout.Dataset.DatasetCard
 import com.example.applayout.Marketplace.MarketplaceScreen
@@ -53,6 +54,8 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 import com.example.applayout.Finetune.FinetuneAPI
+import com.example.applayout.Metrics.MetricTracking
+import com.google.gson.Gson
 
 class LocalAssetActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -439,17 +442,36 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 onDismiss = { showFinetuningRelationshipDialog = false },
                 models = uploadedModelListState.value + localModelListState.value,
                 dataset = localDatasetListState.value,
-                onSubmit = { localRelationship, modelAbsoluteFilePath, datasetAbsoluteFilePath, numEpochs, imgHeight, imgWidth, numTrainings ->
+                onSubmit = { localRelationship, modelAbsoluteFilePath, datasetAbsoluteFilePath, numEpochs, batchSize ->
                     coroutineScope.launch(Dispatchers.IO) {
-                        FinetuneAPI.finetune(
-                            modelAbsoluteFilePath,
-                            datasetAbsoluteFilePath,
-                            numEpochs,
-                            imgHeight,
-                            imgWidth,
-                            numTrainings
+                        val trackingResults: HashMap<String, Double> =
+                            MetricTracking.doWithTracking {
+                                FinetuneAPI.finetune(
+                                    modelAbsoluteFilePath,
+                                    datasetAbsoluteFilePath,
+                                    numEpochs,
+                                    batchSize
+                                )
+                            }
+                        Log.d("LocalAssetsScreen", "Tracking Results: $trackingResults")
+
+                        val deviceSpecifications: HashMap<String, String> =
+                            getDeviceSpecifications()
+                        Log.d("LocalAssetsScreen", "Device Specs: $deviceSpecifications")
+
+                        val mergedMap = trackingResults + deviceSpecifications
+                        val performanceJson = Gson().toJson(mergedMap)
+                        Log.d("LocalAssetsScreen", "Performance Json: $performanceJson")
+
+                        val finetune = Finetune(
+                            num_epochs = numEpochs,
+                            batch_size = batchSize,
+                            performance_json = performanceJson
                         )
-                        uploadFinetuningRelationship(localRelationship)
+                        uploadFinetuningRelationship(
+                            relationshipData = localRelationship,
+                            finetuneData = finetune
+                        )
                     }
                     showFinetuningRelationshipDialog = false
                 }

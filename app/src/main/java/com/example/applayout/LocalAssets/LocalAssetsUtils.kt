@@ -29,6 +29,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.util.UUID
+import android.os.Build
 
 private const val BASE_URL = "10.96.181.80"
 
@@ -613,16 +614,16 @@ data class UploadFinetuningRelationshipPayload(
 
 suspend fun uploadFinetuningRelationship(
     relationshipData: LocalRelationship,
+    finetuneData: Finetune
 ) {
     try {
         val client = OkHttpClient()
         val gson = Gson()
-        val finetune = Finetune()
         val payload = gson.toJson(
             UploadFinetuningRelationshipPayload(
                 weight_id = relationshipData.modelUniqueIdentifier,
                 dataset_id = relationshipData.sourceUniqueIdentifiers,
-                finetune = finetune
+                finetune = finetuneData
             )
         )
         Log.d("uploadRelationship", "Generated JSON Payload: $payload")
@@ -752,4 +753,18 @@ fun isInternetConnected(context: Context): Boolean {
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     val activeNetworkInfo = connectivityManager.activeNetworkInfo
     return activeNetworkInfo != null && activeNetworkInfo.isConnected
+}
+
+fun getDeviceSpecifications(): HashMap<String, String> {
+    return hashMapOf(
+        "Manufacturer" to Build.MANUFACTURER,
+        "Model" to Build.MODEL,
+        "Board" to Build.BOARD,
+        "Brand" to Build.BRAND,
+        "Device" to Build.DEVICE,
+        "Product" to Build.PRODUCT,
+        "CPU ABI" to Build.SUPPORTED_ABIS.joinToString(", "),
+        "Android Version" to Build.VERSION.RELEASE,
+        "API Level" to Build.VERSION.SDK_INT.toString()
+    )
 }

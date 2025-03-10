@@ -34,7 +34,7 @@ fun EditFinetuningRelationshipDialog(
     onDismiss: () -> Unit,
     models: List<Model>,
     dataset: List<Dataset>,
-    onSubmit: (LocalRelationship, String, String, Int, Int, Int, Int) -> Unit
+    onSubmit: (LocalRelationship, String, String, Int, Int) -> Unit
 ) {
 
     var selectedModel by remember { mutableStateOf<Model?>(null) }
@@ -42,9 +42,7 @@ fun EditFinetuningRelationshipDialog(
     var expandedModel by remember { mutableStateOf(false) }
     var expandedDataset by remember { mutableStateOf(false) }
     var numEpochs by remember { mutableStateOf("100") }
-    var imgHeight by remember { mutableStateOf("28") }
-    var imgWidth by remember { mutableStateOf("28") }
-    var numTrainings by remember { mutableStateOf("60000") }
+    var batchSize by remember { mutableStateOf("10") }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -116,22 +114,10 @@ fun EditFinetuningRelationshipDialog(
                         })
                 }
                 Box {
-                    NumberInputField(value = imgHeight,
-                        labelText = "Image Height",
+                    NumberInputField(value = batchSize,
+                        labelText = "Batch Size",
                         onValueChange = {
-                            imgHeight = it
-                        })
-                }
-                Box {
-                    NumberInputField(value = imgWidth, labelText = "Image Width", onValueChange = {
-                        imgWidth = it
-                    })
-                }
-                Box {
-                    NumberInputField(value = numTrainings,
-                        labelText = "Number of Trainings",
-                        onValueChange = {
-                            numTrainings = it
+                            batchSize = it
                         })
                 }
 
@@ -148,16 +134,12 @@ fun EditFinetuningRelationshipDialog(
                             selectedModel!!.absoluteFilePath,
                             selectedDataset!!.absoluteFilePath,
                             numEpochs.toInt(),
-                            imgHeight.toInt(),
-                            imgWidth.toInt(),
-                            numTrainings.toInt()
+                            batchSize.toInt()
                         )
                     },
                     enabled = selectedModel != null && selectedDataset != null && listOf(
                         numEpochs,
-                        imgHeight,
-                        imgWidth,
-                        numTrainings
+                        batchSize
                     ).all { it.isNotBlank() && it.toIntOrNull()!! > 0 },
                     modifier = Modifier.fillMaxWidth()
                 ) {

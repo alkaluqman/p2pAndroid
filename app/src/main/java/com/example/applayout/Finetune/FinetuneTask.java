@@ -8,6 +8,7 @@ import org.tensorflow.lite.Interpreter;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,17 +21,13 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
     private final String modelFileAbsolutePath;
     private final String datasetDirAbsolutePath;
     private final int numEpochs;
-    private final int imgHeight;
-    private final int imgWidth;
-    private final int numTrainings;
+    private final int batchSize;
 
-    public FinetuneTask(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int imgHeight, int imgWidth, int numTrainings) {
+    public FinetuneTask(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int batchSize) {
         this.modelFileAbsolutePath = modelFileAbsolutePath;
         this.datasetDirAbsolutePath = datasetDirAbsolutePath;
         this.numEpochs = numEpochs;
-        this.imgHeight = imgHeight;
-        this.imgWidth = imgWidth;
-        this.numTrainings = numTrainings;
+        this.batchSize = batchSize;
     }
 
     protected void onPreExecute() {
@@ -43,7 +40,7 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
     }
 
     protected Void doInBackground(Void... voids) {
-        finetuneManual(this.modelFileAbsolutePath, this.datasetDirAbsolutePath, numEpochs, imgHeight, imgWidth, numTrainings);
+        finetuneManual(this.modelFileAbsolutePath, this.datasetDirAbsolutePath, numEpochs, batchSize);
         return null;
     }
 
@@ -67,7 +64,7 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
 //        });
     }
 
-    private void finetuneManual(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int imgHeight, int imgWidth, int numTrainings) {
+    private void finetuneManual(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int batchSize) {
         Log.d(this.getClass().getName(), "Beginning finetuneManual...");
         try (Interpreter anotherInterpreter = new Interpreter(FinetuneUtils.loadModelFile(modelFileAbsolutePath))) {
 //            List<FloatBuffer> trainImageBatches = new ArrayList<>(10);
@@ -86,21 +83,36 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
             Log.d(this.getClass().getName(), "imageFileNames: " + imageFileNames);
             assert labelMap != null;
             Log.d(this.getClass().getName(), "labelMap: " + labelMap);
-            int batchSize = imageFileNames.size();
-            Log.d(this.getClass().getName(), "batchSize: " + batchSize);
+            int numImages = imageFileNames.size();
+            Log.d(this.getClass().getName(), "numImages: " + numImages);
 
-            List<FloatBuffer> trainImageBatches = new ArrayList<>(batchSize);
-            List<FloatBuffer> trainLabelBatches = new ArrayList<>(batchSize);
+            int numClasses = FinetuneUtils.getNumClasses(labelMap);
+            Log.d(this.getClass().getName(), "Number of classes: " + numClasses);
 
-            for (int i = 0; i < batchSize; ++i) {
+            HashMap<Integer, Integer> originalLabelsToDatasetLabelsMap = FinetuneUtils.getOriginalLabelsToDatasetLabelsMap(labelMap);
+            Log.d(this.getClass().getName(), "originalLabelsToDatasetLabelsMap : " + originalLabelsToDatasetLabelsMap);
+
+            int[] modelInputShape = FinetuneUtils.getModelInputShape(modelFileAbsolutePath);
+            if (modelInputShape == null)
+                throw new RuntimeException("Failed to get model shape for model: " + modelFileAbsolutePath);
+            Log.d("FinetuneActivity", "Model Input Shape: " + Arrays.toString(modelInputShape));
+            int imgWidth = modelInputShape[1];
+            int imgHeight = modelInputShape[2];
+
+            List<FloatBuffer> trainImageBatches = new ArrayList<>(numImages);
+            List<FloatBuffer> trainLabelBatches = new ArrayList<>(numImages);
+
+            for (int i = 0; i < numImages; ++i) {
                 String imageFileName = imageFileNames.get(i);
                 Integer labelIndex = labelMap.get(imageFileName);
 
                 if (labelIndex == null)
                     throw new RuntimeException("No label found for image: " + imageFileName + " in dataset: " + datasetDirAbsolutePath);
 
+//                int datasetLabelIndex = originalLabelsToDatasetLabelsMap.get(labelIndex);
+
                 FloatBuffer trainImage = FinetuneUtils.readImageAsFloatBuffer(datasetDirAbsolutePath, imageFileName, imgWidth, imgHeight);
-                FloatBuffer trainLabel = FinetuneUtils.readLabelAsFloatBuffer(labelIndex, batchSize); // TODO: check if batchSize is correct here
+                FloatBuffer trainLabel = FinetuneUtils.readLabelAsFloatBuffer(labelIndex, 10);
 
                 if (trainImage != null && trainLabel != null) {
                     trainImageBatches.add(trainImage);
