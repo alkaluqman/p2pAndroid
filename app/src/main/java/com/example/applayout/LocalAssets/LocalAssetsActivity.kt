@@ -41,6 +41,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.applayout.Data.Model.Dataset
+import com.example.applayout.Data.Model.Finetune
 import com.example.applayout.Data.Model.Model
 import com.example.applayout.Dataset.DatasetCard
 import com.example.applayout.Marketplace.MarketplaceScreen
@@ -456,7 +457,12 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                         val deviceSpecifications: HashMap<String, String> =
                             getDeviceSpecifications()
                         Log.d("LocalAssetsScreen", "Device Specs: $deviceSpecifications")
-                        uploadFinetuningRelationship(localRelationship)
+
+                        val finetune = Finetune(num_epochs = numEpochs, batch_size = batchSize)
+                        uploadFinetuningRelationship(
+                            relationshipData = localRelationship,
+                            finetuneData = finetune
+                        )
                     }
                     showFinetuningRelationshipDialog = false
                 }

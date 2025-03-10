@@ -614,16 +614,16 @@ data class UploadFinetuningRelationshipPayload(
 
 suspend fun uploadFinetuningRelationship(
     relationshipData: LocalRelationship,
+    finetuneData: Finetune
 ) {
     try {
         val client = OkHttpClient()
         val gson = Gson()
-        val finetune = Finetune()
         val payload = gson.toJson(
             UploadFinetuningRelationshipPayload(
                 weight_id = relationshipData.modelUniqueIdentifier,
                 dataset_id = relationshipData.sourceUniqueIdentifiers,
-                finetune = finetune
+                finetune = finetuneData
             )
         )
         Log.d("uploadRelationship", "Generated JSON Payload: $payload")
