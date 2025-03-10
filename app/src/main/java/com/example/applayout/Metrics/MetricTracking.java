@@ -13,7 +13,7 @@ public class MetricTracking {
      * @param callback: A Runnable representing the task / function. If your task requires arguments, wrap the function call in a lambda.
      * @return A HashMap with the keys: [minCpu, avgCpu, maxCpu, minMem, avgMem, maxMem]
      */
-    public static HashMap<String, Object> doWithTracking(Runnable callback) {
+    public static HashMap<String, Double> doWithTracking(Runnable callback) {
         return new MetricTracker().doWithTracking(callback);
     }
 
@@ -30,7 +30,7 @@ public class MetricTracking {
         private double totalMem = 0;
         private int memSamples = 0;
 
-        private final HashMap<String, Object> trackingResults = new HashMap<>();
+        private final HashMap<String, Double> trackingResults = new HashMap<>();
 
         private final HandlerThread handlerThread;
 
@@ -41,7 +41,7 @@ public class MetricTracking {
             System.out.println("MetricTracking instance created.");
         }
 
-        private HashMap<String, Object> doWithTracking(Runnable callback) {
+        private HashMap<String, Double> doWithTracking(Runnable callback) {
             System.out.println("Starting Tracking...");
             startTracking();
             callback.run();

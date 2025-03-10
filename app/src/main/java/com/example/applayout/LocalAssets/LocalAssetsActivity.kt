@@ -55,6 +55,7 @@ import java.io.File
 
 import com.example.applayout.Finetune.FinetuneAPI
 import com.example.applayout.Metrics.MetricTracking
+import com.google.gson.Gson
 
 class LocalAssetActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -443,7 +444,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 dataset = localDatasetListState.value,
                 onSubmit = { localRelationship, modelAbsoluteFilePath, datasetAbsoluteFilePath, numEpochs, batchSize ->
                     coroutineScope.launch(Dispatchers.IO) {
-                        val trackingResults: HashMap<String, Any> =
+                        val trackingResults: HashMap<String, Double> =
                             MetricTracking.doWithTracking {
                                 FinetuneAPI.finetune(
                                     modelAbsoluteFilePath,
@@ -458,7 +459,15 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                             getDeviceSpecifications()
                         Log.d("LocalAssetsScreen", "Device Specs: $deviceSpecifications")
 
-                        val finetune = Finetune(num_epochs = numEpochs, batch_size = batchSize)
+                        val mergedMap = trackingResults + deviceSpecifications
+                        val performanceJson = Gson().toJson(mergedMap)
+                        Log.d("LocalAssetsScreen", "Performance Json: $performanceJson")
+
+                        val finetune = Finetune(
+                            num_epochs = numEpochs,
+                            batch_size = batchSize,
+                            performance_json = performanceJson
+                        )
                         uploadFinetuningRelationship(
                             relationshipData = localRelationship,
                             finetuneData = finetune

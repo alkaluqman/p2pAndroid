@@ -152,7 +152,7 @@ public class FinetuneActivity extends BaseActivity {
         btStartFinetune = findViewById(R.id.btStartFinetune);
         btStartFinetune.setOnClickListener(v -> {
                     new Thread(() -> {
-                        HashMap<String, Object> trackingResults = MetricTracking.doWithTracking(FinetuneActivity.this::finetune);
+                        HashMap<String, Double> trackingResults = MetricTracking.doWithTracking(FinetuneActivity.this::finetune);
                         // Log results (replace this with saving to a file or another desired action)
                         System.out.println("Tracking Results: " + trackingResults);
                     }
