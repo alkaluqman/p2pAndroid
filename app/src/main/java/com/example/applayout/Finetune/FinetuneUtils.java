@@ -18,15 +18,47 @@ import java.nio.FloatBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 
 public class FinetuneUtils {
+
+    public static HashMap<Integer, Integer> getOriginalLabelsToDatasetLabelsMap(HashMap<String, Integer> labelsMap) {
+        Set<Integer> uniqueClasses = new HashSet<>(labelsMap.values());
+        List<Integer> sortedDatasetClasses = new ArrayList<>(uniqueClasses);
+        Collections.sort(sortedDatasetClasses);
+
+        HashMap<Integer, Integer> originalLabelsToDatasetLabelsMap = new HashMap<>();
+        for (int i = 0; i < sortedDatasetClasses.size(); ++i) {
+            originalLabelsToDatasetLabelsMap.put(sortedDatasetClasses.get(i), i);
+        }
+        return originalLabelsToDatasetLabelsMap;
+    }
+
+    public static int getNumClasses(HashMap<String, Integer> labelsMap) {
+        Set<Integer> uniqueClasses = new HashSet<>(labelsMap.values());
+        return uniqueClasses.size();
+    }
+
+    public static int[] getModelInputShape(String modelPath) {
+        try {
+            Interpreter interpreter = new Interpreter(loadModelFile(modelPath));
+            int[] inputShape = interpreter.getInputTensor(0).shape();
+            interpreter.close();
+            return inputShape;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     public static MappedByteBuffer loadModelFile(String modelFileAbsolutePath)
             throws IOException {
@@ -104,6 +136,8 @@ public class FinetuneUtils {
                 float green = ((pixel >> 8) & 0xFF) / 255.0f;
                 float blue = (pixel & 0xFF) / 255.0f;
                 floatBuffer.put(red);  // Just an example; adjust as needed for your model
+//                floatBuffer.put(green);
+//                floatBuffer.put(blue);
             }
             floatBuffer.rewind();
             return floatBuffer;
