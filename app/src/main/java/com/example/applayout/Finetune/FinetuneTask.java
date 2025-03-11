@@ -76,10 +76,11 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
 
     private void finetuneManual(Context context, File filesDir, String modelFileName, String datasetDirName, int numEpochs, int batchSize) {
         Log.d(this.getClass().getName(), "Beginning finetuneManual...");
+        final String MODEL_EXT = ".ckpt";
 
         try {
             Interpreter anotherInterpreter = new Interpreter(FinetuneUtils.loadModelFile(context.getAssets(), "model.tflite")); // default base model
-            String modelFileAbsolutePath = FinetuneUtils.getAbsolutePathFromFilesDir(filesDir, "models", modelFileName);
+            String modelFileAbsolutePath = FinetuneUtils.getAbsolutePathFromFilesDir(filesDir, "models", modelFileName + MODEL_EXT);
             String datasetDirAbsolutePath = FinetuneUtils.getAbsolutePathFromFilesDir(filesDir, "datasets", datasetDirName);
 
             // Load weights from checkpoint file (this is where the checkpoint path is used)
@@ -104,7 +105,7 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
 
             int[] modelInputShape = FinetuneUtils.getModelInputShape(context.getAssets(), "model.tflite");
             if (modelInputShape == null)
-                throw new RuntimeException("Failed to get model shape for model: " + modelFileName);
+                throw new RuntimeException("Failed to get model shape for model: " + modelFileName + MODEL_EXT);
             Log.d("FinetuneActivity", "Model Input Shape: " + Arrays.toString(modelInputShape));
             int imgWidth = modelInputShape[1];
             int imgHeight = modelInputShape[2];
@@ -120,7 +121,7 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
                 if (labelIndex == null)
                     throw new RuntimeException("No label found for image: " + imageFileName + " in dataset: " + datasetDirName);
 
-                FloatBuffer trainImage = FinetuneUtils.readImageAsFloatBuffer(datasetDirName, imageFileName, imgWidth, imgHeight);
+                FloatBuffer trainImage = FinetuneUtils.readImageAsFloatBuffer(datasetDirAbsolutePath, imageFileName, imgWidth, imgHeight);
                 FloatBuffer trainLabel = FinetuneUtils.readLabelAsFloatBuffer(labelIndex, 10);
 
                 if (trainImage != null && trainLabel != null) {

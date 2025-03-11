@@ -100,7 +100,7 @@ public class FinetuneActivity extends BaseActivity {
         }
 
         protected Void doInBackground(Void... voids) {
-            finetuneManual(this.modelFileAbsolutePath, this.datasetDirAbsolutePath, numEpochs, batchSize, imgHeight, imgWidth, numTrainings);
+//            finetuneManual(this.modelFileAbsolutePath, this.datasetDirAbsolutePath, numEpochs, batchSize, imgHeight, imgWidth, numTrainings);
             return null;
         }
 
@@ -219,93 +219,93 @@ public class FinetuneActivity extends BaseActivity {
 //        return new ArrayList<>();
 //    }
 
-    private void finetuneManual(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int batchSize, int imgHeight, int imgWidth, int numTrainings) {
-        try (Interpreter anotherInterpreter = new Interpreter(FinetuneUtils.loadModelFile(modelFileAbsolutePath))) {
-//            List<FloatBuffer> trainImageBatches = new ArrayList<>(10);
-//            List<FloatBuffer> trainLabelBatches = new ArrayList<>(10);
+//    private void finetuneManual(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int batchSize, int imgHeight, int imgWidth, int numTrainings) {
+//        try (Interpreter anotherInterpreter = new Interpreter(FinetuneUtils.loadModelFile(modelFileAbsolutePath))) {
+////            List<FloatBuffer> trainImageBatches = new ArrayList<>(10);
+////            List<FloatBuffer> trainLabelBatches = new ArrayList<>(10);
+////
+////            // TODO: Update with dataset
+////            for (int i = 0; i < 10; ++i) {
+////                String imagePath = "test_images/image" + i + ".png";
+////                String labelPath = "labels/label" + i + ".txt";
+////                FloatBuffer trainImages = FinetuneUtils.readImageAsFloatBuffer(context, imagePath, imgWidth, imgHeight);
+////                FloatBuffer trainLabels = FinetuneUtils.readLabelAsFloatBuffer(context, labelPath, 10); // Assuming 10 classes
+////            }
 //
-//            // TODO: Update with dataset
-//            for (int i = 0; i < 10; ++i) {
-//                String imagePath = "test_images/image" + i + ".png";
-//                String labelPath = "labels/label" + i + ".txt";
-//                FloatBuffer trainImages = FinetuneUtils.readImageAsFloatBuffer(context, imagePath, imgWidth, imgHeight);
-//                FloatBuffer trainLabels = FinetuneUtils.readLabelAsFloatBuffer(context, labelPath, 10); // Assuming 10 classes
+//            List<String> imageFileNames = FinetuneUtils.getImageFileNamesFromDataset(datasetDirAbsolutePath); // relative file names
+//            HashMap<String, Integer> labelMap = FinetuneUtils.getLabelMapFromDataset(datasetDirAbsolutePath);
+//            assert labelMap != null;
+//            int numImages = imageFileNames.size();
+//
+//            List<FloatBuffer> trainImageBatches = new ArrayList<>(numImages);
+//            List<FloatBuffer> trainLabelBatches = new ArrayList<>(numImages);
+//
+//            for (int i = 0; i < numImages; ++i) {
+//                String imageFileName = imageFileNames.get(i);
+//                Integer labelIndex = labelMap.get(imageFileName);
+//
+//                if (labelIndex == null)
+//                    throw new RuntimeException("No label found for image: " + imageFileName + " in dataset: " + datasetDirAbsolutePath);
+//
+//                FloatBuffer trainImage = FinetuneUtils.readImageAsFloatBuffer(datasetDirAbsolutePath, imageFileName, imgWidth, imgHeight);
+//                FloatBuffer trainLabel = FinetuneUtils.readLabelAsFloatBuffer(labelIndex, numImages); // TODO: check if numImages is correct here
+//
+//                if (trainImage != null && trainLabel != null) {
+//                    trainImageBatches.add(trainImage);
+//                    trainLabelBatches.add(trainLabel);
+//                } else {
+//                    Log.e("FinetuneActivity", "Failed to read image or label for batch " + i);
+//                }
 //            }
-
-            List<String> imageFileNames = FinetuneUtils.getImageFileNamesFromDataset(datasetDirAbsolutePath); // relative file names
-            HashMap<String, Integer> labelMap = FinetuneUtils.getLabelMapFromDataset(datasetDirAbsolutePath);
-            assert labelMap != null;
-            int numImages = imageFileNames.size();
-
-            List<FloatBuffer> trainImageBatches = new ArrayList<>(numImages);
-            List<FloatBuffer> trainLabelBatches = new ArrayList<>(numImages);
-
-            for (int i = 0; i < numImages; ++i) {
-                String imageFileName = imageFileNames.get(i);
-                Integer labelIndex = labelMap.get(imageFileName);
-
-                if (labelIndex == null)
-                    throw new RuntimeException("No label found for image: " + imageFileName + " in dataset: " + datasetDirAbsolutePath);
-
-                FloatBuffer trainImage = FinetuneUtils.readImageAsFloatBuffer(datasetDirAbsolutePath, imageFileName, imgWidth, imgHeight);
-                FloatBuffer trainLabel = FinetuneUtils.readLabelAsFloatBuffer(labelIndex, numImages); // TODO: check if numImages is correct here
-
-                if (trainImage != null && trainLabel != null) {
-                    trainImageBatches.add(trainImage);
-                    trainLabelBatches.add(trainLabel);
-                } else {
-                    Log.e("FinetuneActivity", "Failed to read image or label for batch " + i);
-                }
-            }
-
-            // Prepare training batches.
-                /*for (int i = 0; i < NUM_BATCHES; ++i) {
-                    ByteBuffer trainImageBuffer = ByteBuffer.allocateDirect(4 * IMG_HEIGHT * IMG_WIDTH).order(ByteOrder.nativeOrder());
-                    FloatBuffer trainImages = trainImageBuffer.asFloatBuffer();
-
-                    ByteBuffer trainLabelsBuffer = ByteBuffer.allocateDirect(4 * 10).order(ByteOrder.nativeOrder());
-                    FloatBuffer trainLabels = trainLabelsBuffer.asFloatBuffer();
-
-                    // Fill the data values...
-                    trainImageBatches.add((FloatBuffer) trainImages.rewind());
-                    trainLabelBatches.add((FloatBuffer) trainLabels.rewind());
-                }*/
-
-            // Run training for a few steps.
-            float[] losses = new float[numEpochs];
-            for (int epoch = 0; epoch < numEpochs; ++epoch) {
-                for (int batchIdx = 0; batchIdx < batchSize; ++batchIdx) {
-                    Map<String, Object> inputs = new HashMap<>();
-                    inputs.put("x", trainImageBatches.get(batchIdx));
-                    inputs.put("y", trainLabelBatches.get(batchIdx));
-
-                    Map<String, Object> outputs = new HashMap<>();
-                    FloatBuffer lossBuffer = FloatBuffer.allocate(1);
-                    outputs.put("loss", lossBuffer);
-
-                    anotherInterpreter.runSignature(inputs, outputs, "train");
-                    final int progressPercentage = (epoch * 100) / numEpochs;
-                    progressBar.setProgress(progressPercentage);
-                    //float lossValue = lossBuffer.get(0);
-
-                    // Record the last loss.
-                    if (batchIdx == batchSize - 1) losses[epoch] = lossBuffer.get(0);
-                }
-
-                // Print the loss output for every 10 epochs.
-                String message = "Finished " + (epoch + 1) + " epochs, current loss: " + losses[epoch];
-                if (THREAD_TEST) {
-                    message += " in Thread ID: " + Thread.currentThread().getId();
-                }
-                if ((epoch + 1) % 10 == 0) {
-                    System.out.println(message);
-                }
-            }
-//            FinetuneUtils.saveModelWeights(context, anotherInterpreter);
-        } catch (IOException e) {
-            Log.e("ReportActivity", "Error", e);
-        }
-    }
+//
+//            // Prepare training batches.
+//                /*for (int i = 0; i < NUM_BATCHES; ++i) {
+//                    ByteBuffer trainImageBuffer = ByteBuffer.allocateDirect(4 * IMG_HEIGHT * IMG_WIDTH).order(ByteOrder.nativeOrder());
+//                    FloatBuffer trainImages = trainImageBuffer.asFloatBuffer();
+//
+//                    ByteBuffer trainLabelsBuffer = ByteBuffer.allocateDirect(4 * 10).order(ByteOrder.nativeOrder());
+//                    FloatBuffer trainLabels = trainLabelsBuffer.asFloatBuffer();
+//
+//                    // Fill the data values...
+//                    trainImageBatches.add((FloatBuffer) trainImages.rewind());
+//                    trainLabelBatches.add((FloatBuffer) trainLabels.rewind());
+//                }*/
+//
+//            // Run training for a few steps.
+//            float[] losses = new float[numEpochs];
+//            for (int epoch = 0; epoch < numEpochs; ++epoch) {
+//                for (int batchIdx = 0; batchIdx < batchSize; ++batchIdx) {
+//                    Map<String, Object> inputs = new HashMap<>();
+//                    inputs.put("x", trainImageBatches.get(batchIdx));
+//                    inputs.put("y", trainLabelBatches.get(batchIdx));
+//
+//                    Map<String, Object> outputs = new HashMap<>();
+//                    FloatBuffer lossBuffer = FloatBuffer.allocate(1);
+//                    outputs.put("loss", lossBuffer);
+//
+//                    anotherInterpreter.runSignature(inputs, outputs, "train");
+//                    final int progressPercentage = (epoch * 100) / numEpochs;
+//                    progressBar.setProgress(progressPercentage);
+//                    //float lossValue = lossBuffer.get(0);
+//
+//                    // Record the last loss.
+//                    if (batchIdx == batchSize - 1) losses[epoch] = lossBuffer.get(0);
+//                }
+//
+//                // Print the loss output for every 10 epochs.
+//                String message = "Finished " + (epoch + 1) + " epochs, current loss: " + losses[epoch];
+//                if (THREAD_TEST) {
+//                    message += " in Thread ID: " + Thread.currentThread().getId();
+//                }
+//                if ((epoch + 1) % 10 == 0) {
+//                    System.out.println(message);
+//                }
+//            }
+////            FinetuneUtils.saveModelWeights(context, anotherInterpreter);
+//        } catch (IOException e) {
+//            Log.e("ReportActivity", "Error", e);
+//        }
+//    }
 
     private void showNumberInputDialog() {
         // Inflate custom layout for the dialog

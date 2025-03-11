@@ -25,4 +25,8 @@ public class FinetuneAPI {
         }
     }
 
+    public static void getBaseCkptFile(Context context, File filesDir, String modelFileName) {
+        FinetuneUtils.getBaseCkptFile(context, filesDir, modelFileName);
+    }
+
 }

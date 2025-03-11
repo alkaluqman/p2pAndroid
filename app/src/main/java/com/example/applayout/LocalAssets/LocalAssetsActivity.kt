@@ -228,10 +228,12 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             Button(
                 onClick = {
                     coroutineScope.launch {
-                        val newModel = downloadFile(filesDir, "models")
+//                        val newModel = downloadFile(filesDir, "models")
+                        val newModel = getNewModel()
+                        FinetuneAPI.getBaseCkptFile(context, filesDir, newModel.uniqueIdentifier)
                         uploadModelNode(
                             filesDir,
-                            newModel!!,
+                            newModel,
                             "alice",
                         )
                         localModelListState.value = fetchModelsInfo(filesDir).notUploadedModels
@@ -438,12 +440,15 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             )
         }
         if (showFinetuningRelationshipDialog) {
+
             EditFinetuningRelationshipDialog(
                 onDismiss = { showFinetuningRelationshipDialog = false },
                 models = uploadedModelListState.value + localModelListState.value,
                 dataset = localDatasetListState.value,
                 onSubmit = { localRelationship, modelFileName, datasetDirName, numEpochs, batchSize ->
                     coroutineScope.launch(Dispatchers.IO) {
+                        Log.d("LocalAssetsScreen", "modelFileName: $modelFileName")
+                        Log.d("LocalAssetsScreen", "datasetDirName: $datasetDirName")
                         val trackingResults: HashMap<String, Double> =
                             MetricTracking.doWithTracking {
                                 FinetuneAPI.finetune(

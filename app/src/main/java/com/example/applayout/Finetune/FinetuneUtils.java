@@ -36,6 +36,20 @@ import com.google.gson.reflect.TypeToken;
 
 public class FinetuneUtils {
 
+    public static void getBaseCkptFile(Context context, File filesDir, String modelFileName) {
+        final String contextName = "FinetuneUtils";
+        Log.d(contextName, "Spawning base .ckpt file...");
+
+        try {
+            Interpreter anotherInterpreter = new Interpreter(loadModelFile(context.getAssets(), "model.tflite")); // default base model
+
+            saveModelWeights(anotherInterpreter, filesDir, modelFileName);
+            Log.d(contextName, "Base .ckpt file spawned!");
+        } catch (IOException e) {
+            Log.e(contextName, "Error", e);
+        }
+    }
+
     public static MappedByteBuffer loadModelFile(AssetManager assets, String modelFilename)
             throws IOException {
         AssetFileDescriptor fileDescriptor = assets.openFd(modelFilename);
@@ -198,7 +212,7 @@ public class FinetuneUtils {
 
     public static void saveModelWeights(Interpreter interpreter, File filesDir, String fileName) throws IOException {
 //        String fileName = "trained_model_weights.ckpt";
-        String ckptAbsolutePath = getAbsolutePathFromFilesDir(filesDir, "models", fileName);
+        String ckptAbsolutePath = getAbsolutePathFromFilesDir(filesDir, "models", fileName + ".ckpt");
         Map<String, Object> inputs = new HashMap<>();
 //        inputs.put("checkpoint_path", file.getAbsolutePath());
         inputs.put("checkpoint_path", ckptAbsolutePath);
