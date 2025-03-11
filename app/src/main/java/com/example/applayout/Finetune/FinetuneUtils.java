@@ -107,22 +107,6 @@ public class FinetuneUtils {
         }
     }
 
-//    public static MappedByteBuffer loadModelFile(String modelFileAbsolutePath) throws IOException {
-////        AssetFileDescriptor fileDescriptor = assets.openFd(modelFilename);
-////        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
-////        FileChannel fileChannel = inputStream.getChannel();
-////        long startOffset = fileDescriptor.getStartOffset();
-////        long declaredLength = fileDescriptor.getDeclaredLength();
-////        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
-//
-//        File file = new File(modelFileAbsolutePath);
-//        FileInputStream inputStream = new FileInputStream(file);
-//        FileChannel fileChannel = inputStream.getChannel();
-//        long fileSize = fileChannel.size();
-//
-//        return fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileSize);
-//    }
-
     public static List<String> getImageFileNamesFromDataset(String datasetDirAbsolutePath) {
         File dir = new File(datasetDirAbsolutePath);
         List<String> fileNames = new ArrayList<>();
@@ -160,9 +144,6 @@ public class FinetuneUtils {
 
     public static FloatBuffer readImageAsFloatBuffer(String datasetDirAbsolutePath, String imageFileName, int imgWidth, int imgHeight) {
         try {
-//            InputStream is = context.getAssets().open(assetPath);
-//            Bitmap bitmap = BitmapFactory.decodeStream(is);
-            // Load the image from file
             String imageFileAbsolutePath = new File(datasetDirAbsolutePath, imageFileName).getAbsolutePath();
             Bitmap bitmap = BitmapFactory.decodeFile(imageFileAbsolutePath);
             if (bitmap == null) {
@@ -194,27 +175,16 @@ public class FinetuneUtils {
     }
 
     public static FloatBuffer readLabelAsFloatBuffer(int labelIndex, int numClasses) {
-//        try {
-//            InputStream is = context.getAssets().open(assetPath);
-//            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-//            int labelIndex = Integer.parseInt(reader.readLine().trim());
-
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * numClasses).order(ByteOrder.nativeOrder());
         FloatBuffer labelBuffer = byteBuffer.asFloatBuffer();
         labelBuffer.put(labelIndex, 1.0f);  // One-hot encoding
         labelBuffer.rewind();
         return labelBuffer;
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            return null;
-//        }
     }
 
     public static void saveModelWeights(Interpreter interpreter, File filesDir, String fileName) throws IOException {
-//        String fileName = "trained_model_weights.ckpt";
         String ckptAbsolutePath = getAbsolutePathFromFilesDir(filesDir, "models", fileName + ".ckpt");
         Map<String, Object> inputs = new HashMap<>();
-//        inputs.put("checkpoint_path", file.getAbsolutePath());
         inputs.put("checkpoint_path", ckptAbsolutePath);
         Map<String, Object> outputs = new HashMap<>();
 
