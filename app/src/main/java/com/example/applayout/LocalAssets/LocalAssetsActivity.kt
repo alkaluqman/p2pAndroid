@@ -442,13 +442,15 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 onDismiss = { showFinetuningRelationshipDialog = false },
                 models = uploadedModelListState.value + localModelListState.value,
                 dataset = localDatasetListState.value,
-                onSubmit = { localRelationship, modelAbsoluteFilePath, datasetAbsoluteFilePath, numEpochs, batchSize ->
+                onSubmit = { localRelationship, modelFileName, datasetDirName, numEpochs, batchSize ->
                     coroutineScope.launch(Dispatchers.IO) {
                         val trackingResults: HashMap<String, Double> =
                             MetricTracking.doWithTracking {
                                 FinetuneAPI.finetune(
-                                    modelAbsoluteFilePath,
-                                    datasetAbsoluteFilePath,
+                                    context,
+                                    filesDir,
+                                    modelFileName,
+                                    datasetDirName,
                                     numEpochs,
                                     batchSize
                                 )

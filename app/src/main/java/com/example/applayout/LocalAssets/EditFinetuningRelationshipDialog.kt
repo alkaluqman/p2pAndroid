@@ -131,8 +131,8 @@ fun EditFinetuningRelationshipDialog(
                         )
                         onSubmit(
                             localRelationship,
-                            selectedModel!!.absoluteFilePath,
-                            selectedDataset!!.absoluteFilePath,
+                            selectedModel!!.uniqueIdentifier,
+                            selectedDataset!!.uniqueIdentifier,
                             numEpochs.toInt(),
                             batchSize.toInt()
                         )

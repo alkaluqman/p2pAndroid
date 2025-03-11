@@ -301,7 +301,7 @@ public class FinetuneActivity extends BaseActivity {
                     System.out.println(message);
                 }
             }
-            FinetuneUtils.saveModelWeights(context, anotherInterpreter);
+//            FinetuneUtils.saveModelWeights(context, anotherInterpreter);
         } catch (IOException e) {
             Log.e("ReportActivity", "Error", e);
         }
