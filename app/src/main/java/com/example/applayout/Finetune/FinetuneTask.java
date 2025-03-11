@@ -1,10 +1,12 @@
 package com.example.applayout.Finetune;
 
+import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 import android.util.Log;
 
 import org.tensorflow.lite.Interpreter;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
@@ -13,19 +15,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.content.Context;
+
 /**
  * An instance of this class represents an instance of Finetuning.
  */
 public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
 
-    private final String modelFileAbsolutePath;
-    private final String datasetDirAbsolutePath;
+    private final Context context;
+    private final String modelFileName;
+    private final String datasetDirName;
+    private final File filesDir;
     private final int numEpochs;
     private final int batchSize;
 
-    public FinetuneTask(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int batchSize) {
-        this.modelFileAbsolutePath = modelFileAbsolutePath;
-        this.datasetDirAbsolutePath = datasetDirAbsolutePath;
+    public FinetuneTask(Context context, File filesDir, String modelFileName, String datasetDirName, int numEpochs, int batchSize) {
+        this.context = context.getApplicationContext();
+        this.filesDir = filesDir;
+        this.modelFileName = modelFileName;
+        this.datasetDirName = datasetDirName;
         this.numEpochs = numEpochs;
         this.batchSize = batchSize;
     }
@@ -40,7 +48,9 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
     }
 
     protected Void doInBackground(Void... voids) {
-        finetuneManual(this.modelFileAbsolutePath, this.datasetDirAbsolutePath, numEpochs, batchSize);
+
+
+        finetuneManual(context, filesDir, modelFileName, datasetDirName, numEpochs, batchSize);
         return null;
     }
 
@@ -64,20 +74,21 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
 //        });
     }
 
-    private void finetuneManual(String modelFileAbsolutePath, String datasetDirAbsolutePath, int numEpochs, int batchSize) {
+    private void finetuneManual(Context context, File filesDir, String modelFileName, String datasetDirName, int numEpochs, int batchSize) {
         Log.d(this.getClass().getName(), "Beginning finetuneManual...");
-        try (Interpreter anotherInterpreter = new Interpreter(FinetuneUtils.loadModelFile(modelFileAbsolutePath))) {
-//            List<FloatBuffer> trainImageBatches = new ArrayList<>(10);
-//            List<FloatBuffer> trainLabelBatches = new ArrayList<>(10);
-//
-//            // TODO: Update with dataset
-//            for (int i = 0; i < 10; ++i) {
-//                String imagePath = "test_images/image" + i + ".png";
-//                String labelPath = "labels/label" + i + ".txt";
-//                FloatBuffer trainImages = FinetuneUtils.readImageAsFloatBuffer(context, imagePath, imgWidth, imgHeight);
-//                FloatBuffer trainLabels = FinetuneUtils.readLabelAsFloatBuffer(context, labelPath, 10); // Assuming 10 classes
-//            }
+        final String MODEL_EXT = ".ckpt";
 
+        try {
+            Interpreter anotherInterpreter = new Interpreter(FinetuneUtils.loadModelFile(context.getAssets(), "model.tflite")); // default base model
+            String modelFileAbsolutePath = FinetuneUtils.getAbsolutePathFromFilesDir(filesDir, "models", modelFileName + MODEL_EXT);
+            String datasetDirAbsolutePath = FinetuneUtils.getAbsolutePathFromFilesDir(filesDir, "datasets", datasetDirName);
+
+            // Load weights from checkpoint file (this is where the checkpoint path is used)
+            if (!modelFileAbsolutePath.isEmpty()) {
+                FinetuneUtils.restoreWeightsFromCheckpoint(anotherInterpreter, modelFileAbsolutePath);
+            }
+
+            // Get image and label data
             List<String> imageFileNames = FinetuneUtils.getImageFileNamesFromDataset(datasetDirAbsolutePath); // relative file names
             HashMap<String, Integer> labelMap = FinetuneUtils.getLabelMapFromDataset(datasetDirAbsolutePath);
             Log.d(this.getClass().getName(), "imageFileNames: " + imageFileNames);
@@ -92,9 +103,9 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
             HashMap<Integer, Integer> originalLabelsToDatasetLabelsMap = FinetuneUtils.getOriginalLabelsToDatasetLabelsMap(labelMap);
             Log.d(this.getClass().getName(), "originalLabelsToDatasetLabelsMap : " + originalLabelsToDatasetLabelsMap);
 
-            int[] modelInputShape = FinetuneUtils.getModelInputShape(modelFileAbsolutePath);
+            int[] modelInputShape = FinetuneUtils.getModelInputShape(context.getAssets(), "model.tflite");
             if (modelInputShape == null)
-                throw new RuntimeException("Failed to get model shape for model: " + modelFileAbsolutePath);
+                throw new RuntimeException("Failed to get model shape for model: " + modelFileName + MODEL_EXT);
             Log.d("FinetuneActivity", "Model Input Shape: " + Arrays.toString(modelInputShape));
             int imgWidth = modelInputShape[1];
             int imgHeight = modelInputShape[2];
@@ -102,14 +113,13 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
             List<FloatBuffer> trainImageBatches = new ArrayList<>(numImages);
             List<FloatBuffer> trainLabelBatches = new ArrayList<>(numImages);
 
+            // Process images and labels for training
             for (int i = 0; i < numImages; ++i) {
                 String imageFileName = imageFileNames.get(i);
                 Integer labelIndex = labelMap.get(imageFileName);
 
                 if (labelIndex == null)
-                    throw new RuntimeException("No label found for image: " + imageFileName + " in dataset: " + datasetDirAbsolutePath);
-
-//                int datasetLabelIndex = originalLabelsToDatasetLabelsMap.get(labelIndex);
+                    throw new RuntimeException("No label found for image: " + imageFileName + " in dataset: " + datasetDirName);
 
                 FloatBuffer trainImage = FinetuneUtils.readImageAsFloatBuffer(datasetDirAbsolutePath, imageFileName, imgWidth, imgHeight);
                 FloatBuffer trainLabel = FinetuneUtils.readLabelAsFloatBuffer(labelIndex, 10);
@@ -122,20 +132,7 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
                 }
             }
 
-            // Prepare training batches.
-                /*for (int i = 0; i < NUM_BATCHES; ++i) {
-                    ByteBuffer trainImageBuffer = ByteBuffer.allocateDirect(4 * IMG_HEIGHT * IMG_WIDTH).order(ByteOrder.nativeOrder());
-                    FloatBuffer trainImages = trainImageBuffer.asFloatBuffer();
-
-                    ByteBuffer trainLabelsBuffer = ByteBuffer.allocateDirect(4 * 10).order(ByteOrder.nativeOrder());
-                    FloatBuffer trainLabels = trainLabelsBuffer.asFloatBuffer();
-
-                    // Fill the data values...
-                    trainImageBatches.add((FloatBuffer) trainImages.rewind());
-                    trainLabelBatches.add((FloatBuffer) trainLabels.rewind());
-                }*/
-
-            // Run training for a few steps.
+            // Train model for the given number of epochs
             float[] losses = new float[numEpochs];
             for (int epoch = 0; epoch < numEpochs; ++epoch) {
                 for (int batchIdx = 0; batchIdx < batchSize; ++batchIdx) {
@@ -149,8 +146,6 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
 
                     anotherInterpreter.runSignature(inputs, outputs, "train");
                     final int progressPercentage = (epoch * 100) / numEpochs;
-//                    progressBar.setProgress(progressPercentage);
-                    //float lossValue = lossBuffer.get(0);
 
                     // Record the last loss.
                     if (batchIdx == batchSize - 1) losses[epoch] = lossBuffer.get(0);
@@ -162,10 +157,12 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
                     System.out.println(message);
                 }
             }
-//            FinetuneUtils.saveModelWeights(context, anotherInterpreter);
+
+            FinetuneUtils.saveModelWeights(anotherInterpreter, filesDir, modelFileName);
             Log.d(this.getClass().getName(), "Completed finetuneManual!");
         } catch (IOException e) {
             Log.e(this.getClass().getName(), "Error", e);
         }
     }
+
 }

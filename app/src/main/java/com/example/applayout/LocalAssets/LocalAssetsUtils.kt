@@ -33,6 +33,14 @@ import android.os.Build
 
 private const val BASE_URL = "10.96.181.80"
 
+fun getNewModel(): LocalModel {
+    val randomID = UUID.randomUUID()
+    val newModel = LocalModel(
+        uniqueIdentifier = randomID.toString(),
+    )
+    return newModel
+}
+
 fun saveModelintoDB(context: Context, fileName: String): LocalModel {
     val db = AppDatabase.getDatabase(context)
     val modelDao = db.localModelDao()
@@ -133,7 +141,7 @@ fun deleteLocalDirectory(directoryName: String, fileDir: File): Boolean {
 fun deleteLocalFile(fileName: String, fileDir: File, parentFolder: String): Boolean {
     val tag = "DeleteFile"
     val modelsDir = File(fileDir, parentFolder)
-    val modelFilePath = File(modelsDir, "${fileName}.tflite")
+    val modelFilePath = File(modelsDir, "${fileName}.ckpt")
     return if (modelFilePath.exists()) {
         modelFilePath.delete()
     } else {
