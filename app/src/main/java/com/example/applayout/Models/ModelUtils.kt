@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.compose.ui.graphics.asImageBitmap
+import com.example.applayout.Finetune.FinetuneUtils
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.tensorflow.lite.DataType
@@ -27,15 +28,22 @@ fun runInferenceOnDirectory(
     modelId: String,
     datasetId: String
 ): List<Pair<Int, Int>> {
-    val relativeModelPath = "models/${modelId}.tflite"
     val relativeDirectoryPath = "datasets/${datasetId}"
-    val modelFile = File(context.filesDir, relativeModelPath)
+    val interpreter = Interpreter(
+        FinetuneUtils.loadModelFile(
+            context.assets,
+            "model.tflite"
+        )
+    )
+    val modelFileAbsolutePath =
+        FinetuneUtils.getAbsolutePathFromFilesDir(context.filesDir, "models", "$modelId.ckpt")
+    val modelFile = File(modelFileAbsolutePath)
     if (!modelFile.exists()) {
-        Log.d("Inference", "Model file does not exist: $relativeModelPath")
+        Log.d("Inference", "Model file does not exist: $modelFileAbsolutePath")
         return emptyList()
     }
+    FinetuneUtils.restoreWeightsFromCheckpoint(interpreter, modelFileAbsolutePath)
 
-    val interpreter = Interpreter(modelFile)
 
     val directory = File(context.filesDir, relativeDirectoryPath)
     if (!directory.exists() || !directory.isDirectory) {

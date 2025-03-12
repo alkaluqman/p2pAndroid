@@ -27,7 +27,7 @@ suspend fun downloadModelFile(downloadUrl: String, filesDir: File, fileName: Str
                 modelsDir.mkdirs()
             }
 
-            val outputFile = File(modelsDir, "$fileName.tflite")
+            val outputFile = File(modelsDir, "$fileName.ckpt")
             if (outputFile.exists()) {
                 Log.d(TAG, "File already exists: ${outputFile.absolutePath}")
                 return@withContext
