@@ -130,7 +130,7 @@ suspend fun downloadFile(fileDir: File, parentFolder: String): LocalModel? {
     return withContext(Dispatchers.IO) {
         try {
             val client = OkHttpClient()
-            val fileUrl = "https://storage.googleapis.com/android-p2p/weights/test.tflite"
+            val fileUrl = "https://storage.googleapis.com/android-p2p/weights/test.ckpt"
 
             Log.d(TAG, "Starting download from URL: $fileUrl")
 
@@ -142,7 +142,7 @@ suspend fun downloadFile(fileDir: File, parentFolder: String): LocalModel? {
             }
 
             val randomID = UUID.randomUUID()
-            val randomFileName = "${randomID}.tflite"
+            val randomFileName = "${randomID}.ckpt"
             val outputFile = File(modelsDir, randomFileName)
             val newModel = LocalModel(
                 uniqueIdentifier = randomID.toString(),
@@ -267,7 +267,7 @@ suspend fun fetchModelsInfo(filesDir: File): ModelResponse {
     val client = OkHttpClient()
     val gson = Gson()
     val modelDir = File(filesDir, "models")
-    val modelFileExt = ".tflite"
+    val modelFileExt = ".ckpt"
     withContext(Dispatchers.IO) {
         fileNames.map { it.substringBeforeLast(".") } //remove file extensions
             .forEach { fileName ->
@@ -391,7 +391,7 @@ suspend fun uploadModelNode(
     try {
         val client = OkHttpClient()
         val gson = Gson()
-        val modelFile = File(filesDir, "/models/${localModelData.uniqueIdentifier}.tflite")
+        val modelFile = File(filesDir, "/models/${localModelData.uniqueIdentifier}.ckpt")
 
         val modelData = Model(
             uniqueIdentifier = localModelData.uniqueIdentifier,
@@ -439,7 +439,7 @@ suspend fun uploadModel(
     try {
         val client = OkHttpClient()
         val gson = Gson()
-        val modelFile = File(filesDir, "/models/${modelUniqueIdentifier}.tflite")
+        val modelFile = File(filesDir, "/models/${modelUniqueIdentifier}.ckpt")
 
         Log.d("UploadModel", "Preparing to upload model: $modelUniqueIdentifier")
         Log.d("UploadModel", "File exists: ${modelFile.exists()}, File size: ${modelFile.length()}")
@@ -713,7 +713,7 @@ suspend fun uploadFileToGCS(
         try {
             Log.d("UploadFileToGCS", "Starting upload to Google Cloud Storage...")
             val bucketName = "android-p2p"
-            val destinationPath = "weights/$fileName.tflite"
+            val destinationPath = "weights/$fileName.ckpt"
             Log.d("UploadFileToGCS", "Bucket: $bucketName, Destination Path: $destinationPath")
 
             val inputStream =
