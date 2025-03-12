@@ -1,6 +1,6 @@
 package com.example.applayout.Finetune;
 
-import android.annotation.SuppressLint;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -15,8 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import android.content.Context;
-
 /**
  * An instance of this class represents an instance of Finetuning.
  */
@@ -29,13 +27,16 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
     private final int numEpochs;
     private final int batchSize;
 
-    public FinetuneTask(Context context, File filesDir, String modelFileName, String datasetDirName, int numEpochs, int batchSize) {
+    private final String newModelFileName;
+
+    public FinetuneTask(Context context, File filesDir, String modelFileName, String datasetDirName, int numEpochs, int batchSize, String newModelFileName) {
         this.context = context.getApplicationContext();
         this.filesDir = filesDir;
         this.modelFileName = modelFileName;
         this.datasetDirName = datasetDirName;
         this.numEpochs = numEpochs;
         this.batchSize = batchSize;
+        this.newModelFileName = newModelFileName;
     }
 
     protected void onPreExecute() {
@@ -50,7 +51,7 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
     protected Void doInBackground(Void... voids) {
 
 
-        finetuneManual(context, filesDir, modelFileName, datasetDirName, numEpochs, batchSize);
+        finetuneManual(context, filesDir, modelFileName, datasetDirName, numEpochs, batchSize, newModelFileName);
         return null;
     }
 
@@ -74,7 +75,7 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
 //        });
     }
 
-    private void finetuneManual(Context context, File filesDir, String modelFileName, String datasetDirName, int numEpochs, int batchSize) {
+    private void finetuneManual(Context context, File filesDir, String modelFileName, String datasetDirName, int numEpochs, int batchSize, String newModelFileName) {
         Log.d(this.getClass().getName(), "Beginning finetuneManual...");
         final String MODEL_EXT = ".ckpt";
 
@@ -158,7 +159,7 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
                 }
             }
 
-            FinetuneUtils.saveModelWeights(anotherInterpreter, filesDir, modelFileName);
+            FinetuneUtils.saveModelWeights(anotherInterpreter, filesDir, newModelFileName);
             Log.d(this.getClass().getName(), "Completed finetuneManual!");
         } catch (IOException e) {
             Log.e(this.getClass().getName(), "Error", e);

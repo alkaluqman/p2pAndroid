@@ -661,8 +661,8 @@ suspend fun uploadFederatedLearningRelationship(
 }
 
 data class UploadFinetuningRelationshipPayload(
-    val dataset_id: String,
-    val weight_id: String,
+    val old_weight_id: String,
+    val new_weight_id: String,
     val finetune: Finetune
 )
 
@@ -676,8 +676,8 @@ suspend fun uploadFinetuningRelationship(
         val gson = Gson()
         val payload = gson.toJson(
             UploadFinetuningRelationshipPayload(
-                weight_id = relationshipData.modelUniqueIdentifier,
-                dataset_id = relationshipData.sourceUniqueIdentifiers,
+                new_weight_id = relationshipData.modelUniqueIdentifier,
+                old_weight_id = relationshipData.sourceUniqueIdentifiers,
                 finetune = finetuneData
             )
         )
