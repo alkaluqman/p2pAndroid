@@ -7,11 +7,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import org.tensorflow.lite.Interpreter;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
@@ -22,6 +22,9 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,9 +32,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 
 public class FinetuneUtils {
@@ -182,8 +182,8 @@ public class FinetuneUtils {
         return labelBuffer;
     }
 
-    public static void saveModelWeights(Interpreter interpreter, File filesDir, String fileName) throws IOException {
-        String ckptAbsolutePath = getAbsolutePathFromFilesDir(filesDir, "models", fileName + ".ckpt");
+    public static void saveModelWeights(Interpreter interpreter, File filesDir, String newModelFileName) throws IOException {
+        String ckptAbsolutePath = getAbsolutePathFromFilesDir(filesDir, "models", newModelFileName + ".ckpt");
         Map<String, Object> inputs = new HashMap<>();
         inputs.put("checkpoint_path", ckptAbsolutePath);
         Map<String, Object> outputs = new HashMap<>();

@@ -42,6 +42,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.applayout.Data.Model.Dataset
 import com.example.applayout.Data.Model.Finetune
+import com.example.applayout.Data.Model.LocalRelationship
 import com.example.applayout.Data.Model.Model
 import com.example.applayout.Dataset.DatasetCard
 import com.example.applayout.Finetune.FinetuneAPI
@@ -445,10 +446,11 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 onDismiss = { showFinetuningRelationshipDialog = false },
                 models = uploadedModelListState.value + localModelListState.value,
                 dataset = localDatasetListState.value,
-                onSubmit = { localRelationship, modelFileName, datasetDirName, numEpochs, batchSize ->
+                onSubmit = { modelFileName, datasetDirName, numEpochs, batchSize ->
                     coroutineScope.launch(Dispatchers.IO) {
                         Log.d("LocalAssetsScreen", "modelFileName: $modelFileName")
                         Log.d("LocalAssetsScreen", "datasetDirName: $datasetDirName")
+                        val newModel = getNewModel();
                         val trackingResults: HashMap<String, Double> =
                             MetricTracking.doWithTracking {
                                 FinetuneAPI.finetune(
@@ -457,7 +459,8 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                                     modelFileName,
                                     datasetDirName,
                                     numEpochs,
-                                    batchSize
+                                    batchSize,
+                                    newModel.uniqueIdentifier
                                 )
                             }
                         Log.d("LocalAssetsScreen", "Tracking Results: $trackingResults")
@@ -473,12 +476,20 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                         val finetune = Finetune(
                             num_epochs = numEpochs,
                             batch_size = batchSize,
-                            performance_json = performanceJson
+                            performance_json = performanceJson,
+                            dataset = datasetDirName
                         )
+                        val localRelationship = LocalRelationship(
+                            modelUniqueIdentifier = newModel.uniqueIdentifier,
+                            relationshipType = "Finetune",
+                            sourceUniqueIdentifiers = modelFileName
+                        )
+                        uploadModelNode(filesDir, newModel, USERNAME)
                         uploadFinetuningRelationship(
                             relationshipData = localRelationship,
                             finetuneData = finetune
                         )
+                        localModelListState.value = fetchModelsInfo(filesDir).notUploadedModels
                     }
                     showFinetuningRelationshipDialog = false
                 }

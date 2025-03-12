@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.applayout.Data.Model.Dataset
-import com.example.applayout.Data.Model.LocalRelationship
 import com.example.applayout.Data.Model.Model
 
 @Composable
@@ -34,7 +33,7 @@ fun EditFinetuningRelationshipDialog(
     onDismiss: () -> Unit,
     models: List<Model>,
     dataset: List<Dataset>,
-    onSubmit: (LocalRelationship, String, String, Int, Int) -> Unit
+    onSubmit: (String, String, Int, Int) -> Unit
 ) {
 
     var selectedModel by remember { mutableStateOf<Model?>(null) }
@@ -124,13 +123,7 @@ fun EditFinetuningRelationshipDialog(
 
                 Button(
                     onClick = {
-                        val localRelationship = LocalRelationship(
-                            modelUniqueIdentifier = selectedModel!!.uniqueIdentifier,
-                            relationshipType = "Dataset",
-                            sourceUniqueIdentifiers = selectedDataset!!.uniqueIdentifier
-                        )
                         onSubmit(
-                            localRelationship,
                             selectedModel!!.uniqueIdentifier,
                             selectedDataset!!.uniqueIdentifier,
                             numEpochs.toInt(),
