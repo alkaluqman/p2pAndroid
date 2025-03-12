@@ -44,18 +44,17 @@ import com.example.applayout.Data.Model.Dataset
 import com.example.applayout.Data.Model.Finetune
 import com.example.applayout.Data.Model.Model
 import com.example.applayout.Dataset.DatasetCard
+import com.example.applayout.Finetune.FinetuneAPI
 import com.example.applayout.Marketplace.MarketplaceScreen
 import com.example.applayout.Marketplace.WebViewScreen
+import com.example.applayout.Metrics.MetricTracking
 import com.example.applayout.Models.ModelCard
 import com.example.applayout.Models.runInferenceOnDirectory
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-
-import com.example.applayout.Finetune.FinetuneAPI
-import com.example.applayout.Metrics.MetricTracking
-import com.google.gson.Gson
 
 class LocalAssetActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,7 +85,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
     val localModelListState = remember { mutableStateOf<List<Model>>(emptyList()) }
     val localDatasetListState = remember { mutableStateOf<List<Dataset>>(emptyList()) }
     var showEditInstallDialog by remember { mutableStateOf(false) }
-    var showEditDatabaseDialog by remember { mutableStateOf(false) }
+    var showEditDatasetDialog by remember { mutableStateOf(false) }
     var showFederatedLearningRelationshipDialog by remember { mutableStateOf(false) }
     var showFinetuningRelationshipDialog by remember { mutableStateOf(false) }
     var selectedInstalledModel by remember { mutableStateOf<Model?>(null) }
@@ -305,7 +304,8 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             Button(
                 onClick = {
                     coroutineScope.launch {
-                        createDatasetFolder(filesDir, USERNAME)
+//                        createDatasetFolder(filesDir, USERNAME)
+                        populateDataset(filesDir, USERNAME)
                         val localDatasetNameList = listLocalResources(filesDir, "datasets", false)
                         withContext(Dispatchers.Main) {
                             localDatasetListState.value =
@@ -343,10 +343,10 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                     },
                     onEdit = { selectedDataset ->
                         selectedLocalDataset = selectedDataset
-                        showEditDatabaseDialog = true
+                        showEditDatasetDialog = true
                         Log.d(
                             "LocalAssetsScreen",
-                            "selectedLocalDataset: $selectedLocalDataset, showEditDatabaseDialog: $showEditDatabaseDialog"
+                            "selectedLocalDataset: $selectedLocalDataset, showEditDatabaseDialog: $showEditDatasetDialog"
                         )
                     },
                     onRun = { selectedDataset ->
@@ -485,16 +485,16 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             )
         }
 
-        if (showEditDatabaseDialog && selectedLocalDataset != null) {
+        if (showEditDatasetDialog && selectedLocalDataset != null) {
             EditDatasetDialog(
                 datasetData = selectedLocalDataset!!,
                 filesDir = filesDir,
-                onDismiss = { showEditDatabaseDialog = false },
+                onDismiss = { showEditDatasetDialog = false },
                 onSubmit = { newDatasetData ->
                     coroutineScope.launch(Dispatchers.IO) {
                         withContext(Dispatchers.Main) {
                             uploadDataset(newDatasetData, USERNAME, filesDir)
-                            showEditDatabaseDialog = false
+                            showEditDatasetDialog = false
                             selectedLocalDataset = null
                         }
                     }

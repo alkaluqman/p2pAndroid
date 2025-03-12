@@ -2,6 +2,7 @@ package com.example.applayout.LocalAssets
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.os.Build
 import android.util.Log
 import com.example.applayout.Data.Database.AppDatabase
 import com.example.applayout.Data.Model.Dataset
@@ -24,12 +25,14 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.net.URL
 import java.nio.ByteBuffer
 import java.util.UUID
-import android.os.Build
+import java.util.zip.ZipInputStream
 
 private const val BASE_URL = "10.96.181.80"
 
@@ -75,6 +78,50 @@ suspend fun createDatasetFolder(fileDir: File, username: String) {
     val labelsFile = File(newDatasetDir, "labels.json")
     labelsFile.writeText("{}")
     uploadDatasetNode(Dataset(randomID.toString()), username, fileDir)
+}
+
+suspend fun populateDataset(fileDir: File, username: String) {
+    val datasetsDir = File(fileDir, "datasets")
+    if (!datasetsDir.exists()) {
+        datasetsDir.mkdirs() // Create the datasets directory if it doesn't exist
+    }
+    val randomID = UUID.randomUUID()
+    val newDatasetDir = File(datasetsDir, randomID.toString())
+    newDatasetDir.mkdirs()
+    val zipFile = File(newDatasetDir, "dataset.zip")
+    downloadFile("https://storage.googleapis.com/android-p2p/weights/dataset.zip", zipFile)
+    unzip(zipFile, newDatasetDir)
+
+    zipFile.delete()
+    uploadDatasetNode(Dataset(randomID.toString()), username, fileDir)
+}
+
+suspend fun downloadFile(url: String, outputFile: File) = withContext(Dispatchers.IO) {
+    URL(url).openStream().use { input ->
+        FileOutputStream(outputFile).use { output ->
+            input.copyTo(output)
+        }
+    }
+}
+
+fun unzip(zipFile: File, targetDir: File) {
+    ZipInputStream(BufferedInputStream(FileInputStream(zipFile))).use { zis ->
+        var entry = zis.nextEntry
+        while (entry != null) {
+            val outFile = File(targetDir, entry.name)
+            if (entry.isDirectory) {
+//                outFile.mkdirs()
+                Log.d("Unzip", "Skipping directory entry: ${entry.name}")
+            } else {
+                outFile.parentFile?.mkdirs()
+                FileOutputStream(outFile).use { output ->
+                    zis.copyTo(output)
+                }
+            }
+            zis.closeEntry()
+            entry = zis.nextEntry
+        }
+    }
 }
 
 
