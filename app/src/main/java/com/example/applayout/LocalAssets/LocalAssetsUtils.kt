@@ -660,6 +660,38 @@ suspend fun uploadFederatedLearningRelationship(
     }
 }
 
+suspend fun getAllFinetunedFrom(weight_id: String) {
+    try {
+        val client = OkHttpClient()
+        val gson = Gson()
+        val url = "https://android-p2p-backend.onrender.com/weights/finetuned/rels/$weight_id"
+        val request = Request.Builder().url(url).build()
+
+        Log.d("getAllFinetunedFrom", "Sending GET request to serverUrl")
+        withContext(Dispatchers.IO) {
+            val response = client.newCall(request).execute()
+            Log.d(
+                "getAllFinetunedFrom",
+                "Response Code: ${response.code}, Response Body: ${response.body?.string()}"
+            )
+
+            if (response.isSuccessful) {
+                val body = response.body?.string()
+                val jsonObject = gson.fromJson<List<Finetune>>(
+                    body,
+                    object : TypeToken<List<Finetune>>() {}.type
+                )
+                Log.d("getAllFinetunedFrom", "jsonObject: $jsonObject")
+                return@withContext jsonObject
+            }
+            return@withContext null
+        }
+    } catch (e: Exception) {
+        Log.e("UploadModel", "Error during model upload: ${e.message}", e)
+        e.printStackTrace()
+    }
+}
+
 data class UploadFinetuningRelationshipPayload(
     val old_weight_id: String,
     val new_weight_id: String,
