@@ -14,9 +14,12 @@ import java.io.IOException
 import java.net.URL
 
 val TAG = "MarketplaceUtils"
-private const val BASE_URL = "10.96.181.80"
+
+//private const val BACKEND_URL = "10.96.181.80:8000"
+//private const val BACKEND_URL = "192.168.2.159:8000"
+private const val BACKEND_URL = "android-p2p-backend.onrender.com"
 //          10.0.2.2 refers to localhost
-//        .url("https://android-p2p-backend.onrender.com/weights")
+//        .url("https://$BACKEND_URL/weights")
 
 suspend fun downloadModelFile(downloadUrl: String, filesDir: File, fileName: String) {
     withContext(Dispatchers.IO) {
@@ -54,7 +57,7 @@ suspend fun getMarketplaceFiles(): List<Model> {
     val gson = Gson()
     val request = Request.Builder()
 //        .url("http://$BASE_URL:8000/weights")
-        .url("https://android-p2p-backend.onrender.com/weights")
+        .url("https://$BACKEND_URL/weights")
         .get()
         .build()
     return try {
@@ -81,10 +84,10 @@ suspend fun increment(modelUniqueIdentifier: String, isUsage: Boolean) {
     withContext(Dispatchers.IO) {
         try {
             val url = if (isUsage)
-                "https://android-p2p-backend.onrender.com/weights/$modelUniqueIdentifier/increment-usage"
+                "https://$BACKEND_URL/weights/$modelUniqueIdentifier/increment-usage"
 //                "http://$BASE_URL:3000/weights/$modelUniqueIdentifier/increment-usage"
             else
-                "https://android-p2p-backend.onrender.com/weights/$modelUniqueIdentifier/increment-likes"
+                "https://$BACKEND_URL/weights/$modelUniqueIdentifier/increment-likes"
 //                "http://$BASE_URL:3000/weights/$modelUniqueIdentifier/increment-likes"
             val request = Request.Builder()
                 .url(url)

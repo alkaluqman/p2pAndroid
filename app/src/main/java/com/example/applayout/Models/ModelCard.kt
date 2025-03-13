@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -31,6 +32,7 @@ import androidx.navigation.NavController
 import com.example.applayout.Data.Model.Model
 
 private const val BASE_URL = "10.96.181.80"
+
 @Composable
 fun ModelCard(
     isSelected: Boolean,
@@ -40,7 +42,8 @@ fun ModelCard(
     onEdit: (Model) -> Unit,
     onDelete: (filename: String) -> Unit,
     onUpload: (String) -> Unit,
-    isUploaded: Boolean
+    isUploaded: Boolean,
+    onViewPerformanceHistory: (() -> Unit)? = null
 ) {
     val backgroundColor =
         if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface
@@ -129,6 +132,19 @@ fun ModelCard(
                         )
                     }
 
+                }
+            }
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                IconButton(onClick = {
+                    if (onViewPerformanceHistory != null) {
+                        onViewPerformanceHistory()
+                    }
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "View Model Performance History",
+                    )
                 }
             }
 
