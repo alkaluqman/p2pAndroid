@@ -34,8 +34,8 @@ import java.nio.ByteBuffer
 import java.util.UUID
 import java.util.zip.ZipInputStream
 
-//private const val BACKEND_URL = "10.96.181.80"
-//private const val BACKEND_URL = "192.168.2.159"
+//private const val BACKEND_URL = "10.96.181.80:8000"
+//private const val BACKEND_URL = "192.168.2.159:8000"
 private const val BACKEND_URL = "android-p2p-backend.onrender.com"
 
 fun getNewModel(id: String? = null): LocalModel {

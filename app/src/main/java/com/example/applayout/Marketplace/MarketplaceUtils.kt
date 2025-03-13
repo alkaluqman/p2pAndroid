@@ -15,8 +15,8 @@ import java.net.URL
 
 val TAG = "MarketplaceUtils"
 
-//private const val BACKEND_URL = "10.96.181.80"
-//private const val BACKEND_URL = "192.168.2.159"
+//private const val BACKEND_URL = "10.96.181.80:8000"
+//private const val BACKEND_URL = "192.168.2.159:8000"
 private const val BACKEND_URL = "android-p2p-backend.onrender.com"
 //          10.0.2.2 refers to localhost
 //        .url("https://$BACKEND_URL/weights")
