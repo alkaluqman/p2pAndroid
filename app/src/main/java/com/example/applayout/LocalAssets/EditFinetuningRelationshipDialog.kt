@@ -16,6 +16,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,7 +34,7 @@ fun EditFinetuningRelationshipDialog(
     onDismiss: () -> Unit,
     models: List<Model>,
     dataset: List<Dataset>,
-    onSubmit: (String, String, Int, Int) -> Unit
+    onSubmit: (String, String, String, Int, Int) -> Unit
 ) {
 
     var selectedModel by remember { mutableStateOf<Model?>(null) }
@@ -42,6 +43,7 @@ fun EditFinetuningRelationshipDialog(
     var expandedDataset by remember { mutableStateOf(false) }
     var numEpochs by remember { mutableStateOf("100") }
     var batchSize by remember { mutableStateOf("10") }
+    var newModelName by remember { mutableStateOf("") }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -106,6 +108,17 @@ fun EditFinetuningRelationshipDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Box {
+                    TextField(
+                        value = newModelName,
+                        onValueChange = { newModelName = it },
+                        label = { Text("New Model File Name") },
+                        placeholder = { Text("Leave blank for a random file name") },
+                        singleLine = true
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Box {
                     NumberInputField(value = numEpochs,
                         labelText = "Number of Epochs",
                         onValueChange = {
@@ -126,6 +139,7 @@ fun EditFinetuningRelationshipDialog(
                         onSubmit(
                             selectedModel!!.uniqueIdentifier,
                             selectedDataset!!.uniqueIdentifier,
+                            newModelName,
                             numEpochs.toInt(),
                             batchSize.toInt()
                         )

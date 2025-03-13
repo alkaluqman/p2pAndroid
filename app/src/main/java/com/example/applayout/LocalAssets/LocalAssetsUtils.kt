@@ -36,10 +36,10 @@ import java.util.zip.ZipInputStream
 
 private const val BASE_URL = "10.96.181.80"
 
-fun getNewModel(): LocalModel {
+fun getNewModel(id: String? = null): LocalModel {
     val randomID = UUID.randomUUID()
     val newModel = LocalModel(
-        uniqueIdentifier = randomID.toString(),
+        uniqueIdentifier = id ?: randomID.toString(),
     )
     return newModel
 }
