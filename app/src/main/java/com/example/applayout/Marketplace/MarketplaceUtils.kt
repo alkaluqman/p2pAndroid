@@ -14,7 +14,8 @@ import java.io.IOException
 import java.net.URL
 
 val TAG = "MarketplaceUtils"
-private const val BASE_URL = "10.96.181.80"
+//private const val BASE_URL = "10.96.181.80"
+private const val BASE_URL = "192.168.2.159"
 //          10.0.2.2 refers to localhost
 //        .url("https://android-p2p-backend.onrender.com/weights")
 
@@ -53,8 +54,8 @@ suspend fun getMarketplaceFiles(): List<Model> {
     val client = OkHttpClient()
     val gson = Gson()
     val request = Request.Builder()
-//        .url("http://$BASE_URL:8000/weights")
-        .url("https://android-p2p-backend.onrender.com/weights")
+        .url("http://$BASE_URL:8000/weights")
+//        .url("https://android-p2p-backend.onrender.com/weights")
         .get()
         .build()
     return try {

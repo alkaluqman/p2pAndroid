@@ -285,6 +285,12 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                             localModelListState.value = fetchModelsInfo(filesDir).notUploadedModels
                         }
                     },
+                    onViewPerformanceHistory = {
+                        coroutineScope.launch(Dispatchers.IO) {
+                            val allFinetunedRels = getAllFinetunedFrom(model.uniqueIdentifier)
+                            Log.d("LocalAssetsActivity", "allFinetunedRels: $allFinetunedRels")
+                        }
+                    },
                     isUploaded = false
                 )
             }
