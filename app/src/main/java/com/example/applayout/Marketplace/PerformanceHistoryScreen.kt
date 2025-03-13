@@ -41,7 +41,7 @@ fun PerformanceHistoryScreen(list: List<Finetune>) {
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Epochs: ${item.num_epochs}", fontWeight = FontWeight.Bold)
-                    Text("Batch Size: ${item.batch_size}")
+                    Text("Batch Size: ${item.batch_size}", fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text("Performance Details:", fontWeight = FontWeight.Bold)
@@ -52,7 +52,7 @@ fun PerformanceHistoryScreen(list: List<Finetune>) {
                     Spacer(modifier = Modifier.height(8.dp))
 
                     // Dataset ID
-                    Text("Dataset ID: ${item.dataset}")
+                    Text("Dataset ID: ${item.dataset}", fontWeight = FontWeight.Bold)
                 }
             }
         }
