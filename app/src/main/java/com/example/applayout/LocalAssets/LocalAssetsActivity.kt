@@ -1,6 +1,8 @@
 package com.example.applayout.LocalAssets
 
 
+import android.content.pm.FeatureInfo
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -47,11 +49,13 @@ import com.example.applayout.Data.Model.Model
 import com.example.applayout.Dataset.DatasetCard
 import com.example.applayout.Finetune.FinetuneAPI
 import com.example.applayout.Marketplace.MarketplaceScreen
+import com.example.applayout.Marketplace.PerformanceHistoryScreen
 import com.example.applayout.Marketplace.WebViewScreen
 import com.example.applayout.Metrics.MetricTracking
 import com.example.applayout.Models.ModelCard
 import com.example.applayout.Models.runInferenceOnDirectory
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -71,6 +75,13 @@ class LocalAssetActivity : ComponentActivity() {
                 ) { backStackEntry ->
                     val url = backStackEntry.arguments?.getString("url") ?: "https://www.google.com"
                     WebViewScreen(url = url)
+                }
+                composable("performance_history/{listJson}") { backStackEntry ->
+                    val json = backStackEntry.arguments?.getString("listJson") ?: "[]"
+                    val listType = object : TypeToken<List<Finetune>>() {}.type
+                    val list: List<Finetune> = Gson().fromJson(json, listType)
+
+                    PerformanceHistoryScreen(list)
                 }
             }
         }
@@ -289,6 +300,11 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                         coroutineScope.launch(Dispatchers.IO) {
                             val allFinetunedRels = getAllFinetunedFrom(model.uniqueIdentifier)
                             Log.d("LocalAssetsActivity", "allFinetunedRels: $allFinetunedRels")
+
+                            val json = Uri.encode(Gson().toJson(allFinetunedRels))
+                            withContext(Dispatchers.Main) {
+                                navController.navigate("performance_history/$json")
+                            }
                         }
                     },
                     isUploaded = false
