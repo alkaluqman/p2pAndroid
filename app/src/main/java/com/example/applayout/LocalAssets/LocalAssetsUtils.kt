@@ -661,8 +661,8 @@ suspend fun uploadFederatedLearningRelationship(
     }
 }
 
-suspend fun getAllFinetunedFrom(weight_id: String) {
-    try {
+suspend fun getAllFinetunedFrom(weight_id: String): List<Finetune> {
+    return try {
         val client = OkHttpClient()
         val gson = Gson()
 //        val url = "https://android-p2p-backend.onrender.com/weights/finetuned/rels/$weight_id"
@@ -670,23 +670,27 @@ suspend fun getAllFinetunedFrom(weight_id: String) {
         val request = Request.Builder().url(url).build()
 
         Log.d("getAllFinetunedFrom", "Sending GET request to serverUrl")
+
         withContext(Dispatchers.IO) {
             val response = client.newCall(request).execute()
 
             if (response.isSuccessful) {
                 val body = response.body?.string()
-                val jsonObject = gson.fromJson<List<Finetune>>(
-                    body,
-                    object : TypeToken<List<Finetune>>() {}.type
-                )
-                Log.d("getAllFinetunedFrom", "jsonObject: $jsonObject")
-                return@withContext jsonObject
+                if (!body.isNullOrEmpty()) {
+                    val jsonObject = gson.fromJson<List<Finetune>>(
+                        body,
+                        object : TypeToken<List<Finetune>>() {}.type
+                    )
+                    Log.d("getAllFinetunedFrom", "jsonObject: $jsonObject")
+                    return@withContext jsonObject
+                }
             }
-            return@withContext null
+            Log.e("getAllFinetunedFrom", "Response not successful or empty body")
+            emptyList()
         }
     } catch (e: Exception) {
         Log.e("getAllFinetunedFrom", "Error fetching rels: ${e.message}", e)
-        e.printStackTrace()
+        emptyList()
     }
 }
 
