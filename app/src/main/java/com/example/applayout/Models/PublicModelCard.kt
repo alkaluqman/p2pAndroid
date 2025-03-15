@@ -1,7 +1,6 @@
 package com.example.applayout.Models
 
 import android.net.Uri
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -36,18 +36,12 @@ fun PublicModelCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clickable {
-                val encodedUrl =
-                    Uri.encode("https://android-p2p-frontend-xoxm.vercel.app/weight/${modelData.uniqueIdentifier}")
-//                Uri.encode("http://$BASE_URL:3000/weight/${modelData.uniqueIdentifier}")
-                navController.navigate("webview/$encodedUrl")
-            },
+            .padding(vertical = 8.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Model Name: ${modelData.uniqueIdentifier.take(8)}",
+                text = "Name: ${modelData.uniqueIdentifier.take(8)}",
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
                 maxLines = 1,
@@ -93,6 +87,17 @@ fun PublicModelCard(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Download Model",
                             tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    IconButton(onClick = {
+                        val encodedUrl =
+                            Uri.encode("https://android-p2p-frontend-xoxm.vercel.app/weight/${modelData.uniqueIdentifier}")
+//                Uri.encode("http://$BASE_URL:3000/weight/${modelData.uniqueIdentifier}")
+                        navController.navigate("webview/$encodedUrl")
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.ExitToApp,
+                            contentDescription = "Explore Model"
                         )
                     }
                 }

@@ -63,7 +63,7 @@ fun ModelCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Model Name: ${modelData.uniqueIdentifier.take(8)}",
+                    text = "Name: ${modelData.uniqueIdentifier.take(8)}",
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     maxLines = 1,

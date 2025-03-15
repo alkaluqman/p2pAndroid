@@ -48,7 +48,7 @@ fun DatasetCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Dataset Name: ${datasetData.uniqueIdentifier.take(8)}",
+                        text = "Name: ${datasetData.uniqueIdentifier.take(8)}",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
                         maxLines = 1,
