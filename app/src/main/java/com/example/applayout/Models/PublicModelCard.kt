@@ -47,10 +47,9 @@ fun PublicModelCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = modelData.uniqueIdentifier,
+                text = "Model Name: ${modelData.uniqueIdentifier.take(8)}",
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                modifier = Modifier.padding(bottom = 4.dp),
+                fontSize = 20.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -67,7 +66,10 @@ fun PublicModelCard(
                         Column(modifier = Modifier.weight(2f)) {
                             InfoText("Architecture:", modelData.architecture)
                             InfoText("Model Task:", modelData.model_task)
-                            InfoText("File Size:", "${modelData.weight_size} bytes")
+                            InfoText(
+                                "File Size:",
+                                String.format("%.2f MB", modelData.weight_size / (1024.0 * 1024.0))
+                            )
                         }
                         Column(modifier = Modifier.weight(1f)) {
                             InfoText("Usage:", modelData.usage.toString())

@@ -62,7 +62,6 @@ fun ModelCard(
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "Model Name: ${modelData.uniqueIdentifier.take(8)}",
                     fontWeight = FontWeight.Bold,
@@ -70,7 +69,6 @@ fun ModelCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-            }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(
@@ -98,7 +96,6 @@ fun ModelCard(
                 }
             }
 
-            // Reorganized Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
