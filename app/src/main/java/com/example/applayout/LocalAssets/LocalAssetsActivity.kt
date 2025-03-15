@@ -8,13 +8,16 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -148,11 +151,34 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 .padding(16.dp)
         ) {
             Text(
-                text = "Local Assets",
+                text = "Model Manager",
                 color = MaterialTheme.colorScheme.onPrimary,
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.align(Alignment.Center)
             )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(
+                onClick = { showFinetuningRelationshipDialog = true },
+                modifier = Modifier.weight(1f) // Makes button occupy equal space
+            ) {
+                Text("Finetune")
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(
+                onClick = { showFederatedLearningRelationshipDialog = true },
+                modifier = Modifier.weight(1f) // Makes button occupy equal space
+            ) {
+                Text("Federated Learn")
+            }
+
         }
         Row(
             modifier = Modifier
@@ -169,7 +195,6 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             Button(
                 onClick = { navController.navigate("marketplace") },
                 enabled = internetConnected.value,
-                modifier = Modifier.padding(top = 16.dp)
             ) {
                 Text("Browse Marketplace")
             }
@@ -248,8 +273,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                         )
                         localModelListState.value = fetchModelsInfo(filesDir).notUploadedModels
                     }
-                },
-                modifier = Modifier.padding(top = 16.dp)
+                }
             ) {
                 Text("New Model")
             }
@@ -314,7 +338,6 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp),
-
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -335,7 +358,6 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                         }
                     }
                 },
-                modifier = Modifier.padding(top = 16.dp)
             ) {
                 Text(" New Dataset")
             }
@@ -399,32 +421,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             }
 
         }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
 
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Button(
-                onClick = {
-                    showFederatedLearningRelationshipDialog = true
-
-                },
-                modifier = Modifier.padding(top = 16.dp)
-            ) {
-                Text("Federated Learn")
-            }
-            Button(
-                onClick = {
-                    showFinetuningRelationshipDialog = true
-
-                },
-                modifier = Modifier.padding(top = 16.dp)
-            ) {
-                Text("Finetune")
-            }
-        }
         if (showEditInstallDialog && selectedInstalledModel != null) {
             EditModelDialog(
                 onDismiss = { showEditInstallDialog = false },

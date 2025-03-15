@@ -17,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,25 +41,26 @@ fun DatasetCard(
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Dataset Name at the Top
-            Text(
-                text = "Dataset: ${datasetData.uniqueIdentifier.take(8)}",
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Dataset Name: ${datasetData.uniqueIdentifier.take(8)}",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
                     InfoText("Number of Images:", numImages.toString())
                     InfoText("Description:", datasetData.description)
                 }
+
+
                 IconButton(onClick = { onEdit(datasetData) }) {
                     Icon(imageVector = Icons.Default.Create, contentDescription = "Edit Dataset")
                 }
