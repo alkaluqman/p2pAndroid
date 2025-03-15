@@ -5,22 +5,17 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-
-import com.example.applayout.LocalAssets.LocalAssetActivity;
+import com.example.applayout.BaseActivity;
 import com.example.applayout.R;
 
-    
-import com.example.applayout.BaseActivity;
-
 public class CommunicationActivity extends BaseActivity {
-    Button btWifi, btBluetooth, btMarketPlace;
+    Button btWifi, btBluetooth;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setContentView(R.layout.activity_communications);
         super.onCreate(savedInstanceState);
         btWifi = findViewById(R.id.btWifi);
         btBluetooth = findViewById(R.id.btBluetooth);
-        btMarketPlace= findViewById(R.id.btMarketplace);
 
         btWifi.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -34,14 +29,6 @@ public class CommunicationActivity extends BaseActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(view.getContext(), BluetoothActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        btMarketPlace.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(view.getContext(), LocalAssetActivity.class);
                 startActivity(intent);
             }
         });

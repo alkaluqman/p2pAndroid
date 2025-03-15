@@ -1,8 +1,11 @@
 package com.example.applayout.Dataset
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
@@ -37,57 +40,42 @@ fun DatasetCard(
             .padding(vertical = 8.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = datasetData.uniqueIdentifier,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    modifier = Modifier.padding(bottom = 4.dp),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column() {
-                        Column(modifier = Modifier.weight(2f)) {
-                            InfoText("Number of Images:", numImages.toString())
-                        }
-                        Column(modifier = Modifier.weight(2f)) {
-                            InfoText("Description:", datasetData.description)
-                        }
-                    }
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Name: ${datasetData.uniqueIdentifier.take(8)}",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
 
-                    Row {
-                        IconButton(onClick = { onEdit(datasetData) }) {
-                            Icon(
-                                imageVector = Icons.Default.Create,
-                                contentDescription = "Edit Dataset",
-                            )
-                        }
-                        IconButton(onClick = { onRemove(datasetData.uniqueIdentifier) }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete Dataset",
-                            )
-                        }
-                        IconButton(onClick = { onRun(datasetData) }) {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = "Run Inference",
-                            )
-                        }
-                    }
-
+                    Spacer(modifier = Modifier.height(8.dp))
+                    InfoText("Number of Images:", numImages.toString())
+                    InfoText("Description:", datasetData.description)
                 }
 
+
+                IconButton(onClick = { onEdit(datasetData) }) {
+                    Icon(imageVector = Icons.Default.Create, contentDescription = "Edit Dataset")
+                }
+                IconButton(onClick = { onRemove(datasetData.uniqueIdentifier) }) {
+                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete Dataset")
+                }
+                IconButton(onClick = { onRun(datasetData) }) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Run Inference"
+                    )
+                }
             }
+
+
         }
     }
 }
-
-

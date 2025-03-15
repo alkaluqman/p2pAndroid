@@ -10,6 +10,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.applayout.Finetune.FinetuneActivity;
+import com.example.applayout.LocalAssets.LocalAssetActivity;
 import com.example.applayout.Report.ReportActivity;
 
 import java.io.BufferedReader;
@@ -20,6 +21,7 @@ public class MainActivity extends BaseActivity {
     TextView status;
     Button btConfirm;
     Button btFinetune;
+    Button btModelManager;
     ListView lvApplications;
     String[] applications;
     public static String string;
@@ -31,6 +33,7 @@ public class MainActivity extends BaseActivity {
         lvApplications = findViewById(R.id.lvApplication);
         btConfirm = findViewById(R.id.btConfirmApplication);
         btFinetune = findViewById(R.id.btFinetune);
+        btModelManager = findViewById(R.id.btModelManager);
         status = findViewById(R.id.statusApplication);
 
         applications = new String[2];
@@ -51,6 +54,13 @@ public class MainActivity extends BaseActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(view.getContext(), ReportActivity.class);
+                startActivity(intent);
+            }
+        });
+        btModelManager.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(view.getContext(), LocalAssetActivity.class);
                 startActivity(intent);
             }
         });

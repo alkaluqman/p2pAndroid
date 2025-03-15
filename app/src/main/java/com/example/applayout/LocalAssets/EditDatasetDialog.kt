@@ -2,12 +2,12 @@ package com.example.applayout.LocalAssets
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,7 +45,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.applayout.Data.Model.Dataset
 import com.example.applayout.Data.Model.modelTasks
 import com.example.applayout.Models.loadImageBitmap
-import com.example.applayout.Models.readLabels
+import com.example.applayout.Models.readLabelsDefault
 import com.google.gson.Gson
 import java.io.File
 import java.io.FileOutputStream
@@ -62,7 +62,6 @@ fun EditDatasetDialog(
 
     var modelTask by remember { mutableStateOf(datasetData.model_task) }
     var description by remember { mutableStateOf(datasetData.description) }
-    Log.d("update dataset", "Dataset ID1: $datasetData")
     var fileNames by remember {
         mutableStateOf(
             listLocalResources(filesDir, "datasets/${datasetData.uniqueIdentifier}", true)
@@ -70,8 +69,7 @@ fun EditDatasetDialog(
         )
     }
     val datasetDir = File(filesDir, "datasets/${datasetData.uniqueIdentifier}")
-    var datasetLabels = readLabels(datasetDir).toMutableMap()
-    Log.d("update dataset", "Dataset ID2: $datasetData")
+    var datasetLabels = readLabelsDefault(datasetDir).toMutableMap()
     val context = LocalContext.current
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -86,7 +84,6 @@ fun EditDatasetDialog(
                 }
             }
         }
-    Log.d("update dataset", "Dataset ID3: $datasetData")
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
@@ -97,14 +94,12 @@ fun EditDatasetDialog(
             tonalElevation = 8.dp // Increased elevation for better prominence
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                // Dialog Title
                 Text(
                     text = "Edit Dataset",
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                // Model Task Dropdown
                 Text("Model Task", style = MaterialTheme.typography.bodyMedium)
                 Spacer(modifier = Modifier.height(8.dp))
                 var expanded by remember { mutableStateOf(false) }
@@ -137,8 +132,6 @@ fun EditDatasetDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Divider()
-
-                // Description Input
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Description", style = MaterialTheme.typography.bodyMedium)
                 Spacer(modifier = Modifier.height(8.dp))
@@ -154,13 +147,27 @@ fun EditDatasetDialog(
                 Spacer(modifier = Modifier.height(16.dp))
                 Divider()
 
-                // Files Section
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Files in Dataset",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Dataset Images: ",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Button(
+                        onClick = {
+                            launcher.launch("image/*")
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Add Image")
+                    }
+                }
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxHeight(0.6f)
@@ -180,7 +187,7 @@ fun EditDatasetDialog(
                                 datasetLabels[filename] = newLabel
                                 val labelsFile = File(datasetDir, "labels.json")
                                 labelsFile.writeText(Gson().toJson(datasetLabels))
-                                datasetLabels = readLabels(datasetDir).toMutableMap()
+                                datasetLabels = readLabelsDefault(datasetDir).toMutableMap()
                             },
                             onFileNameChange = { newFileName ->
                                 val oldFile = File(datasetDir, filename)
@@ -206,16 +213,6 @@ fun EditDatasetDialog(
                 Spacer(modifier = Modifier.height(16.dp))
                 Divider()
 
-                // Buttons
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = {
-                        launcher.launch("image/*")
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Upload New File")
-                }
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
@@ -249,41 +246,68 @@ fun DatasetItemCard(
     onDelete: () -> Unit
 ) {
     val imageFilePath = File(datasetDir, fileName).absolutePath
-    var newFileName by remember { mutableStateOf(fileName) }
+    var newFileName by remember { mutableStateOf(fileName.substringBeforeLast(".")) }
     var newLabel by remember { mutableStateOf(label.toIntOrNull() ?: 0) }
+    var expanded by remember { mutableStateOf(false) }
 
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
-            .border(1.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(12.dp)
+            .border(1.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
+            .padding(12.dp),
     ) {
-        // File details
-        Column(modifier = Modifier.weight(1f)) {
-            Text("Filename:", style = MaterialTheme.typography.bodyMedium)
-            Spacer(modifier = Modifier.height(4.dp))
-            BasicTextField(
-                value = newFileName,
-                onValueChange = { updatedFileName ->
-                    newFileName = updatedFileName
-                    onFileNameChange(updatedFileName)
-                },
+        Text("Filename: $newFileName", style = MaterialTheme.typography.bodyMedium)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                bitmap = loadImageBitmap(imageFilePath),
+                contentDescription = "Dataset Image",
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
-                    .padding(8.dp)
+                    .size(70.dp)
+//                .border(1.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
+                    .padding(4.dp)
             )
+            IconButton(onClick = onDelete, modifier = Modifier.padding(start = 8.dp)) {
+                Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
+            }
+        }
+//        Spacer(modifier = Modifier.height(4.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Label:", style = MaterialTheme.typography.bodyMedium)
-            Spacer(modifier = Modifier.height(4.dp))
+//        Text("Filename:", style = MaterialTheme.typography.bodyMedium)
+//        Spacer(modifier = Modifier.height(4.dp))
+//        BasicTextField(
+//            value = newFileName,
+//            onValueChange = { updatedFileName ->
+//                newFileName = updatedFileName
+//                onFileNameChange("$updatedFileName.${fileName.substringAfterLast(".")}") // Add back extension
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .border(1.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
+//                .padding(8.dp)
+//        )
 
-            // Dropdown for selecting labels
-            var expanded by remember { mutableStateOf(false) }
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Label:",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(end = 8.dp)
+            )
             Box {
-                Button(onClick = { expanded = true }) {
-                    Text("Label: $newLabel")
+                Button(
+                    onClick = { expanded = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("$newLabel")
                 }
                 DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     classLabels.forEachIndexed { index, classLabel ->
@@ -298,20 +322,6 @@ fun DatasetItemCard(
                     }
                 }
             }
-        }
-
-        // Image preview
-        Image(
-            bitmap = loadImageBitmap(imageFilePath),
-            contentDescription = null,
-            modifier = Modifier
-                .size(64.dp)
-                .padding(8.dp)
-        )
-
-        // Delete button
-        IconButton(onClick = onDelete) {
-            Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
         }
     }
 }

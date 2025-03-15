@@ -87,6 +87,14 @@
             android:layout_weight="1"
             style="@style/CustomButtonStyle"
             android:text="@string/confirm" />
+
+        <Button
+            android:id="@+id/btModelManager"
+            style="@style/CustomButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Model Manager" />
     </LinearLayout>
 
     <TextView
