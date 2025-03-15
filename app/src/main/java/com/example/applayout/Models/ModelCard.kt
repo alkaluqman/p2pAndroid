@@ -51,26 +51,27 @@ fun ModelCard(
         if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
             alpha = 0.2f
         )
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .background(backgroundColor)
             .border(2.dp, borderColor)
-            .clickable {
-                onClick(modelData.uniqueIdentifier)
-            },
+            .clickable { onClick(modelData.uniqueIdentifier) },
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = modelData.uniqueIdentifier,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Model Name: ${modelData.uniqueIdentifier.take(8)}",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(
                     modifier = Modifier
@@ -84,7 +85,10 @@ fun ModelCard(
                         Column(modifier = Modifier.weight(2f)) {
                             InfoText("Architecture:", modelData.architecture)
                             InfoText("Model Task:", modelData.model_task)
-                            InfoText("File Size:", "${modelData.weight_size} bytes")
+                            InfoText(
+                                "File Size:",
+                                String.format("%.2f MB", modelData.weight_size / (1024.0 * 1024.0))
+                            )
                         }
                         Column(modifier = Modifier.weight(1f)) {
                             InfoText("Usage:", modelData.usage.toString())
@@ -92,62 +96,47 @@ fun ModelCard(
                         }
                     }
                 }
-                Row {
-                    IconButton(
-                        enabled = modelData.isOwner,
-                        onClick = {
-                            onEdit(modelData)
-                        }) {
-                        Icon(
-                            imageVector = Icons.Default.Create,
-                            contentDescription = "Edit Model",
-                        )
-                    }
-                    if (!isUploaded) {
-                        IconButton(onClick = { onUpload(modelData.uniqueIdentifier) }) {
-                            Icon(
-                                imageVector = Icons.Default.Send,
-                                contentDescription = "Upload Model",
-                            )
-                        }
-                    }
-                    IconButton(onClick = {
-                        val encodedUrl =
-                            Uri.encode("https://android-p2p-frontend-xoxm.vercel.app/weight/${modelData.uniqueIdentifier}")
-//                    Uri.encode("http://$BASE_URL:3000/weight/${modelData.uniqueIdentifier}")
-                        navController.navigate("webview/$encodedUrl")
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.ExitToApp,
-                            contentDescription = "Explore Model",
-                        )
-                    }
-
-                    IconButton(onClick = {
-                        onDelete(modelData.uniqueIdentifier)
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete Model",
-                        )
-                    }
-
-                }
             }
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                IconButton(onClick = {
-                    if (onViewPerformanceHistory != null) {
-                        onViewPerformanceHistory()
+            // Reorganized Buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                onViewPerformanceHistory?.let {
+                    IconButton(onClick = { it() }) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "View Model Performance History"
+                        )
                     }
+                }
+                if (modelData.isOwner) {
+                    IconButton(onClick = { onEdit(modelData) }) {
+                        Icon(imageVector = Icons.Default.Create, contentDescription = "Edit Model")
+                    }
+                }
+                if (!isUploaded) {
+                    IconButton(onClick = { onUpload(modelData.uniqueIdentifier) }) {
+                        Icon(imageVector = Icons.Default.Send, contentDescription = "Upload Model")
+                    }
+                }
+                IconButton(onClick = {
+                    val encodedUrl =
+                        Uri.encode("https://android-p2p-frontend-xoxm.vercel.app/weight/${modelData.uniqueIdentifier}")
+                    navController.navigate("webview/$encodedUrl")
                 }) {
                     Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = "View Model Performance History",
+                        imageVector = Icons.Default.ExitToApp,
+                        contentDescription = "Explore Model"
                     )
+                }
+                IconButton(onClick = { onDelete(modelData.uniqueIdentifier) }) {
+                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete Model")
                 }
             }
 
         }
     }
 }
+

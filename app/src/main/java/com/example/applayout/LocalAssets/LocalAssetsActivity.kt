@@ -1,7 +1,6 @@
 package com.example.applayout.LocalAssets
 
 
-import android.content.pm.FeatureInfo
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -162,7 +161,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Public Models",
+                text = "Downloaded Models",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
@@ -172,7 +171,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 enabled = internetConnected.value,
                 modifier = Modifier.padding(top = 16.dp)
             ) {
-                Text("Go to Marketplace")
+                Text("Browse Marketplace")
             }
         }
         LazyColumn(
@@ -231,7 +230,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Local Models",
+                text = "Personal Models",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
@@ -252,7 +251,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 },
                 modifier = Modifier.padding(top = 16.dp)
             ) {
-                Text("Spawn Local Files")
+                Text("New Model")
             }
         }
         LazyColumn(
@@ -319,7 +318,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Local Datasets",
+                text = "Personal Datasets",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
@@ -338,7 +337,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 },
                 modifier = Modifier.padding(top = 16.dp)
             ) {
-                Text(" Add Dataset Folder")
+                Text(" New Dataset")
             }
         }
         LazyColumn(

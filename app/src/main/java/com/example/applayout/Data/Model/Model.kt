@@ -11,7 +11,7 @@ data class Model(
     var usage: Int = 0,
     var likes: Int = 0,
     var public_link: String = "",
-    var architecture: String = "",
+    var architecture: String = "simple feedforward",
     var isOwner: Boolean = false,
     var absoluteFilePath: String = ""
 
