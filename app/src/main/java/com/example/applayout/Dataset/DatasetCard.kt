@@ -1,8 +1,11 @@
 package com.example.applayout.Dataset
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
@@ -14,7 +17,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,57 +39,41 @@ fun DatasetCard(
             .padding(vertical = 8.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = datasetData.uniqueIdentifier,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    modifier = Modifier.padding(bottom = 4.dp),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column() {
-                        Column(modifier = Modifier.weight(2f)) {
-                            InfoText("Number of Images:", numImages.toString())
-                        }
-                        Column(modifier = Modifier.weight(2f)) {
-                            InfoText("Description:", datasetData.description)
-                        }
-                    }
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Dataset Name at the Top
+            Text(
+                text = "Dataset: ${datasetData.uniqueIdentifier.take(8)}",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
 
-                    Row {
-                        IconButton(onClick = { onEdit(datasetData) }) {
-                            Icon(
-                                imageVector = Icons.Default.Create,
-                                contentDescription = "Edit Dataset",
-                            )
-                        }
-                        IconButton(onClick = { onRemove(datasetData.uniqueIdentifier) }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete Dataset",
-                            )
-                        }
-                        IconButton(onClick = { onRun(datasetData) }) {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = "Run Inference",
-                            )
-                        }
-                    }
+            Spacer(modifier = Modifier.height(8.dp))
 
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    InfoText("Number of Images:", numImages.toString())
+                    InfoText("Description:", datasetData.description)
                 }
-
+                IconButton(onClick = { onEdit(datasetData) }) {
+                    Icon(imageVector = Icons.Default.Create, contentDescription = "Edit Dataset")
+                }
+                IconButton(onClick = { onRemove(datasetData.uniqueIdentifier) }) {
+                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete Dataset")
+                }
+                IconButton(onClick = { onRun(datasetData) }) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Run Inference"
+                    )
+                }
             }
+
+
         }
     }
 }
-
-

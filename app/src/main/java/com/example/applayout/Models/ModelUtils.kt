@@ -111,6 +111,7 @@ private fun convertToGrayscale(bitmap: Bitmap): Bitmap {
     return grayscaleBitmap
 }
 
+
 fun readLabels(datasetDir: File): Map<String, String> {
     val labelsFile = File(datasetDir, "labels.json")
     return if (labelsFile.exists()) {
@@ -125,6 +126,43 @@ fun readLabels(datasetDir: File): Map<String, String> {
     } else {
         emptyMap()
     }
+}
+
+fun readLabelsDefault(datasetDir: File): Map<String, String> {
+    val labelsFile = File(datasetDir, "labels.json")
+    val existingLabels: MutableMap<String, String> = try {
+        if (labelsFile.exists()) {
+            val jsonContent = labelsFile.readText()
+            val type = object : TypeToken<Map<String, String>>() {}.type
+            Gson().fromJson<Map<String, String>>(jsonContent, type)?.toMutableMap()
+                ?: mutableMapOf()
+        } else {
+            mutableMapOf()
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        mutableMapOf()
+    }
+
+    // Get all image filenames in the dataset directory
+    val allFiles = datasetDir.listFiles()?.map { it.name }?.filter { it != "labels.json" }?.toSet()
+        ?: emptySet()
+
+    // Ensure all images have a label, defaulting to "0"
+    var updated = false
+    allFiles.forEach { fileName ->
+        if (!existingLabels.containsKey(fileName)) {
+            existingLabels[fileName] = "0"  // Assign default label
+            updated = true
+        }
+    }
+
+    // If updates were made, write back to labels.json
+    if (updated) {
+        labelsFile.writeText(Gson().toJson(existingLabels))
+    }
+
+    return existingLabels
 }
 
 fun loadImageBitmap(filePath: String): androidx.compose.ui.graphics.ImageBitmap {
