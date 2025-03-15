@@ -1,7 +1,6 @@
 package com.example.applayout.LocalAssets
 
 
-import android.content.pm.FeatureInfo
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -454,10 +453,23 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             EditFederatedLearningRelationshipDialog(
                 onDismiss = { showFederatedLearningRelationshipDialog = false },
                 models = uploadedModelListState.value + localModelListState.value,
-                onSubmit = { localRelationship ->
-                    coroutineScope.launch(Dispatchers.IO) {
-                        uploadFederatedLearningRelationship(localRelationship)
-                    }
+                onSubmit = { sourceModels ->
+                    val newModel = getNewModel();
+                    val localRelationship = LocalRelationship(
+                        modelUniqueIdentifier = newModel.uniqueIdentifier,
+                        relationshipType = "FederatedLearn",
+                        sourceUniqueIdentifiers = Gson().toJson(sourceModels)
+                    )
+                    FinetuneAPI.federatedLearn(
+                        context,
+                        filesDir,
+                        sourceModels,
+                        newModel.uniqueIdentifier,
+                    )
+                    //call federatedLearn
+//                    coroutineScope.launch(Dispatchers.IO) {
+//                        uploadFederatedLearningRelationship(localRelationship)
+//                    }
                     showFederatedLearningRelationshipDialog = false
                 }
             )

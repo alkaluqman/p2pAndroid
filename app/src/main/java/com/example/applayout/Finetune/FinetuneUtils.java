@@ -11,6 +11,8 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import org.tensorflow.lite.Interpreter;
+import org.tensorflow.lite.Tensor;
+import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,8 +34,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-
 public class FinetuneUtils {
 
     public static void getBaseCkptFile(Context context, File filesDir, String modelFileName) {
@@ -76,6 +76,87 @@ public class FinetuneUtils {
         Map<String, Object> outputs = new HashMap<>();
         anotherInterpreter.runSignature(inputs, outputs, "restore");
     }
+
+    public static void saveWeightsToCheckpoint(Interpreter anotherInterpreter, Map<String, Tensor> newWeights, String checkpointFilePath) {
+        Map<String, Object> inputs = new HashMap<>();
+        inputs.put("checkpoint_path", checkpointFilePath);
+        inputs.put("dense_1_kernel", newWeights.get("dense_1/kernel:0"));
+        inputs.put("dense_1_bias", newWeights.get("dense_1/bias:0"));
+        inputs.put("dense_2_kernel", newWeights.get("dense_2/kernel:0"));
+        inputs.put("dense_2_bias", newWeights.get("dense_2/bias:0"));
+        Map<String, Object> outputs = new HashMap<>();
+        anotherInterpreter.runSignature(inputs, outputs, "save_weights");
+    }
+
+    public static Map<String, Tensor> extractWeights(Interpreter anotherInterpreter) {
+        Map<String, Object> inputs = new HashMap<>();
+        inputs.put("checkpoint_path", "hello");//dummy input to work
+        Map<String, Object> outputs = new HashMap<>();
+        anotherInterpreter.runSignature(inputs, outputs, "get_weights");
+        Map<String, Tensor> weights = new HashMap<>();
+        for (Map.Entry<String, Object> entry : outputs.entrySet()) {
+            weights.put(entry.getKey(), (Tensor) entry.getValue());
+        }
+        return weights;
+    }
+//    public static TensorBuffer tensorToBuffer(Tensor tensor) {
+//        int[] shape = tensor.shape();
+//        int totalElements = 1;
+//        for (int dim : shape) {
+//            totalElements *= dim;
+//        }
+//        // Create an array to hold the tensor data.
+//        float[] data = new float[totalElements];
+//        // Copy the data from the Tensor into the float array.
+//        // This assumes that the Tensor API provides a method like copyTo(float[]).
+//        tensor.copyTo(data);
+//
+//        // Create a TensorBuffer and load the data.
+//        TensorBuffer buffer = TensorBuffer.createFixedSize(shape, DataType.FLOAT32);
+//        buffer.loadArray(data, shape);
+//        return buffer;
+//    }
+
+    public static Map<String, TensorBuffer> averageTensorMaps(List<Map<String, Tensor>> tensorMaps) {
+        Map<String, TensorBuffer> averagedMap = new HashMap<>();
+
+        // Assume there's at least one map and that all maps share the same keys.
+        Set<String> keys = tensorMaps.get(0).keySet();
+        int count = tensorMaps.size();
+
+//        for (String key : keys) {
+//            TensorBuffer firstTensor = tensorMaps.get(0).get(key);
+//            int[] shape = firstTensor.getShape();
+//            int numElements = firstTensor.getFlatSize();
+//            float[] sumArray = new float[numElements];
+//
+//            for (Map<String, TensorBuffer> map : tensorMaps) {
+//                TensorBuffer tensor = map.get(key);
+//                float[] data = tensor.getFloatArray(); // Assumes data is float.
+//                for (int i = 0; i < numElements; i++) {
+//                    sumArray[i] += data[i];
+//                }
+//            }
+//
+//            for (int i = 0; i < numElements; i++) {
+//                sumArray[i] /= count;
+//            }
+//            TensorBuffer avgTensor = TensorBuffer.createFixedSize(shape, DataType.FLOAT32);
+//            avgTensor.loadArray(sumArray, shape);
+//            averagedMap.put(key, avgTensor);
+//        }
+
+        return averagedMap;
+    }
+
+    public static Map<String, Tensor> combineWeights(List<Map<String, Tensor>> weightsList) {
+        Map<String, Tensor> combined = new HashMap<>();
+
+        return combined;
+    }
+
+
+
 
 
     public static HashMap<Integer, Integer> getOriginalLabelsToDatasetLabelsMap(HashMap<String, Integer> labelsMap) {
