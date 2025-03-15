@@ -20,14 +20,14 @@ public class MetricTracking {
     private static class MetricTracker {
         private final Handler handler;
         private final int DELAY_MILLIS = 1000;
-        private double minCpu = Double.MAX_VALUE;
-        private double maxCpu = Double.MIN_VALUE;
+        private double minCpu = 0.0;
+        private double maxCpu = 0.0;
         private double totalCpu = 0.0;
         private int cpuSamples = 0;
 
-        private double minMem = Long.MAX_VALUE;
-        private double maxMem = Long.MIN_VALUE;
-        private double totalMem = 0;
+        private double minMem = 0.0;
+        private double maxMem = 0.0;
+        private double totalMem = 0.0;
         private int memSamples = 0;
 
         private final HashMap<String, Double> trackingResults = new HashMap<>();
@@ -83,14 +83,26 @@ public class MetricTracking {
                 double currentMem = usage[1];
 
                 // Update CPU usage
-                minCpu = Math.min(minCpu, currentCpu);
-                maxCpu = Math.max(maxCpu, currentCpu);
+                if (minCpu == 0.0)
+                    minCpu = currentCpu;
+                else
+                    minCpu = Math.min(minCpu, currentCpu);
+                if (maxCpu == 0.0)
+                    maxCpu = currentCpu;
+                else
+                    maxCpu = Math.max(maxCpu, currentCpu);
                 totalCpu += currentCpu;
                 cpuSamples++;
 
                 // Update memory usage
-                minMem = Math.min(minMem, currentMem);
-                maxMem = Math.max(maxMem, currentMem);
+                if (minMem == 0.0)
+                    minMem = currentMem;
+                else
+                    minMem = Math.min(minMem, currentMem);
+                if (maxMem == 0.0)
+                    maxMem = currentMem;
+                else
+                    maxMem = Math.max(maxMem, currentMem);
                 totalMem += currentMem;
                 memSamples++;
 
