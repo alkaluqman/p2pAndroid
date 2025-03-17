@@ -634,10 +634,13 @@ suspend fun uploadFederatedLearningRelationship(
     try {
         val client = OkHttpClient()
         val gson = Gson()
+        val type = object : TypeToken<List<String>>() {}.type
+        val componentIds: List<String> =
+            gson.fromJson(relationshipData.sourceUniqueIdentifiers, type)
         val payload = gson.toJson(
             UploadFederatedLearningRelationshipPayload(
                 resultant_id = relationshipData.modelUniqueIdentifier,
-                component_ids = relationshipData.sourceUniqueIdentifiers.split(",")
+                component_ids = componentIds
             )
         )
         Log.d("uploadRelationship", "Generated JSON Payload: $payload")

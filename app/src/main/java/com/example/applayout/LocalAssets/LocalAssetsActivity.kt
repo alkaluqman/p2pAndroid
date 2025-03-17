@@ -454,7 +454,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 onDismiss = { showFederatedLearningRelationshipDialog = false },
                 models = uploadedModelListState.value + localModelListState.value,
                 onSubmit = { sourceModels ->
-                    val newModel = getNewModel();
+                    val newModel = getNewModel()
                     val localRelationship = LocalRelationship(
                         modelUniqueIdentifier = newModel.uniqueIdentifier,
                         relationshipType = "FederatedLearn",
@@ -466,10 +466,10 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                         sourceModels,
                         newModel.uniqueIdentifier,
                     )
-                    //call federatedLearn
-//                    coroutineScope.launch(Dispatchers.IO) {
-//                        uploadFederatedLearningRelationship(localRelationship)
-//                    }
+                    coroutineScope.launch(Dispatchers.IO) {
+                        uploadModelNode(filesDir, newModel, USERNAME)
+                        uploadFederatedLearningRelationship(localRelationship)
+                    }
                     showFederatedLearningRelationshipDialog = false
                 }
             )
