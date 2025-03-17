@@ -38,6 +38,13 @@ import java.util.zip.ZipInputStream
 //private const val BACKEND_URL = "192.168.2.159:8000"
 private const val BACKEND_URL = "android-p2p-backend.onrender.com"
 
+fun saveFinetune(filesDir: File, finetune: Finetune) {
+    val json = Gson().toJson(finetune)
+    val file = File(filesDir, "last_run_finetune_data")
+    file.writeText(json)
+    Log.d("LocalAssetsUtils", "Finetune data saved to: ${file.absolutePath}")
+}
+
 fun getNewModel(id: String? = null): LocalModel {
     val randomID = UUID.randomUUID()
     val newModel = LocalModel(
