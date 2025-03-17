@@ -52,6 +52,7 @@ import com.example.applayout.Dataset.DatasetCard
 import com.example.applayout.Finetune.FinetuneAPI
 import com.example.applayout.Marketplace.MarketplaceScreen
 import com.example.applayout.Marketplace.PerformanceHistoryScreen
+import com.example.applayout.Marketplace.LastFinetuneScreen
 import com.example.applayout.Marketplace.WebViewScreen
 import com.example.applayout.Metrics.MetricTracking
 import com.example.applayout.Models.ModelCard
@@ -85,6 +86,7 @@ class LocalAssetActivity : ComponentActivity() {
 
                     PerformanceHistoryScreen(list)
                 }
+                composable("last_finetune_screen") { LastFinetuneScreen() }
             }
         }
     }
@@ -113,7 +115,6 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
     var evaluatedModelId by remember { mutableStateOf<String?>(null) }
     var evaluatedDatasetId by remember { mutableStateOf<String?>(null) }
     var evaluatedDatasetUploadStatus by remember { mutableStateOf<Boolean>(false) }
-    var isFinetuneComplete by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
         coroutineScope.launch {
@@ -178,6 +179,14 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                 modifier = Modifier.weight(1f) // Makes button occupy equal space
             ) {
                 Text("Federated Learn")
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(
+                onClick = { navController.navigate("last_finetune_screen") },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Last Run Statistics")
             }
 
         }

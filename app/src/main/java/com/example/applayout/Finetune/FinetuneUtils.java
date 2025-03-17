@@ -38,7 +38,7 @@ import java.util.Set;
 public class FinetuneUtils {
 
     public static void saveLosses(File filesDir, float[] losses) throws IOException {
-        File file = new File(filesDir, "last_run_losses");
+        File file = new File(filesDir, "last_run_losses.csv");
         try (FileWriter writer = new FileWriter(file)) {
             writer.write("epoch,loss\n");
             for (int epoch = 0; epoch < losses.length; epoch++) {
