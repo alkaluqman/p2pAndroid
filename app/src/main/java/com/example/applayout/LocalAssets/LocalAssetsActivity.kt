@@ -113,6 +113,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
     var evaluatedModelId by remember { mutableStateOf<String?>(null) }
     var evaluatedDatasetId by remember { mutableStateOf<String?>(null) }
     var evaluatedDatasetUploadStatus by remember { mutableStateOf<Boolean>(false) }
+    var isFinetuneComplete by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
         coroutineScope.launch {
@@ -498,6 +499,7 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                             performance_json = performanceJson,
                             dataset = datasetDirName
                         )
+                        saveFinetune(filesDir, finetune)
                         val localRelationship = LocalRelationship(
                             modelUniqueIdentifier = newModel.uniqueIdentifier,
                             relationshipType = "Finetune",

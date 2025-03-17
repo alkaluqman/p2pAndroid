@@ -15,6 +15,7 @@ import org.tensorflow.lite.Interpreter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
@@ -35,6 +36,19 @@ import java.util.Set;
 
 
 public class FinetuneUtils {
+
+    public static void saveLosses(File filesDir, float[] losses) throws IOException {
+        File file = new File(filesDir, "last_run_losses");
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write("epoch,loss\n");
+            for (int epoch = 0; epoch < losses.length; epoch++) {
+                writer.write((epoch + 1) * 10 + "," + losses[epoch] + "\n");
+            }
+            Log.d("FinetuneUtils", "Loss data saved to: " + file.getAbsolutePath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void getBaseCkptFile(Context context, File filesDir, String modelFileName) {
         final String contextName = "FinetuneUtils";

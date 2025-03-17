@@ -160,6 +160,7 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
             }
 
             FinetuneUtils.saveModelWeights(anotherInterpreter, filesDir, newModelFileName);
+            FinetuneUtils.saveLosses(filesDir, losses);
             Log.d(this.getClass().getName(), "Completed finetuneManual!");
         } catch (IOException e) {
             Log.e(this.getClass().getName(), "Error", e);
