@@ -460,8 +460,21 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
             EditFederatedLearningRelationshipDialog(
                 onDismiss = { showFederatedLearningRelationshipDialog = false },
                 models = uploadedModelListState.value + localModelListState.value,
-                onSubmit = { localRelationship ->
+                onSubmit = { sourceModels ->
+                    val newModel = getNewModel()
+                    val localRelationship = LocalRelationship(
+                        modelUniqueIdentifier = newModel.uniqueIdentifier,
+                        relationshipType = "FederatedLearn",
+                        sourceUniqueIdentifiers = Gson().toJson(sourceModels)
+                    )
+                    FinetuneAPI.federatedLearn(
+                        context,
+                        filesDir,
+                        sourceModels,
+                        newModel.uniqueIdentifier,
+                    )
                     coroutineScope.launch(Dispatchers.IO) {
+                        uploadModelNode(filesDir, newModel, USERNAME)
                         uploadFederatedLearningRelationship(localRelationship)
                     }
                     showFederatedLearningRelationshipDialog = false

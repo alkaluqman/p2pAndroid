@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 
@@ -20,6 +21,15 @@ public class FinetuneAPI {
         Log.d("FinetuneAPI", "In FinetuneAPI.finetune()");
         try {
             new FinetuneTask(context, filesDir, modelFileName, datasetDirName, numEpochs, batchSize, newModelFileName).execute().get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void federatedLearn(Context context, File filesDir, List<String> modelFileNames, String newModelFileName) {
+        Log.d("FinetuneAPI", "In FinetuneAPI.federatedLearn()");
+        try {
+            new FederatedLearnTask(context, filesDir, modelFileNames, newModelFileName).execute().get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }

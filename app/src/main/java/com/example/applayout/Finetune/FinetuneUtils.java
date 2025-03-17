@@ -33,8 +33,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-
 public class FinetuneUtils {
 
     public static void saveLosses(File filesDir, float[] losses) throws IOException {
@@ -90,6 +88,65 @@ public class FinetuneUtils {
         Map<String, Object> outputs = new HashMap<>();
         anotherInterpreter.runSignature(inputs, outputs, "restore");
     }
+
+    private static ByteBuffer convertFloatBufferToByteBuffer(FloatBuffer floatBuffer) {
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(floatBuffer.capacity() * 4); // Float is 4 bytes
+        byteBuffer.order(ByteOrder.nativeOrder());
+        floatBuffer.rewind(); // Reset position to start
+        while (floatBuffer.hasRemaining()) {
+            byteBuffer.putFloat(floatBuffer.get());
+        }
+        byteBuffer.rewind();
+        return byteBuffer;
+    }
+
+    public static void saveWeightsToCheckpoint(File filesDir, Interpreter anotherInterpreter, Map<String, FloatBuffer> newWeights, String checkpointFilePath) throws IOException {
+        Map<String, Object> inputs = new HashMap<>();
+        String ckptAbsolutePath = getAbsolutePathFromFilesDir(filesDir, "models", checkpointFilePath);
+        inputs.put("checkpoint_path", ckptAbsolutePath);
+        inputs.put("dense_1_kernel", convertFloatBufferToByteBuffer(newWeights.get("dense_1/kernel:0")));
+        inputs.put("dense_1_bias", convertFloatBufferToByteBuffer(newWeights.get("dense_1/bias:0")));
+        inputs.put("dense_2_kernel", convertFloatBufferToByteBuffer(newWeights.get("dense_2/kernel:0")));
+        inputs.put("dense_2_bias", convertFloatBufferToByteBuffer(newWeights.get("dense_2/bias:0")));
+        Map<String, Object> outputs = new HashMap<>();
+        anotherInterpreter.runSignature(inputs, outputs, "save_weights");
+        Log.d("federated_learn", "Model weights saved to " + ckptAbsolutePath);
+    }
+
+    public static Map<String, FloatBuffer> extractWeights(Interpreter anotherInterpreter) {
+        Map<String, Object> inputs = new HashMap<>();
+        inputs.put("test_path", "hello");//dummy input to work
+        Map<String, Object> outputs = new HashMap<>();
+        outputs.put("testKey", FloatBuffer.allocate(1));
+        outputs.put("dense_1/bias:0", FloatBuffer.allocate(128));        // (128,)
+        outputs.put("dense_1/kernel:0", FloatBuffer.allocate(784 * 128)); // (784,128)
+        outputs.put("dense_2/bias:0", FloatBuffer.allocate(10));         // (10,)
+        outputs.put("dense_2/kernel:0", FloatBuffer.allocate(128 * 10)); // (128,10)
+
+        anotherInterpreter.runSignature(inputs, outputs, "get_weights");
+
+        Map<String, FloatBuffer> weightBuffers = new HashMap<>();
+        for (Map.Entry<String, Object> entry : outputs.entrySet()) {
+            if (entry.getValue() instanceof FloatBuffer) {
+                FloatBuffer buffer = (FloatBuffer) entry.getValue();
+                buffer.rewind(); // Reset position before reading
+                weightBuffers.put(entry.getKey(), buffer);
+
+//                StringBuilder sb = new StringBuilder();
+//                sb.append(entry.getKey()).append(": [");
+//                for (int i = 0; i < Math.min(5, buffer.capacity()); i++) {
+//                    sb.append(buffer.get()).append(" ");
+//                }
+//                sb.append("...]");
+//                Log.d("federated_learn", sb.toString());
+            } else {
+                Log.d("federated_learn", "Output: " + entry.getKey() + " is not a FloatBuffer.");
+            }
+        }
+        return weightBuffers;
+    }
+
+
 
 
     public static HashMap<Integer, Integer> getOriginalLabelsToDatasetLabelsMap(HashMap<String, Integer> labelsMap) {

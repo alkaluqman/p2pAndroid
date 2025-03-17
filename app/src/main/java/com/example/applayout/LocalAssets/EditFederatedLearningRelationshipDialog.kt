@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.example.applayout.Data.Model.LocalRelationship
 import com.example.applayout.Data.Model.Model
 
 @Composable
@@ -33,12 +32,10 @@ fun EditFederatedLearningRelationshipDialog(
     onDismiss: () -> Unit,
     models: List<Model>,
 
-    onSubmit: (LocalRelationship) -> Unit
+    onSubmit: (List<String>) -> Unit
 ) {
 
-    var selectedModel by remember { mutableStateOf("") }
     var selectedSourceIds by remember { mutableStateOf(emptyList<String>()) }
-    var expandedModel by remember { mutableStateOf(false) }
     var expandedSourceIds by remember { mutableStateOf(false) }
 
     Dialog(
@@ -61,33 +58,6 @@ fun EditFederatedLearningRelationshipDialog(
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
-                Text("Model Unique Identifier")
-                Box {
-                    Text(
-                        text = selectedModel.ifEmpty { "Select Model" },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .clickable { expandedModel = true }
-                            .border(1.dp, MaterialTheme.colorScheme.primary)
-                    )
-                    DropdownMenu(
-                        expanded = expandedModel,
-                        onDismissRequest = { expandedModel = false }
-                    ) {
-                        models.forEach { model ->
-                            DropdownMenuItem(
-                                text = { Text(model.uniqueIdentifier) },
-                                onClick = {
-                                    selectedModel = model.uniqueIdentifier
-                                    expandedModel = false
-                                }
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
                 Text("Source Unique Identifiers")
                 Box {
                     Text(
@@ -125,14 +95,9 @@ fun EditFederatedLearningRelationshipDialog(
 
                 Button(
                     onClick = {
-                        val localRelationship = LocalRelationship(
-                            modelUniqueIdentifier = selectedModel,
-                            relationshipType = "Model",
-                            sourceUniqueIdentifiers = selectedSourceIds.joinToString(",")
-                        )
-                        onSubmit(localRelationship)
+                        onSubmit(selectedSourceIds)
                     },
-                    enabled = selectedModel.isNotEmpty() && selectedSourceIds.isNotEmpty(),
+                    enabled = selectedSourceIds.isNotEmpty(),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Submit")
