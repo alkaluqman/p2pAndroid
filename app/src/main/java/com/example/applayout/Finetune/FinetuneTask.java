@@ -108,8 +108,15 @@ public class FinetuneTask extends AsyncTask<Void, Integer, Void> {
             if (modelInputShape == null)
                 throw new RuntimeException("Failed to get model shape for model: " + modelFileName + MODEL_EXT);
             Log.d("FinetuneActivity", "Model Input Shape: " + Arrays.toString(modelInputShape));
-            int imgWidth = modelInputShape[1];
-            int imgHeight = modelInputShape[2];
+            int imgWidth, imgHeight;
+            if (modelInputShape.length < 2) {
+                Log.d("FinetuneActivity", "Defaulting to 28 * 28");
+                imgWidth = 28;
+                imgHeight = 28;
+            } else {
+                imgWidth = modelInputShape[1];
+                imgHeight = modelInputShape[2];
+            }
 
             List<FloatBuffer> trainImageBatches = new ArrayList<>(numImages);
             List<FloatBuffer> trainLabelBatches = new ArrayList<>(numImages);
