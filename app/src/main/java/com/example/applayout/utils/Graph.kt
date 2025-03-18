@@ -29,6 +29,12 @@ fun readGraphData(context: Context, fileName: String): List<Pair<Float, Float>> 
     }
 }
 
+fun toPairs(list1: List<Float>, list2: List<Float>): List<Pair<Float, Float>> {
+    require(list1.size == list2.size) { "Both lists must have the same length, but got ${list1.size} and ${list2.size}." }
+    return list1.mapIndexed { index, value -> value to list2[index] }
+}
+
+
 // Custom class for chart entries
 data class CustomChartEntry(
     override val x: Float,
@@ -40,15 +46,29 @@ data class CustomChartEntry(
 }
 
 @Composable
-fun Graph(fileName: String, xAxisTitle: String, yAxisTitle: String, useCase: String) {
+fun Graph(
+    fileName: String? = null,
+    xAxisTitle: String,
+    yAxisTitle: String,
+    useCase: String,
+    xAxisData: List<Float>? = null,
+    yAxisData: List<Float>? = null
+) {
     val context = LocalContext.current
     val tag = "GraphUtil"
 
-    val graphData = remember { readGraphData(context, fileName) }
-    Log.d(tag, "graphData: $graphData")
+    var graphData: List<Pair<Float, Float>> = emptyList()
+    if (fileName != null) {
+        graphData = remember { readGraphData(context, fileName) }
+    } else if (xAxisData != null && yAxisData != null) {
+        Log.d(tag, "xAxisData: $xAxisData for useCase: $useCase")
+        Log.d(tag, "yAxisData: $yAxisData for useCase: $useCase")
+        graphData = remember { toPairs(xAxisData, yAxisData) }
+    }
+    Log.d(tag, "graphData: $graphData for useCase: $useCase")
 
     val chartEntries = remember { graphData.map { (epoch, loss) -> CustomChartEntry(epoch, loss) } }
-    Log.d(tag, "chartEntries: $chartEntries")
+    Log.d(tag, "chartEntries: $chartEntries for useCase: $useCase")
     val chartEntryProducer = remember(chartEntries) {
         ChartEntryModelProducer(chartEntries)
     }
@@ -61,7 +81,6 @@ fun Graph(fileName: String, xAxisTitle: String, yAxisTitle: String, useCase: Str
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp) // Add vertical space between children
     ) {

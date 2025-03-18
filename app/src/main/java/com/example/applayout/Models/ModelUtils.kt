@@ -12,8 +12,11 @@ import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import java.io.File
+import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlin.math.exp
+import kotlin.math.ln
 
 data class evaluationApi(
     val accuracy: Double,
@@ -21,6 +24,42 @@ data class evaluationApi(
     val class_performance: List<Double>,
     val evaluationDate: String
 )
+
+fun readFloatsFromFile(context: Context, fileName: String): List<Float> {
+    val file = File(context.filesDir, fileName)
+    return try {
+        val content = file.readText().trim()
+        Gson().fromJson(content, object : TypeToken<List<Float>>() {}.type) ?: emptyList()
+    } catch (e: Exception) {
+        e.printStackTrace()
+        emptyList()
+    }
+}
+
+
+fun saveFile(context: Context, fileName: String, data: Any) {
+    val tag = "ModelUtils"
+    try {
+        val file = File(context.filesDir, fileName)
+        FileOutputStream(file).use { fos ->
+            val content = when (data) {
+                is String -> data
+                else -> Gson().toJson(data) // Convert objects/lists to JSON
+            }
+            fos.write(content.toByteArray(Charsets.UTF_8))
+        }
+        Log.d(tag, "File saved: ${file.absolutePath}")
+    } catch (e: Exception) {
+        e.printStackTrace()
+        Log.d(tag, "Failed to save file: ${e.message}")
+    }
+}
+
+fun softmax(logits: FloatArray): FloatArray {
+    val expValues = logits.map { exp(it) }
+    val sumExp = expValues.sum()
+    return expValues.map { it / sumExp }.toFloatArray()
+}
 
 //[[predict, correct],[predict, correct]]
 fun runInferenceOnDirectory(
@@ -55,6 +94,7 @@ fun runInferenceOnDirectory(
     val results = mutableListOf<Pair<Int, Int>>()
     val inputSize = 28 // Model expects 28x28 single-channel input
     val outputTensorBuffer = TensorBuffer.createFixedSize(intArrayOf(1, 10), DataType.FLOAT32)
+    val losses = mutableListOf<Float>()
 
     directory.listFiles()?.filter { it.isFile && it.extension in listOf("jpg", "png", "jpeg") }
         ?.forEach { imageFile ->
@@ -67,11 +107,25 @@ fun runInferenceOnDirectory(
                 val outputArray = outputTensorBuffer.floatArray
                 val predictedLabel = outputArray.indices.maxByOrNull { outputArray[it] } ?: -1
                 val actualLabel = datasetLabels[imageFile.name]?.toIntOrNull() ?: -1
+
+                val probabilities = softmax(outputArray)
+
+                // Compute loss (Cross-Entropy)
+                val actualProbability =
+                    if (actualLabel in probabilities.indices) probabilities[actualLabel] else 0f
+                Log.d("ModelUtilsEval", "actualProbability: $actualProbability")
+                val loss =
+                    if (actualProbability > 0) -ln(actualProbability) else Float.POSITIVE_INFINITY
+                Log.d("ModelUtilsEval", "loss: $loss")
+                losses.add(loss)
+
                 results.add(Pair(predictedLabel, actualLabel))
             } else {
                 println("Failed to decode image: ${imageFile.name}")
             }
         }
+
+    saveFile(context, "last_run_eval_losses", losses)
 
     interpreter.close()
     return results
