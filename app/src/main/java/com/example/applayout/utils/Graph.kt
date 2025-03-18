@@ -81,7 +81,6 @@ fun Graph(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp) // Add vertical space between children
     ) {

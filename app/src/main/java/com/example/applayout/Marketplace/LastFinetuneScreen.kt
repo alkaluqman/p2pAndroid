@@ -3,6 +3,7 @@ package com.example.applayout.Marketplace
 import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -32,17 +33,17 @@ fun LastFinetuneScreen(context: Context, localRelationship: LocalRelationship, f
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp) // Add more space if needed
     ) {
         Graph(
             fileName = fileName,
             xAxisTitle = xAxisTitle,
             yAxisTitle = yAxisTitle,
-            useCase = "finetune"
+            useCase = "finetune",
         )
 
         Graph(
-            xAxisTitle = xAxisTitle,
+            xAxisTitle = "dataset images",
             yAxisTitle = yAxisTitle,
             xAxisData = evalEpochs,
             yAxisData = evalLosses,
@@ -51,5 +52,3 @@ fun LastFinetuneScreen(context: Context, localRelationship: LocalRelationship, f
     }
 
 }
-
-
