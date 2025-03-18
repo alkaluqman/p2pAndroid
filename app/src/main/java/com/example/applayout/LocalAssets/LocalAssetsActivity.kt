@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -86,7 +87,23 @@ class LocalAssetActivity : ComponentActivity() {
 
                     PerformanceHistoryScreen(list)
                 }
-                composable("last_finetune_screen") { LastFinetuneScreen() }
+                composable("last_finetune_screen/{lastRelationshipJson}/{finetuneJson}") { backStackEntry ->
+                    val lastRelationshipJson =
+                        backStackEntry.arguments?.getString("lastRelationshipJson") ?: "{}"
+                    val finetuneJson = backStackEntry.arguments?.getString("finetuneJson") ?: "{}"
+                    val lastRelationshipJsonType = object : TypeToken<LocalRelationship>() {}.type
+                    val finetuneJsonType = object : TypeToken<Finetune>() {}.type
+
+                    val lastRelationship: LocalRelationship =
+                        Gson().fromJson(lastRelationshipJson, lastRelationshipJsonType)
+                    val finetune: Finetune = Gson().fromJson(finetuneJson, finetuneJsonType)
+
+                    LastFinetuneScreen(
+                        context = LocalContext.current,
+                        localRelationship = lastRelationship,
+                        finetune = finetune
+                    )
+                }
             }
         }
     }
@@ -115,6 +132,8 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
     var evaluatedModelId by remember { mutableStateOf<String?>(null) }
     var evaluatedDatasetId by remember { mutableStateOf<String?>(null) }
     var evaluatedDatasetUploadStatus by remember { mutableStateOf<Boolean>(false) }
+    var lastLocalRelationship by rememberSaveable { mutableStateOf<LocalRelationship?>(null) }
+    var lastFinetuneData by rememberSaveable { mutableStateOf<Finetune?>(null) }
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
         coroutineScope.launch {
@@ -183,7 +202,12 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
 
             Spacer(modifier = Modifier.width(16.dp))
             Button(
-                onClick = { navController.navigate("last_finetune_screen") },
+
+                onClick = {
+                    val lastRelationshipJson = Uri.encode(Gson().toJson(lastLocalRelationship))
+                    val lastFinetuneJson = Uri.encode(Gson().toJson(lastFinetuneData))
+                    navController.navigate("last_finetune_screen/$lastRelationshipJson/$lastFinetuneJson")
+                },
                 modifier = Modifier.weight(1f)
             ) {
                 Text("Last Run Statistics")
@@ -527,6 +551,8 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                             relationshipType = "Finetune",
                             sourceUniqueIdentifiers = modelFileName
                         )
+                        lastLocalRelationship = localRelationship
+                        lastFinetuneData = finetune
                         uploadModelNode(filesDir, newModel, USERNAME)
                         uploadFinetuningRelationship(
                             relationshipData = localRelationship,
