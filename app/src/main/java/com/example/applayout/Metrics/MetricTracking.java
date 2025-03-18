@@ -19,7 +19,7 @@ public class MetricTracking {
 
     private static class MetricTracker {
         private final Handler handler;
-        private final int DELAY_MILLIS = 1000;
+        private final int DELAY_MILLIS = 100;
         private double minCpu = 0.0;
         private double maxCpu = 0.0;
         private double totalCpu = 0.0;

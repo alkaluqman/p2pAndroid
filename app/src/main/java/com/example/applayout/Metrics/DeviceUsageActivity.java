@@ -20,6 +20,9 @@ import android.net.TrafficStats;
 
 import com.example.applayout.R;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class DeviceUsageActivity extends AppCompatActivity {
     private ProgressBar availableMemoryProgressBar;
     private ProgressBar appUsedMemoryProgressBar;
@@ -28,10 +31,11 @@ public class DeviceUsageActivity extends AppCompatActivity {
     private TextView networkUsageText;
     private TextView batteryUsageText;
     private Handler handler;
-    private long lastRxBytes = 0;
-    private long lastTxBytes = 0;
+    private long lastRxBytes = TrafficStats.getUidRxBytes(Process.myUid());
+    private long lastTxBytes = TrafficStats.getUidTxBytes(Process.myUid());
 
-    private final int DELAY_MILLIS = 1000;
+    private final int DELAY_MILLIS = 100;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,9 +55,6 @@ public class DeviceUsageActivity extends AppCompatActivity {
         batteryUsageText = findViewById(R.id.batteryUsageText);
         handler = new Handler(Looper.getMainLooper());
 
-        lastRxBytes = TrafficStats.getUidRxBytes(Process.myUid());
-        lastTxBytes = TrafficStats.getUidTxBytes(Process.myUid());
-
         startUsageMonitoring();
     }
 
@@ -61,20 +62,28 @@ public class DeviceUsageActivity extends AppCompatActivity {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                displayResourceUsage();
-                handler.postDelayed(this, DELAY_MILLIS); // Update every second
+                executor.execute(() -> {
+                    // Move heavy work to a background thread
+                    final String memoryUsageStr = getMemoryUsage();
+                    final String cpuUsageStr = getCpuUsage();
+                    final String networkUsageStr = getNetworkUsage();
+                    final String batteryUsageStr = getBatteryUsage();
+
+                    // Update UI on main thread
+                    handler.post(() -> {
+                        memoryUsageText.setText(memoryUsageStr);
+                        cpuUsageText.setText(cpuUsageStr);
+                        networkUsageText.setText(networkUsageStr);
+                        batteryUsageText.setText(batteryUsageStr);
+                    });
+                });
+
+                handler.postDelayed(this, DELAY_MILLIS);
             }
         }, DELAY_MILLIS);
     }
 
-    private void displayResourceUsage() {
-        displayMemoryUsage();
-        displayCpuUsage();
-        displayNetworkUsage();
-        displayBatteryUsage();
-    }
-
-    private void displayBatteryUsage() {
+    private String getBatteryUsage() {
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = registerReceiver(null, ifilter);
 
@@ -88,13 +97,11 @@ public class DeviceUsageActivity extends AppCompatActivity {
 
         String chargingStatus = isCharging ? "Charging" : "Not Charging";
 
-        String batteryUsageStr = "Battery Level: " + batteryPct + "%\n" +
+        return "Battery Level: " + batteryPct + "%\n" +
                 "Battery Status: " + chargingStatus;
-
-        batteryUsageText.setText(batteryUsageStr);
     }
 
-    private void displayNetworkUsage() {
+    private String getNetworkUsage() {
         long currentRxBytes = TrafficStats.getUidRxBytes(Process.myUid());
         long currentTxBytes = TrafficStats.getUidTxBytes(Process.myUid());
         long rxBytes = currentRxBytes - lastRxBytes;
@@ -105,19 +112,16 @@ public class DeviceUsageActivity extends AppCompatActivity {
         String rxBytesFormatted = Formatter.formatFileSize(this, rxBytes);
         String txBytesFormatted = Formatter.formatFileSize(this, txBytes);
 
-        String networkUsageStr = "Network Download: " + rxBytesFormatted + "\n" +
+        return "Network Download: " + rxBytesFormatted + "\n" +
                 "Network Upload: " + txBytesFormatted;
-
-        networkUsageText.setText(networkUsageStr);
     }
 
-    private void displayMemoryUsage() {
+    private String getMemoryUsage() {
         ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
         activityManager.getMemoryInfo(memoryInfo);
 
         long availableMemory = memoryInfo.availMem / (1024 * 1024);
-
         long totalMemory = memoryInfo.totalMem / (1024 * 1024);
 
         Runtime runtime = Runtime.getRuntime();
@@ -130,17 +134,14 @@ public class DeviceUsageActivity extends AppCompatActivity {
         double appUsedMemoryPercentage = (usedMemory * 100.0) / maxMemory;
         appUsedMemoryProgressBar.setProgress((int) appUsedMemoryPercentage);
 
-        String memoryUsageStr = "Device Available Memory: " + availableMemory + " MB\n" +
+        return "Device Available Memory: " + availableMemory + " MB\n" +
                 "Device Total Memory: " + totalMemory + " MB\n" +
                 "App Used Memory: " + usedMemory + " MB\n" +
                 "App Max Memory: " + maxMemory + " MB";
-
-        memoryUsageText.setText(memoryUsageStr);
     }
 
-    private void displayCpuUsage() {
+    private String getCpuUsage() {
         double cpuUsage = MetricTrackingUtils.calculateAppCpuAndMemUsage()[0];
-        String cpuUsageStr = "App CPU Usage: " + String.format("%.2f", cpuUsage) + "%";
-        cpuUsageText.setText(cpuUsageStr);
+        return "App CPU Usage: " + String.format("%.2f", cpuUsage) + "%";
     }
 }
