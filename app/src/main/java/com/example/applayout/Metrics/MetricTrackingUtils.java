@@ -55,8 +55,6 @@ public class MetricTrackingUtils {
                 }
             }
             br.close();
-            System.out.println("Child PIDs: ");
-            System.out.println(childPids);
         } catch (IOException e) {
             e.printStackTrace();
         }
