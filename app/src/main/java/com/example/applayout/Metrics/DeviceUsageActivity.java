@@ -58,16 +58,6 @@ public class DeviceUsageActivity extends AppCompatActivity {
         startUsageMonitoring();
     }
 
-//    private void startUsageMonitoring() {
-//        handler.postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                displayResourceUsage();
-//                handler.postDelayed(this, DELAY_MILLIS); // Update every second
-//            }
-//        }, DELAY_MILLIS);
-//    }
-
     private void startUsageMonitoring() {
         handler.postDelayed(new Runnable() {
             @Override
@@ -93,33 +83,6 @@ public class DeviceUsageActivity extends AppCompatActivity {
         }, DELAY_MILLIS);
     }
 
-//    private void displayResourceUsage() {
-//        displayMemoryUsage();
-//        displayCpuUsage();
-//        displayNetworkUsage();
-//        displayBatteryUsage();
-//    }
-
-//    private void displayBatteryUsage() {
-//        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-//        Intent batteryStatus = registerReceiver(null, ifilter);
-//
-//        int level = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) : -1;
-//        int scale = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1) : -1;
-//        int batteryPct = (int) ((level / (float) scale) * 100);
-//
-//        boolean isCharging = batteryStatus != null &&
-//                (batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1) == BatteryManager.BATTERY_STATUS_CHARGING ||
-//                        batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1) == BatteryManager.BATTERY_STATUS_FULL);
-//
-//        String chargingStatus = isCharging ? "Charging" : "Not Charging";
-//
-//        String batteryUsageStr = "Battery Level: " + batteryPct + "%\n" +
-//                "Battery Status: " + chargingStatus;
-//
-//        batteryUsageText.setText(batteryUsageStr);
-//    }
-
     private String getBatteryUsage() {
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = registerReceiver(null, ifilter);
@@ -138,23 +101,6 @@ public class DeviceUsageActivity extends AppCompatActivity {
                 "Battery Status: " + chargingStatus;
     }
 
-//    private void displayNetworkUsage() {
-//        long currentRxBytes = TrafficStats.getUidRxBytes(Process.myUid());
-//        long currentTxBytes = TrafficStats.getUidTxBytes(Process.myUid());
-//        long rxBytes = currentRxBytes - lastRxBytes;
-//        long txBytes = currentTxBytes - lastTxBytes;
-//        lastRxBytes = currentRxBytes;
-//        lastTxBytes = currentTxBytes;
-//
-//        String rxBytesFormatted = Formatter.formatFileSize(this, rxBytes);
-//        String txBytesFormatted = Formatter.formatFileSize(this, txBytes);
-//
-//        String networkUsageStr = "Network Download: " + rxBytesFormatted + "\n" +
-//                "Network Upload: " + txBytesFormatted;
-//
-//        networkUsageText.setText(networkUsageStr);
-//    }
-
     private String getNetworkUsage() {
         long currentRxBytes = TrafficStats.getUidRxBytes(Process.myUid());
         long currentTxBytes = TrafficStats.getUidTxBytes(Process.myUid());
@@ -169,33 +115,6 @@ public class DeviceUsageActivity extends AppCompatActivity {
         return "Network Download: " + rxBytesFormatted + "\n" +
                 "Network Upload: " + txBytesFormatted;
     }
-
-//    private void displayMemoryUsage() {
-//        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-//        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
-//        activityManager.getMemoryInfo(memoryInfo);
-//
-//        long availableMemory = memoryInfo.availMem / (1024 * 1024);
-//
-//        long totalMemory = memoryInfo.totalMem / (1024 * 1024);
-//
-//        Runtime runtime = Runtime.getRuntime();
-//        long usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
-//        long maxMemory = runtime.maxMemory() / (1024 * 1024);
-//
-//        double availableMemoryPercentage = (availableMemory * 100.0) / totalMemory;
-//        availableMemoryProgressBar.setProgress((int) availableMemoryPercentage);
-//
-//        double appUsedMemoryPercentage = (usedMemory * 100.0) / maxMemory;
-//        appUsedMemoryProgressBar.setProgress((int) appUsedMemoryPercentage);
-//
-//        String memoryUsageStr = "Device Available Memory: " + availableMemory + " MB\n" +
-//                "Device Total Memory: " + totalMemory + " MB\n" +
-//                "App Used Memory: " + usedMemory + " MB\n" +
-//                "App Max Memory: " + maxMemory + " MB";
-//
-//        memoryUsageText.setText(memoryUsageStr);
-//    }
 
     private String getMemoryUsage() {
         ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -220,12 +139,6 @@ public class DeviceUsageActivity extends AppCompatActivity {
                 "App Used Memory: " + usedMemory + " MB\n" +
                 "App Max Memory: " + maxMemory + " MB";
     }
-
-//    private void displayCpuUsage() {
-//        double cpuUsage = MetricTrackingUtils.calculateAppCpuAndMemUsage()[0];
-//        String cpuUsageStr = "App CPU Usage: " + String.format("%.2f", cpuUsage) + "%";
-//        cpuUsageText.setText(cpuUsageStr);
-//    }
 
     private String getCpuUsage() {
         double cpuUsage = MetricTrackingUtils.calculateAppCpuAndMemUsage()[0];
