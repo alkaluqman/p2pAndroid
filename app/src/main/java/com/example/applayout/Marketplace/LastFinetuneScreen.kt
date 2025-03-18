@@ -11,6 +11,7 @@ import com.example.applayout.Data.Model.Finetune
 import com.example.applayout.Data.Model.LocalRelationship
 import com.example.applayout.utils.*
 import com.example.applayout.Models.readFloatsFromFile
+import com.example.applayout.Models.runInferenceOnDirectory
 
 @Composable
 fun LastFinetuneScreen(context: Context, localRelationship: LocalRelationship, finetune: Finetune) {
@@ -20,6 +21,9 @@ fun LastFinetuneScreen(context: Context, localRelationship: LocalRelationship, f
     val fileName = "last_run_losses.csv"
     val xAxisTitle = "epoch"
     val yAxisTitle = "loss"
+
+    val evaluationResults =
+        runInferenceOnDirectory(context, localRelationship.modelUniqueIdentifier, finetune.dataset)
 
     val evalLosses = readFloatsFromFile(context = context, fileName = "last_run_eval_losses")
     Log.d(tag, "evalLosses: $evalLosses")
