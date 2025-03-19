@@ -30,7 +30,6 @@ fun EvaluationResultsDialog(
     onDismiss: () -> Unit,
     onUpload: (evaluationApi) -> Unit
 ) {
-    // Overall metrics
     val totalPredictions = results.size
     val correctPredictions = results.count { it.first == it.second }
     val overallAccuracy = if (totalPredictions > 0) {
