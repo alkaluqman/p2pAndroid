@@ -1,6 +1,7 @@
 package com.example.applayout.LocalAssets
 
 
+import EvaluationResultsDialog
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -51,9 +52,9 @@ import com.example.applayout.Data.Model.LocalRelationship
 import com.example.applayout.Data.Model.Model
 import com.example.applayout.Dataset.DatasetCard
 import com.example.applayout.Finetune.FinetuneAPI
+import com.example.applayout.Marketplace.LastFinetuneScreen
 import com.example.applayout.Marketplace.MarketplaceScreen
 import com.example.applayout.Marketplace.PerformanceHistoryScreen
-import com.example.applayout.Marketplace.LastFinetuneScreen
 import com.example.applayout.Marketplace.WebViewScreen
 import com.example.applayout.Metrics.MetricTracking
 import com.example.applayout.Models.ModelCard
@@ -500,8 +501,10 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
                     coroutineScope.launch(Dispatchers.IO) {
                         uploadModelNode(filesDir, newModel, USERNAME)
                         uploadFederatedLearningRelationship(localRelationship)
+                        localModelListState.value = fetchModelsInfo(filesDir).notUploadedModels
                     }
                     showFederatedLearningRelationshipDialog = false
+
                 }
             )
         }
@@ -585,7 +588,6 @@ fun LocalAssetsScreen(filesDir: File, navController: NavController) {
     if (showResultsDialog) {
         EvaluationResultsDialog(
             isUploadable = true,
-//                isUploadable = evaluatedDatasetUploadStatus && uploadedModelListState.value.any { it.uniqueIdentifier == highlightedModel },
             results = evaluationResults,
             classLabels = evaluationClasses,
             onDismiss = { showResultsDialog = false },

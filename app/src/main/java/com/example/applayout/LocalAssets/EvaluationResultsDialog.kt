@@ -1,11 +1,10 @@
-package com.example.applayout.LocalAssets
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,13 +30,13 @@ fun EvaluationResultsDialog(
     onDismiss: () -> Unit,
     onUpload: (evaluationApi) -> Unit
 ) {
+    // Overall metrics
     val totalPredictions = results.size
     val correctPredictions = results.count { it.first == it.second }
     val overallAccuracy = if (totalPredictions > 0) {
         correctPredictions.toDouble() / totalPredictions
     } else 0.0
 
-    // Calculate per-class accuracy and precision
     val classCounts = classLabels.indices.associateWith { index ->
         results.count { it.second == index }
     }
@@ -56,16 +55,13 @@ fun EvaluationResultsDialog(
         val predictedCount = results.count { it.first == index }
         if (predictedCount > 0) {
             (classCorrect[index] ?: 0).toDouble() / predictedCount
-        } else 0.0
+        } else null
     }
 
-    val overallPrecision = if (classPrecision.isNotEmpty()) {
-        classPrecision.values.average()
+    val validPrecisions = classPrecision.values.filterNotNull()
+    val overallPrecision = if (validPrecisions.isNotEmpty()) {
+        validPrecisions.average()
     } else 0.0
-
-    val classPerformance = classLabels.indices.map { index ->
-        classAccuracy[index] ?: 0.0
-    }
 
     val evaluationDate = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
         .format(java.util.Date())
@@ -77,70 +73,91 @@ fun EvaluationResultsDialog(
             modifier = Modifier.padding(16.dp)
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Header Section
                 Text(
                     text = "Evaluation Results",
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
-                Text(
-                    text = "Overall Accuracy: ${(overallAccuracy * 100).format(2)}%",
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Text(
-                    text = "Overall Precision: ${(overallPrecision * 100).format(2)}%",
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Divider(modifier = Modifier.padding(vertical = 16.dp))
+                Divider(modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Accuracy",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "${(overallAccuracy * 100).format(2)}%",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Precision",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "${(overallPrecision * 100).format(2)}%",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+                Divider(modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(16.dp))
 
-                // Class Results Section
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp)
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     items(classLabels.indices.toList()) { index ->
-                        Row(
+                        Surface(
+                            shape = MaterialTheme.shapes.medium,
+                            tonalElevation = 2.dp,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(vertical = 4.dp, horizontal = 8.dp)
                         ) {
-                            Text(
-                                text = "Class ${index + 1}: ${classLabels[index]}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(1.5f)
-                            )
-                            Text(
-                                text = "Accuracy: ${
-                                    (classAccuracy[index]?.times(100)?.format(2)) ?: "0.00"
-                                }%",
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Text(
-                                text = "Precision: ${
-                                    (classPrecision[index]?.times(100)?.format(2)) ?: "0.00"
-                                }%",
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.weight(1f)
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = classLabels[index],
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.weight(2f)
+                                )
+                                Text(
+                                    text = "Correct: ${classCorrect[index] ?: 0} / ${classCounts[index] ?: 0}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.weight(2f)
+                                )
+                            }
                         }
                     }
                 }
-
-                Divider(modifier = Modifier.padding(vertical = 16.dp))
-
-                // Buttons Section
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        text = "Evaluation Date: $evaluationDate",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                // Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -158,7 +175,9 @@ fun EvaluationResultsDialog(
                                 evaluationApi(
                                     accuracy = overallAccuracy,
                                     precision = overallPrecision,
-                                    class_performance = classPerformance,
+                                    class_performance = classLabels.indices.map {
+                                        classAccuracy[it] ?: 0.0
+                                    },
                                     evaluationDate = evaluationDate
                                 )
                             )
