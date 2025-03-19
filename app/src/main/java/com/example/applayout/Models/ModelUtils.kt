@@ -93,7 +93,6 @@ fun runInferenceOnDirectory(
     val datasetLabels = readLabels(datasetDir)
     val results = mutableListOf<Pair<Int, Int>>()
     val inputSize = 28 // Model expects 28x28 single-channel input
-    val outputTensorBuffer = TensorBuffer.createFixedSize(intArrayOf(1, 10), DataType.FLOAT32)
     val losses = mutableListOf<Float>()
 
     directory.listFiles()?.filter { it.isFile && it.extension in listOf("jpg", "png", "jpeg") }
@@ -103,11 +102,15 @@ fun runInferenceOnDirectory(
                 val resizedBitmap = Bitmap.createScaledBitmap(bitmap, inputSize, inputSize, true)
                 val grayscaleBitmap = convertToGrayscale(resizedBitmap)
                 val inputTensor = preprocessImageForSingleChannel(grayscaleBitmap, inputSize)
-                interpreter.run(inputTensor, outputTensorBuffer.buffer.rewind())
+                val inputs = mapOf("x" to inputTensor)
+                val outputTensorBuffer =
+                    TensorBuffer.createFixedSize(intArrayOf(1, 10), DataType.FLOAT32)
+                val outputs =
+                    mutableMapOf<String, Any>("output" to outputTensorBuffer.buffer.rewind())
+                interpreter.runSignature(inputs, outputs, "infer")
                 val outputArray = outputTensorBuffer.floatArray
                 val predictedLabel = outputArray.indices.maxByOrNull { outputArray[it] } ?: -1
                 val actualLabel = datasetLabels[imageFile.name]?.toIntOrNull() ?: -1
-
                 val probabilities = softmax(outputArray)
 
                 // Compute loss (Cross-Entropy)
